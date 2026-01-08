@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معرض صور نظام CRM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            background: #f0f0f0;
+            border: 2px solid transparent;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        .filter-btn:hover { background: #e0e0e0; }
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .gallery-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .gallery-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        .gallery-item-info {
+            padding: 1rem;
+        }
+        .gallery-item-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .gallery-item-meta {
+            color: #666;
+            font-size: 0.875rem;
+        }
+        .viewport-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            padding: 2rem;
+        }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content {
+            max-width: 95%;
+            max-height: 95%;
+            position: relative;
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: white;
+            color: #333;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        .stats {
+            text-align: center;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 10px;
+            margin-top: 2rem;
+        }
+        .stats strong { color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 معرض صور نظام CRM</h1>
+        <p class="subtitle">نظام إدارة علاقات العملاء المتكامل</p>
+
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">الكل</button>
+            <button class="filter-btn" data-filter="Desktop">سطح المكتب</button>
+            <button class="filter-btn" data-filter="Laptop">اللابتوب</button>
+            <button class="filter-btn" data-filter="Tablet">التابلت</button>
+            <button class="filter-btn" data-filter="Mobile">الموبايل</button>
+        </div>
+
+        <div class="gallery">
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="01-login-1920x1080.png" alt="صفحة تسجيل الدخول" onclick="openModal('01-login-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">صفحة تسجيل الدخول</div>
+                        <div class="gallery-item-meta">01-login</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="01-login-1366x768.png" alt="صفحة تسجيل الدخول" onclick="openModal('01-login-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">صفحة تسجيل الدخول</div>
+                        <div class="gallery-item-meta">01-login</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="01-login-768x1024.png" alt="صفحة تسجيل الدخول" onclick="openModal('01-login-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">صفحة تسجيل الدخول</div>
+                        <div class="gallery-item-meta">01-login</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="01-login-375x812.png" alt="صفحة تسجيل الدخول" onclick="openModal('01-login-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">صفحة تسجيل الدخول</div>
+                        <div class="gallery-item-meta">01-login</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="02-dashboard-1920x1080.png" alt="لوحة التحكم الرئيسية" onclick="openModal('02-dashboard-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">لوحة التحكم الرئيسية</div>
+                        <div class="gallery-item-meta">02-dashboard</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="02-dashboard-1366x768.png" alt="لوحة التحكم الرئيسية" onclick="openModal('02-dashboard-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">لوحة التحكم الرئيسية</div>
+                        <div class="gallery-item-meta">02-dashboard</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="02-dashboard-768x1024.png" alt="لوحة التحكم الرئيسية" onclick="openModal('02-dashboard-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">لوحة التحكم الرئيسية</div>
+                        <div class="gallery-item-meta">02-dashboard</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="02-dashboard-375x812.png" alt="لوحة التحكم الرئيسية" onclick="openModal('02-dashboard-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">لوحة التحكم الرئيسية</div>
+                        <div class="gallery-item-meta">02-dashboard</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="03-invoices-list-1920x1080.png" alt="قائمة الفواتير" onclick="openModal('03-invoices-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الفواتير</div>
+                        <div class="gallery-item-meta">03-invoices-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="03-invoices-list-1366x768.png" alt="قائمة الفواتير" onclick="openModal('03-invoices-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الفواتير</div>
+                        <div class="gallery-item-meta">03-invoices-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="03-invoices-list-768x1024.png" alt="قائمة الفواتير" onclick="openModal('03-invoices-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الفواتير</div>
+                        <div class="gallery-item-meta">03-invoices-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="03-invoices-list-375x812.png" alt="قائمة الفواتير" onclick="openModal('03-invoices-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الفواتير</div>
+                        <div class="gallery-item-meta">03-invoices-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="04-invoice-create-1920x1080.png" alt="إنشاء فاتورة جديدة" onclick="openModal('04-invoice-create-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إنشاء فاتورة جديدة</div>
+                        <div class="gallery-item-meta">04-invoice-create</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="04-invoice-create-1366x768.png" alt="إنشاء فاتورة جديدة" onclick="openModal('04-invoice-create-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إنشاء فاتورة جديدة</div>
+                        <div class="gallery-item-meta">04-invoice-create</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="04-invoice-create-768x1024.png" alt="إنشاء فاتورة جديدة" onclick="openModal('04-invoice-create-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إنشاء فاتورة جديدة</div>
+                        <div class="gallery-item-meta">04-invoice-create</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="04-invoice-create-375x812.png" alt="إنشاء فاتورة جديدة" onclick="openModal('04-invoice-create-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إنشاء فاتورة جديدة</div>
+                        <div class="gallery-item-meta">04-invoice-create</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="05-purchases-list-1920x1080.png" alt="قائمة المشتريات" onclick="openModal('05-purchases-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المشتريات</div>
+                        <div class="gallery-item-meta">05-purchases-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="05-purchases-list-1366x768.png" alt="قائمة المشتريات" onclick="openModal('05-purchases-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المشتريات</div>
+                        <div class="gallery-item-meta">05-purchases-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="05-purchases-list-768x1024.png" alt="قائمة المشتريات" onclick="openModal('05-purchases-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المشتريات</div>
+                        <div class="gallery-item-meta">05-purchases-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="05-purchases-list-375x812.png" alt="قائمة المشتريات" onclick="openModal('05-purchases-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المشتريات</div>
+                        <div class="gallery-item-meta">05-purchases-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="06-purchase-create-1920x1080.png" alt="إنشاء فاتورة شراء" onclick="openModal('06-purchase-create-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إنشاء فاتورة شراء</div>
+                        <div class="gallery-item-meta">06-purchase-create</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="06-purchase-create-1366x768.png" alt="إنشاء فاتورة شراء" onclick="openModal('06-purchase-create-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إنشاء فاتورة شراء</div>
+                        <div class="gallery-item-meta">06-purchase-create</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="06-purchase-create-768x1024.png" alt="إنشاء فاتورة شراء" onclick="openModal('06-purchase-create-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إنشاء فاتورة شراء</div>
+                        <div class="gallery-item-meta">06-purchase-create</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="06-purchase-create-375x812.png" alt="إنشاء فاتورة شراء" onclick="openModal('06-purchase-create-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إنشاء فاتورة شراء</div>
+                        <div class="gallery-item-meta">06-purchase-create</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="07-employees-list-1920x1080.png" alt="قائمة الموظفين" onclick="openModal('07-employees-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الموظفين</div>
+                        <div class="gallery-item-meta">07-employees-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="07-employees-list-1366x768.png" alt="قائمة الموظفين" onclick="openModal('07-employees-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الموظفين</div>
+                        <div class="gallery-item-meta">07-employees-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="07-employees-list-768x1024.png" alt="قائمة الموظفين" onclick="openModal('07-employees-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الموظفين</div>
+                        <div class="gallery-item-meta">07-employees-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="07-employees-list-375x812.png" alt="قائمة الموظفين" onclick="openModal('07-employees-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الموظفين</div>
+                        <div class="gallery-item-meta">07-employees-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="08-employee-create-1920x1080.png" alt="إضافة موظف جديد" onclick="openModal('08-employee-create-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة موظف جديد</div>
+                        <div class="gallery-item-meta">08-employee-create</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="08-employee-create-1366x768.png" alt="إضافة موظف جديد" onclick="openModal('08-employee-create-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة موظف جديد</div>
+                        <div class="gallery-item-meta">08-employee-create</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="08-employee-create-768x1024.png" alt="إضافة موظف جديد" onclick="openModal('08-employee-create-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة موظف جديد</div>
+                        <div class="gallery-item-meta">08-employee-create</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="08-employee-create-375x812.png" alt="إضافة موظف جديد" onclick="openModal('08-employee-create-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة موظف جديد</div>
+                        <div class="gallery-item-meta">08-employee-create</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="09-customers-list-1920x1080.png" alt="قائمة العملاء" onclick="openModal('09-customers-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة العملاء</div>
+                        <div class="gallery-item-meta">09-customers-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="09-customers-list-1366x768.png" alt="قائمة العملاء" onclick="openModal('09-customers-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة العملاء</div>
+                        <div class="gallery-item-meta">09-customers-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="09-customers-list-768x1024.png" alt="قائمة العملاء" onclick="openModal('09-customers-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة العملاء</div>
+                        <div class="gallery-item-meta">09-customers-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="09-customers-list-375x812.png" alt="قائمة العملاء" onclick="openModal('09-customers-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة العملاء</div>
+                        <div class="gallery-item-meta">09-customers-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="10-customer-create-1920x1080.png" alt="إضافة عميل جديد" onclick="openModal('10-customer-create-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة عميل جديد</div>
+                        <div class="gallery-item-meta">10-customer-create</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="10-customer-create-1366x768.png" alt="إضافة عميل جديد" onclick="openModal('10-customer-create-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة عميل جديد</div>
+                        <div class="gallery-item-meta">10-customer-create</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="10-customer-create-768x1024.png" alt="إضافة عميل جديد" onclick="openModal('10-customer-create-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة عميل جديد</div>
+                        <div class="gallery-item-meta">10-customer-create</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="10-customer-create-375x812.png" alt="إضافة عميل جديد" onclick="openModal('10-customer-create-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة عميل جديد</div>
+                        <div class="gallery-item-meta">10-customer-create</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="11-products-list-1920x1080.png" alt="قائمة المنتجات" onclick="openModal('11-products-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المنتجات</div>
+                        <div class="gallery-item-meta">11-products-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="11-products-list-1366x768.png" alt="قائمة المنتجات" onclick="openModal('11-products-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المنتجات</div>
+                        <div class="gallery-item-meta">11-products-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="11-products-list-768x1024.png" alt="قائمة المنتجات" onclick="openModal('11-products-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المنتجات</div>
+                        <div class="gallery-item-meta">11-products-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="11-products-list-375x812.png" alt="قائمة المنتجات" onclick="openModal('11-products-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المنتجات</div>
+                        <div class="gallery-item-meta">11-products-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="12-product-create-1920x1080.png" alt="إضافة منتج جديد" onclick="openModal('12-product-create-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة منتج جديد</div>
+                        <div class="gallery-item-meta">12-product-create</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="12-product-create-1366x768.png" alt="إضافة منتج جديد" onclick="openModal('12-product-create-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة منتج جديد</div>
+                        <div class="gallery-item-meta">12-product-create</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="12-product-create-768x1024.png" alt="إضافة منتج جديد" onclick="openModal('12-product-create-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة منتج جديد</div>
+                        <div class="gallery-item-meta">12-product-create</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="12-product-create-375x812.png" alt="إضافة منتج جديد" onclick="openModal('12-product-create-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">إضافة منتج جديد</div>
+                        <div class="gallery-item-meta">12-product-create</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="13-suppliers-list-1920x1080.png" alt="قائمة الموردين" onclick="openModal('13-suppliers-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الموردين</div>
+                        <div class="gallery-item-meta">13-suppliers-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="13-suppliers-list-1366x768.png" alt="قائمة الموردين" onclick="openModal('13-suppliers-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الموردين</div>
+                        <div class="gallery-item-meta">13-suppliers-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="13-suppliers-list-768x1024.png" alt="قائمة الموردين" onclick="openModal('13-suppliers-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الموردين</div>
+                        <div class="gallery-item-meta">13-suppliers-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="13-suppliers-list-375x812.png" alt="قائمة الموردين" onclick="openModal('13-suppliers-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الموردين</div>
+                        <div class="gallery-item-meta">13-suppliers-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="14-warehouses-list-1920x1080.png" alt="قائمة المخازن" onclick="openModal('14-warehouses-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المخازن</div>
+                        <div class="gallery-item-meta">14-warehouses-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="14-warehouses-list-1366x768.png" alt="قائمة المخازن" onclick="openModal('14-warehouses-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المخازن</div>
+                        <div class="gallery-item-meta">14-warehouses-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="14-warehouses-list-768x1024.png" alt="قائمة المخازن" onclick="openModal('14-warehouses-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المخازن</div>
+                        <div class="gallery-item-meta">14-warehouses-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="14-warehouses-list-375x812.png" alt="قائمة المخازن" onclick="openModal('14-warehouses-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المخازن</div>
+                        <div class="gallery-item-meta">14-warehouses-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="15-categories-list-1920x1080.png" alt="قائمة الأقسام" onclick="openModal('15-categories-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الأقسام</div>
+                        <div class="gallery-item-meta">15-categories-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="15-categories-list-1366x768.png" alt="قائمة الأقسام" onclick="openModal('15-categories-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الأقسام</div>
+                        <div class="gallery-item-meta">15-categories-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="15-categories-list-768x1024.png" alt="قائمة الأقسام" onclick="openModal('15-categories-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الأقسام</div>
+                        <div class="gallery-item-meta">15-categories-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="15-categories-list-375x812.png" alt="قائمة الأقسام" onclick="openModal('15-categories-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة الأقسام</div>
+                        <div class="gallery-item-meta">15-categories-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="16-sales-list-1920x1080.png" alt="قائمة المبيعات" onclick="openModal('16-sales-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المبيعات</div>
+                        <div class="gallery-item-meta">16-sales-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="16-sales-list-1366x768.png" alt="قائمة المبيعات" onclick="openModal('16-sales-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المبيعات</div>
+                        <div class="gallery-item-meta">16-sales-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="16-sales-list-768x1024.png" alt="قائمة المبيعات" onclick="openModal('16-sales-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المبيعات</div>
+                        <div class="gallery-item-meta">16-sales-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="16-sales-list-375x812.png" alt="قائمة المبيعات" onclick="openModal('16-sales-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المبيعات</div>
+                        <div class="gallery-item-meta">16-sales-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="17-expenses-list-1920x1080.png" alt="قائمة المصروفات" onclick="openModal('17-expenses-list-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المصروفات</div>
+                        <div class="gallery-item-meta">17-expenses-list</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="17-expenses-list-1366x768.png" alt="قائمة المصروفات" onclick="openModal('17-expenses-list-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المصروفات</div>
+                        <div class="gallery-item-meta">17-expenses-list</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="17-expenses-list-768x1024.png" alt="قائمة المصروفات" onclick="openModal('17-expenses-list-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المصروفات</div>
+                        <div class="gallery-item-meta">17-expenses-list</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="17-expenses-list-375x812.png" alt="قائمة المصروفات" onclick="openModal('17-expenses-list-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">قائمة المصروفات</div>
+                        <div class="gallery-item-meta">17-expenses-list</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="18-reports-1920x1080.png" alt="التقارير" onclick="openModal('18-reports-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">التقارير</div>
+                        <div class="gallery-item-meta">18-reports</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="18-reports-1366x768.png" alt="التقارير" onclick="openModal('18-reports-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">التقارير</div>
+                        <div class="gallery-item-meta">18-reports</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="18-reports-768x1024.png" alt="التقارير" onclick="openModal('18-reports-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">التقارير</div>
+                        <div class="gallery-item-meta">18-reports</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="18-reports-375x812.png" alt="التقارير" onclick="openModal('18-reports-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">التقارير</div>
+                        <div class="gallery-item-meta">18-reports</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Desktop">
+                    <img src="19-settings-1920x1080.png" alt="الإعدادات" onclick="openModal('19-settings-1920x1080.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">الإعدادات</div>
+                        <div class="gallery-item-meta">19-settings</div>
+                        <span class="viewport-badge">Desktop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Laptop">
+                    <img src="19-settings-1366x768.png" alt="الإعدادات" onclick="openModal('19-settings-1366x768.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">الإعدادات</div>
+                        <div class="gallery-item-meta">19-settings</div>
+                        <span class="viewport-badge">Laptop</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Tablet">
+                    <img src="19-settings-768x1024.png" alt="الإعدادات" onclick="openModal('19-settings-768x1024.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">الإعدادات</div>
+                        <div class="gallery-item-meta">19-settings</div>
+                        <span class="viewport-badge">Tablet</span>
+                    </div>
+                </div>
+            
+                <div class="gallery-item" data-viewport="Mobile">
+                    <img src="19-settings-375x812.png" alt="الإعدادات" onclick="openModal('19-settings-375x812.png')">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">الإعدادات</div>
+                        <div class="gallery-item-meta">19-settings</div>
+                        <span class="viewport-badge">Mobile</span>
+                    </div>
+                </div>
+            
+        </div>
+
+        <div class="stats">
+            <strong>76</strong> صورة تم التقاطها من
+            <strong>19</strong> صفحة مختلفة على
+            <strong>4</strong> أحجام شاشات
+        </div>
+    </div>
+
+    <div class="modal" id="modal" onclick="closeModal()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <img id="modalImage" src="" alt="">
+        </div>
+    </div>
+
+    <script>
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.gallery-item').forEach(item => {
+                    if (filter === 'all' || item.dataset.viewport === filter) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Modal functionality
+        function openModal(imageSrc) {
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('modalImage').src = imageSrc;
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

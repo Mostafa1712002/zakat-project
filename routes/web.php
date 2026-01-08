@@ -16,6 +16,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExpensePaymentMethodController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 // Authentication Routes
@@ -90,4 +91,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/invoices', [SettingController::class, 'invoices'])->name('invoices');
         Route::post('/invoices', [SettingController::class, 'updateInvoices'])->name('invoices.update');
     });
+
+    // Portfolio (معرض الأعمال)
+    Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio.index');
 });
