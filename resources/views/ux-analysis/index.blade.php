@@ -222,10 +222,4 @@
     @endforeach
 </div>
 
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px; border-radius: 16px; margin-top: 40px; text-align: center;">
-    <h3 style="font-size: 24px; margin-bottom: 12px;">🤖 تم إنشاء هذا التحليل بواسطة</h3>
-    <p style="font-size: 32px; font-weight: 700; margin: 0;">Google Gemini AI</p>
-    <p style="font-size: 16px; opacity: 0.9; margin-top: 8px;">تحليل احترافي شامل باللغة العربية</p>
-</div>
-
 @endsection
