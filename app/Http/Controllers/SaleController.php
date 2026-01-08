@@ -1,0 +1,406 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Sale;
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\Warehouse;
+use App\Models\Branch;
+use App\Models\SalesRep;
+use App\Models\SaleItem;
+use App\Models\StockMovement;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class SaleController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $sales = Sale::with(['customer', 'branch', 'warehouse', 'user'])
+            ->latest()
+            ->paginate(15);
+
+        return view('sales.index', compact('sales'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $customers = Customer::active()->get();
+        $products = Product::active()->with('unit')->get();
+        $warehouses = Warehouse::active()->get();
+        $branches = Branch::where('is_active', true)->get();
+        $salesReps = SalesRep::where('is_active', true)->get();
+
+        return view('sales.create', compact('customers', 'products', 'warehouses', 'branches', 'salesReps'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'branch_id' => 'nullable|exists:branches,id',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'sales_rep_id' => 'nullable|exists:sales_reps,id',
+            'invoice_date' => 'required|date',
+            'due_date' => 'nullable|date|after_or_equal:invoice_date',
+            'payment_type' => 'required|in:cash,credit',
+            'discount_type' => 'nullable|in:fixed,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
+            'shipping_amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string|max:50',
+            'purchase_order_number' => 'nullable|string|max:100',
+            'shipping_address' => 'nullable|string|max:500',
+            'notes' => 'nullable|string',
+            'terms' => 'nullable|string',
+            // Items validation
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.discount_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Create the sale
+            $sale = Sale::create([
+                'invoice_number' => Sale::generateInvoiceNumber(),
+                'customer_id' => $validated['customer_id'],
+                'branch_id' => $validated['branch_id'] ?? auth()->user()->branch_id,
+                'warehouse_id' => $validated['warehouse_id'],
+                'sales_rep_id' => $validated['sales_rep_id'],
+                'user_id' => auth()->id(),
+                'invoice_date' => $validated['invoice_date'],
+                'due_date' => $validated['due_date'],
+                'payment_type' => $validated['payment_type'],
+                'status' => Sale::STATUS_DRAFT,
+                'payment_status' => Sale::PAYMENT_STATUS_UNPAID,
+                'discount_type' => $validated['discount_type'] ?? 'fixed',
+                'discount_value' => $validated['discount_value'] ?? 0,
+                'shipping_amount' => $validated['shipping_amount'] ?? 0,
+                'payment_method' => $validated['payment_method'],
+                'purchase_order_number' => $validated['purchase_order_number'],
+                'shipping_address' => $validated['shipping_address'],
+                'notes' => $validated['notes'],
+                'terms' => $validated['terms'],
+            ]);
+
+            // Create sale items
+            foreach ($validated['items'] as $item) {
+                $product = Product::find($item['product_id']);
+
+                $subtotal = $item['quantity'] * $item['unit_price'];
+                $discount = $item['discount_amount'] ?? 0;
+                $taxAmount = $product->is_taxable ? ($subtotal - $discount) * ($product->tax_rate / 100) : 0;
+                $total = $subtotal - $discount + $taxAmount;
+
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'cost_price' => $product->cost_price,
+                    'discount_amount' => $discount,
+                    'tax_rate' => $product->is_taxable ? $product->tax_rate : 0,
+                    'tax_amount' => $taxAmount,
+                    'subtotal' => $subtotal,
+                    'total' => $total,
+                ]);
+            }
+
+            // Calculate totals
+            $sale->calculateTotals();
+            $sale->save();
+
+            DB::commit();
+
+            return redirect()->route('sales.show', $sale)
+                ->with('success', 'تم إنشاء الفاتورة بنجاح');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()
+                ->withInput()
+                ->with('error', 'حدث خطأ أثناء إنشاء الفاتورة: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Sale $sale)
+    {
+        $sale->load(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'items.product', 'payments']);
+
+        return view('sales.show', compact('sale'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Sale $sale)
+    {
+        // Only allow editing draft sales
+        if ($sale->status !== Sale::STATUS_DRAFT) {
+            return back()->with('error', 'لا يمكن تعديل فاتورة تم تأكيدها');
+        }
+
+        $sale->load('items.product');
+        $customers = Customer::active()->get();
+        $products = Product::active()->with('unit')->get();
+        $warehouses = Warehouse::active()->get();
+        $branches = Branch::where('is_active', true)->get();
+        $salesReps = SalesRep::where('is_active', true)->get();
+
+        return view('sales.edit', compact('sale', 'customers', 'products', 'warehouses', 'branches', 'salesReps'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Sale $sale)
+    {
+        // Only allow editing draft sales
+        if ($sale->status !== Sale::STATUS_DRAFT) {
+            return back()->with('error', 'لا يمكن تعديل فاتورة تم تأكيدها');
+        }
+
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'branch_id' => 'nullable|exists:branches,id',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'sales_rep_id' => 'nullable|exists:sales_reps,id',
+            'invoice_date' => 'required|date',
+            'due_date' => 'nullable|date|after_or_equal:invoice_date',
+            'payment_type' => 'required|in:cash,credit',
+            'discount_type' => 'nullable|in:fixed,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
+            'shipping_amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string|max:50',
+            'purchase_order_number' => 'nullable|string|max:100',
+            'shipping_address' => 'nullable|string|max:500',
+            'notes' => 'nullable|string',
+            'terms' => 'nullable|string',
+            // Items validation
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.discount_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Update the sale
+            $sale->update([
+                'customer_id' => $validated['customer_id'],
+                'branch_id' => $validated['branch_id'] ?? auth()->user()->branch_id,
+                'warehouse_id' => $validated['warehouse_id'],
+                'sales_rep_id' => $validated['sales_rep_id'],
+                'invoice_date' => $validated['invoice_date'],
+                'due_date' => $validated['due_date'],
+                'payment_type' => $validated['payment_type'],
+                'discount_type' => $validated['discount_type'] ?? 'fixed',
+                'discount_value' => $validated['discount_value'] ?? 0,
+                'shipping_amount' => $validated['shipping_amount'] ?? 0,
+                'payment_method' => $validated['payment_method'],
+                'purchase_order_number' => $validated['purchase_order_number'],
+                'shipping_address' => $validated['shipping_address'],
+                'notes' => $validated['notes'],
+                'terms' => $validated['terms'],
+            ]);
+
+            // Delete existing items and recreate
+            $sale->items()->delete();
+
+            foreach ($validated['items'] as $item) {
+                $product = Product::find($item['product_id']);
+
+                $subtotal = $item['quantity'] * $item['unit_price'];
+                $discount = $item['discount_amount'] ?? 0;
+                $taxAmount = $product->is_taxable ? ($subtotal - $discount) * ($product->tax_rate / 100) : 0;
+                $total = $subtotal - $discount + $taxAmount;
+
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'cost_price' => $product->cost_price,
+                    'discount_amount' => $discount,
+                    'tax_rate' => $product->is_taxable ? $product->tax_rate : 0,
+                    'tax_amount' => $taxAmount,
+                    'subtotal' => $subtotal,
+                    'total' => $total,
+                ]);
+            }
+
+            // Recalculate totals
+            $sale->calculateTotals();
+            $sale->save();
+
+            DB::commit();
+
+            return redirect()->route('sales.show', $sale)
+                ->with('success', 'تم تحديث الفاتورة بنجاح');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()
+                ->withInput()
+                ->with('error', 'حدث خطأ أثناء تحديث الفاتورة: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Sale $sale)
+    {
+        // Only allow deleting draft sales
+        if ($sale->status !== Sale::STATUS_DRAFT) {
+            return back()->with('error', 'لا يمكن حذف فاتورة تم تأكيدها');
+        }
+
+        // Check if sale has payments
+        if ($sale->paid_amount > 0) {
+            return back()->with('error', 'لا يمكن حذف فاتورة تم دفع جزء منها');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Delete sale items
+            $sale->items()->delete();
+
+            // Delete the sale
+            $sale->delete();
+
+            DB::commit();
+
+            return redirect()->route('sales.index')
+                ->with('success', 'تم حذف الفاتورة بنجاح');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'حدث خطأ أثناء حذف الفاتورة: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Confirm a sale and deduct inventory.
+     */
+    public function confirm(Sale $sale)
+    {
+        if ($sale->status !== Sale::STATUS_DRAFT) {
+            return back()->with('error', 'هذه الفاتورة تم تأكيدها مسبقاً');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Deduct inventory for each item
+            foreach ($sale->items as $item) {
+                StockMovement::recordMovement([
+                    'product_id' => $item->product_id,
+                    'warehouse_id' => $sale->warehouse_id,
+                    'type' => StockMovement::TYPE_OUT,
+                    'quantity' => $item->quantity,
+                    'unit_cost' => $item->cost_price,
+                    'reference_type' => Sale::class,
+                    'reference_id' => $sale->id,
+                    'reference_number' => $sale->invoice_number,
+                    'user_id' => auth()->id(),
+                    'reason' => 'بيع',
+                ]);
+            }
+
+            // Update sale status
+            $sale->update(['status' => Sale::STATUS_CONFIRMED]);
+
+            // Update customer balance if credit sale
+            if ($sale->payment_type === 'credit') {
+                $sale->customer->updateBalance($sale->total_amount);
+            }
+
+            DB::commit();
+
+            return redirect()->route('sales.show', $sale)
+                ->with('success', 'تم تأكيد الفاتورة بنجاح');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'حدث خطأ أثناء تأكيد الفاتورة: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cancel a sale.
+     */
+    public function cancel(Sale $sale)
+    {
+        if ($sale->status === Sale::STATUS_CANCELLED) {
+            return back()->with('error', 'هذه الفاتورة ملغاة مسبقاً');
+        }
+
+        if ($sale->paid_amount > 0) {
+            return back()->with('error', 'لا يمكن إلغاء فاتورة تم دفع جزء منها');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // If sale was confirmed, return inventory
+            if ($sale->status === Sale::STATUS_CONFIRMED) {
+                foreach ($sale->items as $item) {
+                    StockMovement::recordMovement([
+                        'product_id' => $item->product_id,
+                        'warehouse_id' => $sale->warehouse_id,
+                        'type' => StockMovement::TYPE_RETURN,
+                        'quantity' => $item->quantity,
+                        'unit_cost' => $item->cost_price,
+                        'reference_type' => Sale::class,
+                        'reference_id' => $sale->id,
+                        'reference_number' => $sale->invoice_number,
+                        'user_id' => auth()->id(),
+                        'reason' => 'إلغاء فاتورة',
+                    ]);
+                }
+
+                // Reverse customer balance if credit sale
+                if ($sale->payment_type === 'credit') {
+                    $sale->customer->updateBalance(-$sale->total_amount);
+                }
+            }
+
+            // Update sale status
+            $sale->update(['status' => Sale::STATUS_CANCELLED]);
+
+            DB::commit();
+
+            return redirect()->route('sales.show', $sale)
+                ->with('success', 'تم إلغاء الفاتورة بنجاح');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'حدث خطأ أثناء إلغاء الفاتورة: ' . $e->getMessage());
+        }
+    }
+}
