@@ -440,6 +440,7 @@
                 <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><span class="nav-icon">📈</span> التقارير</a></li>
                 <li><a href="{{ route('settings.index') }}" class="{{ request()->routeIs('settings.*') ? 'active' : '' }}"><span class="nav-icon">⚙️</span> الإعدادات</a></li>
                 <li><a href="{{ route('portfolio.index') }}" class="{{ request()->routeIs('portfolio.*') ? 'active' : '' }}"><span class="nav-icon">📸</span> معرض الأعمال</a></li>
+                <li><a href="{{ route('ux-analysis.index') }}" class="{{ request()->routeIs('ux-analysis.*') ? 'active' : '' }}"><span class="nav-icon">🎨</span> تحليل UX</a></li>
             </ul>
 
             <div class="sidebar-footer">

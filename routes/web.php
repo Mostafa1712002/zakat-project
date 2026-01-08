@@ -17,6 +17,7 @@ use App\Http\Controllers\ExpensePaymentMethodController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\UxAnalysisController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 // Authentication Routes
@@ -94,4 +95,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Portfolio (معرض الأعمال)
     Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio.index');
+
+    // UX Analysis (تحليل تجربة المستخدم)
+    Route::get('/ux-analysis', [UxAnalysisController::class, 'index'])->name('ux-analysis.index');
+    Route::get('/ux-analysis/{module}', [UxAnalysisController::class, 'show'])->name('ux-analysis.show');
 });
