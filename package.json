@@ -1,10 +1,13 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
     "private": true,
-    "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "gallery": "node scripts/create-gallery.js",
+        "video": "node scripts/create-video.js",
+        "enhance": "node scripts/enhance-with-gemini.js",
+        "gallery:full": "npm run gallery && npm run video && npm run enhance"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
