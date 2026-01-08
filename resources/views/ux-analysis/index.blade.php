@@ -5,8 +5,8 @@
 @section('content')
 <div class="page-header">
     <div>
-        <h1>🎨 تحليل تجربة المستخدم (UX Analysis)</h1>
-        <p>تحليل شامل لكل وحدات النظام باستخدام Google Gemini AI</p>
+        <h1>🎨 تحليل تجربة المستخدم</h1>
+        <p>تحليل شامل لكل وحدات النظام باستخدام الذكاء الاصطناعي</p>
     </div>
 </div>
 
@@ -170,7 +170,7 @@
             <div class="ux-title">{{ $documentation['crud-guide']['name'] }}</div>
         </div>
         <div class="ux-description">
-            شرح مفصل لعمليات Create, Read, Update, Delete مع أمثلة عملية ومخططات تدفق
+            شرح مفصل لعمليات الإنشاء، القراءة، التعديل، والحذف مع أمثلة عملية ومخططات تدفق
         </div>
         <div class="ux-meta">
             <span>📝 13KB</span>
@@ -211,11 +211,11 @@
             <div class="ux-title">{{ $analysis['name'] }}</div>
         </div>
         <div class="ux-description">
-            تحليل شامل لواجهة المستخدم، تدفق التجربة، عمليات CRUD، نقاط القوة والتحسينات
+            تحليل شامل لواجهة المستخدم، تدفق التجربة، عمليات الإضافة والتعديل والحذف، نقاط القوة والتحسينات
         </div>
         <div class="ux-meta">
-            <span>🎨 UI/UX</span>
-            <span>🔄 CRUD</span>
+            <span>🎨 واجهة المستخدم</span>
+            <span>🔄 العمليات</span>
             <span>📈 مخططات</span>
         </div>
     </a>

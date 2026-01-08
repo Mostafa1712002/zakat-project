@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $title . ' - تحليل UX')
+@section('title', $title . ' - تحليل تجربة المستخدم')
 
 @section('content')
 <div class="page-header">
@@ -206,7 +206,7 @@
         <ul>
             <li><a href="#ui-analysis">🎨 تحليل واجهة المستخدم</a></li>
             <li><a href="#user-flow">🔄 تدفق تجربة المستخدم</a></li>
-            <li><a href="#crud-operations">⚙️ عمليات CRUD</a></li>
+            <li><a href="#crud-operations">⚙️ عمليات العمليات الأساسية</a></li>
             <li><a href="#strengths">💪 نقاط القوة</a></li>
             <li><a href="#improvements">🚀 نقاط التحسين</a></li>
             <li><a href="#diagrams">📊 المخططات التوضيحية</a></li>
@@ -217,10 +217,10 @@
         {!! \Illuminate\Support\Str::markdown($content) !!}
     </div>
 
-    <!-- CRUD Flow Diagram -->
+    <!-- العمليات الأساسية Flow Diagram -->
     <div class="diagram-section" id="diagrams">
         <div class="diagram-title">
-            📊 مخطط تدفق عمليات CRUD
+            📊 مخطط تدفق عمليات العمليات الأساسية
         </div>
         <div class="mermaid">
 graph TD
@@ -276,7 +276,7 @@ graph TD
         </div>
         <div class="mermaid">
 journey
-    title رحلة المستخدم في نظام CRM
+    title رحلة المستخدم في نظام إدارة علاقات العملاء
     section تسجيل الدخول
       فتح الصفحة: 5: المستخدم
       إدخال البيانات: 4: المستخدم
@@ -301,28 +301,28 @@ journey
     @if($module === 'architecture' || $module === 'crud-guide')
     <div class="diagram-section">
         <div class="diagram-title">
-            🏗️ معمارية النظام (System Architecture)
+            🏗️ معمارية النظام
         </div>
         <div class="mermaid">
 graph TB
-    subgraph "طبقة العرض - Presentation Layer"
-        A[المتصفح - Browser]
-        B[Blade Templates]
-        C[Alpine.js]
-        D[Tailwind CSS]
+    subgraph "طبقة العرض"
+        A[المتصفح]
+        B[قوالب العرض]
+        C[الجافاسكربت]
+        D[التنسيقات]
     end
 
-    subgraph "طبقة المنطق - Business Logic"
-        E[Routes]
-        F[Controllers]
-        G[Models]
-        H[Validation]
+    subgraph "طبقة المنطق"
+        E[المسارات]
+        F[المتحكمات]
+        G[النماذج]
+        H[التحقق]
     end
 
-    subgraph "طبقة البيانات - Data Layer"
-        I[SQLite Database]
-        J[Migrations]
-        K[Seeders]
+    subgraph "طبقة البيانات"
+        I[قاعدة البيانات]
+        J[الهجرات]
+        K[البيانات الأولية]
     end
 
     A --> B
@@ -350,53 +350,53 @@ graph TB
         </div>
         <div class="mermaid">
 erDiagram
-    CUSTOMERS ||--o{ INVOICES : "لديه"
-    CUSTOMERS {
-        int id
-        string name
-        string phone
-        string email
-        string address
+    العملاء ||--o{ الفواتير : "لديه"
+    العملاء {
+        رقم المعرف
+        نص الاسم
+        نص الهاتف
+        نص البريد_الإلكتروني
+        نص العنوان
     }
 
-    INVOICES ||--|{ INVOICE_ITEMS : "يحتوي"
-    INVOICES {
-        int id
-        int customer_id
-        string invoice_number
-        date date
-        decimal total
-        string payment_status
+    الفواتير ||--|{ بنود_الفاتورة : "يحتوي"
+    الفواتير {
+        رقم المعرف
+        رقم معرف_العميل
+        نص رقم_الفاتورة
+        تاريخ التاريخ
+        عشري الإجمالي
+        نص حالة_الدفع
     }
 
-    PRODUCTS ||--o{ INVOICE_ITEMS : "في"
-    PRODUCTS {
-        int id
-        string name
-        string barcode
-        decimal price
-        int quantity
+    المنتجات ||--o{ بنود_الفاتورة : "في"
+    المنتجات {
+        رقم المعرف
+        نص الاسم
+        نص الباركود
+        عشري السعر
+        رقم الكمية
     }
 
-    PRODUCTS }|--|| CATEGORIES : "ينتمي"
-    CATEGORIES {
-        int id
-        string name
+    المنتجات }|--|| الأقسام : "ينتمي"
+    الأقسام {
+        رقم المعرف
+        نص الاسم
     }
 
-    WAREHOUSES ||--o{ INVENTORY : "يخزن"
-    WAREHOUSES {
-        int id
-        string name
-        string location
+    المخازن ||--o{ المخزون : "يخزن"
+    المخازن {
+        رقم المعرف
+        نص الاسم
+        نص الموقع
     }
 
-    PRODUCTS ||--o{ INVENTORY : "مخزن في"
-    INVENTORY {
-        int id
-        int product_id
-        int warehouse_id
-        int quantity
+    المنتجات ||--o{ المخزون : "مخزن في"
+    المخزون {
+        رقم المعرف
+        رقم معرف_المنتج
+        رقم معرف_المخزن
+        رقم الكمية
     }
         </div>
     </div>
