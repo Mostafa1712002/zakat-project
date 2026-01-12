@@ -2,59 +2,49 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): View
+    public function index()
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
+        return view('profile.index', [
+            'user' => auth()->user()
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request)
     {
-        $request->user()->fill($request->validated());
+        $user = auth()->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $user = $request->user();
+        $user->update($validated);
 
-        Auth::logout();
+        return back()->with('success', 'تم تحديث البيانات بنجاح');
+    }
 
-        $user->delete();
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ], [
+            'current_password.current_password' => 'كلمة المرور الحالية غير صحيحة',
+            'password.confirmed' => 'كلمة المرور الجديدة غير متطابقة',
+            'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
+        ]);
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        auth()->user()->update([
+            'password' => Hash::make($validated['password'])
+        ]);
 
-        return Redirect::to('/');
+        return back()->with('success', 'تم تغيير كلمة المرور بنجاح');
     }
 }

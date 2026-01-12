@@ -447,7 +447,13 @@
             </ul>
 
             <div class="sidebar-footer">
-                <button class="logout-btn">🚪 تسجيل الخروج</button>
+                <a href="{{ route('profile.index') }}" class="profile-btn" style="display: block; text-align: center; padding: 10px; margin-bottom: 10px; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #93c5fd; text-decoration: none;">
+                    👤 {{ auth()->user()->name ?? 'الملف الشخصي' }}
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="logout-btn">🚪 تسجيل الخروج</button>
+                </form>
             </div>
         </aside>
 

@@ -19,6 +19,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\UxAnalysisController;
 use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 // Authentication Routes
@@ -92,6 +93,13 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/users/{user}', [SettingController::class, 'destroyUser'])->name('users.destroy');
         Route::get('/invoices', [SettingController::class, 'invoices'])->name('invoices');
         Route::post('/invoices', [SettingController::class, 'updateInvoices'])->name('invoices.update');
+    });
+
+    // Profile (الملف الشخصي)
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('index');
+        Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password');
     });
 
     // Portfolio (معرض الأعمال)
