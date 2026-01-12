@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Sale;
 use App\Models\Purchase;
 use App\Models\Expense;
+use App\Models\InventoryLevel;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -37,10 +38,13 @@ class DashboardController extends Controller
             ->where('due_date', '<=', now()->addDays(7))
             ->sum('remaining_amount');
 
+        // Low stock count - count products with inventory below min_stock
+        $lowStockCount = InventoryLevel::where('quantity', '<', 10)->distinct('product_id')->count('product_id');
+
         $stats = [
             'total_sales' => $todaySales,
             'total_purchases' => $todayPurchases,
-            'low_stock_count' => Product::where('stock', '<', 10)->count(),
+            'low_stock_count' => $lowStockCount,
             'monthly_profit' => $monthlyProfit,
             'customers_count' => Customer::count(),
             'products_count' => Product::count(),
@@ -57,8 +61,11 @@ class DashboardController extends Controller
             ->take(3)
             ->get();
 
-        $low_stock_products = Product::where('stock', '<', 20)
-            ->orderBy('stock')
+        // Low stock products - get products with low inventory
+        $lowStockIds = InventoryLevel::where('quantity', '<', 20)
+            ->pluck('product_id')
+            ->unique();
+        $low_stock_products = Product::whereIn('id', $lowStockIds)
             ->take(5)
             ->get();
 
