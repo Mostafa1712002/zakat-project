@@ -18,6 +18,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\UxAnalysisController;
+use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 // Authentication Routes
@@ -99,4 +100,17 @@ Route::middleware(['auth'])->group(function () {
     // UX Analysis (تحليل تجربة المستخدم)
     Route::get('/ux-analysis', [UxAnalysisController::class, 'index'])->name('ux-analysis.index');
     Route::get('/ux-analysis/{module}', [UxAnalysisController::class, 'show'])->name('ux-analysis.show');
+
+    // Features Management (إدارة المميزات) - Super Admin Only
+    Route::middleware(['super_admin'])->prefix('features')->name('features.')->group(function () {
+        Route::get('/', [FeatureController::class, 'index'])->name('index');
+        Route::get('/create', [FeatureController::class, 'create'])->name('create');
+        Route::post('/', [FeatureController::class, 'store'])->name('store');
+        Route::get('/{feature}/edit', [FeatureController::class, 'edit'])->name('edit');
+        Route::put('/{feature}', [FeatureController::class, 'update'])->name('update');
+        Route::delete('/{feature}', [FeatureController::class, 'destroy'])->name('destroy');
+        Route::post('/{feature}/toggle', [FeatureController::class, 'toggle'])->name('toggle');
+        Route::post('/enable-all', [FeatureController::class, 'enableAll'])->name('enable-all');
+        Route::post('/disable-all', [FeatureController::class, 'disableAll'])->name('disable-all');
+    });
 });

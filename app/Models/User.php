@@ -20,7 +20,16 @@ class User extends Authenticatable
         'branch_id',
         'phone',
         'is_active',
+        'is_super_admin',
     ];
+
+    /**
+     * التحقق من كون المستخدم مسؤول أعلى
+     */
+    public function isSuperAdmin(): bool
+    {
+        return (bool) $this->is_super_admin;
+    }
 
     public function branch(): BelongsTo
     {

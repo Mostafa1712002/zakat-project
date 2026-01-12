@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: [
             env('SESSION_COOKIE', 'crm-session'),
         ]);
+
+        $middleware->alias([
+            'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'feature' => \App\Http\Middleware\CheckFeatureMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
