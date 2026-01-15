@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Auditable;
+use App\Traits\SalesRepScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Sale extends Model
 {
-    use HasFactory, SoftDeletes, Auditable;
+    use HasFactory, SoftDeletes, Auditable, SalesRepScope;
 
     public const STATUS_DRAFT = 'draft';
     public const STATUS_CONFIRMED = 'confirmed';

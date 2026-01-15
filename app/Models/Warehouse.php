@@ -6,6 +6,7 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -86,5 +87,15 @@ class Warehouse extends Model
         return $this->inventoryLevels()
             ->join('products', 'products.id', '=', 'inventory_levels.product_id')
             ->sum(\DB::raw('inventory_levels.quantity * products.cost_price'));
+    }
+
+    /**
+     * المندوبين المرتبطين بالمخزن
+     */
+    public function salesReps(): BelongsToMany
+    {
+        return $this->belongsToMany(SalesRep::class, 'sales_rep_warehouse')
+            ->withPivot('is_default')
+            ->withTimestamps();
     }
 }

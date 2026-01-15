@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Warehouse;
 use App\Models\InventoryLevel;
 use App\Models\StockMovement;
+use App\Models\SalesRep;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -360,6 +361,131 @@ class ReportController extends Controller
             'summaryByType',
             'warehouses',
             'products'
+        ));
+    }
+
+    /**
+     * عرض تقرير أداء جميع المندوبين
+     */
+    public function salesRepsPerformance(Request $request)
+    {
+        $startDate = $request->get('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', Carbon::now()->format('Y-m-d'));
+
+        // الحصول على جميع المندوبين مع إحصائياتهم
+        $salesReps = SalesRep::with(['user', 'branch'])
+            ->withCount(['customers', 'sales' => function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('invoice_date', [$startDate, $endDate]);
+            }])
+            ->withSum(['sales' => function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('invoice_date', [$startDate, $endDate])
+                    ->where('status', '!=', Sale::STATUS_CANCELLED);
+            }], 'total_amount')
+            ->withSum(['payments' => function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('payment_date', [$startDate, $endDate])
+                    ->where('status', 'completed');
+            }], 'amount')
+            ->orderByDesc('sales_sum_total_amount')
+            ->get();
+
+        // إحصائيات عامة
+        $totalSalesReps = $salesReps->count();
+        $activeSalesReps = $salesReps->where('sales_count', '>', 0)->count();
+        $totalSales = $salesReps->sum('sales_sum_total_amount');
+        $totalCollections = $salesReps->sum('payments_sum_amount');
+        $totalCustomers = $salesReps->sum('customers_count');
+
+        // أفضل المندوبين
+        $topSalesReps = $salesReps->take(5);
+
+        return view('reports.sales-reps-performance', compact(
+            'startDate',
+            'endDate',
+            'salesReps',
+            'totalSalesReps',
+            'activeSalesReps',
+            'totalSales',
+            'totalCollections',
+            'totalCustomers',
+            'topSalesReps'
+        ));
+    }
+
+    /**
+     * عرض تقرير تفصيلي لمندوب محدد
+     */
+    public function salesRepDetail(Request $request, SalesRep $salesRep)
+    {
+        $year = $request->get('year', Carbon::now()->year);
+
+        // تحميل العلاقات
+        $salesRep->load(['user', 'branch', 'warehouses']);
+
+        // إحصائيات شهرية
+        $monthlySales = collect();
+        for ($i = 1; $i <= 12; $i++) {
+            $start = Carbon::create($year, $i, 1)->startOfMonth();
+            $end = Carbon::create($year, $i, 1)->endOfMonth();
+
+            $monthlySales->push([
+                'month' => $i,
+                'month_name' => $start->translatedFormat('F'),
+                'sales' => $salesRep->sales()
+                    ->whereBetween('invoice_date', [$start, $end])
+                    ->where('status', '!=', Sale::STATUS_CANCELLED)
+                    ->sum('total_amount'),
+                'collections' => $salesRep->payments()
+                    ->whereBetween('payment_date', [$start, $end])
+                    ->where('status', 'completed')
+                    ->sum('amount'),
+                'invoices_count' => $salesRep->sales()
+                    ->whereBetween('invoice_date', [$start, $end])
+                    ->count(),
+                'new_customers' => $salesRep->customers()
+                    ->whereBetween('created_at', [$start, $end])
+                    ->count(),
+            ]);
+        }
+
+        // أفضل العملاء
+        $topCustomers = $salesRep->customers()
+            ->withSum(['sales' => function ($q) use ($year) {
+                $q->whereYear('invoice_date', $year)
+                    ->where('status', '!=', Sale::STATUS_CANCELLED);
+            }], 'total_amount')
+            ->orderByDesc('sales_sum_total_amount')
+            ->limit(10)
+            ->get();
+
+        // آخر الفواتير
+        $recentSales = $salesRep->sales()
+            ->with('customer')
+            ->latest('invoice_date')
+            ->limit(10)
+            ->get();
+
+        // نسبة التحصيل
+        $totalSalesAmount = $monthlySales->sum('sales');
+        $totalCollectionsAmount = $monthlySales->sum('collections');
+        $collectionRate = $totalSalesAmount > 0
+            ? ($totalCollectionsAmount / $totalSalesAmount) * 100
+            : 0;
+
+        // تحقيق الهدف
+        $targetAchievement = $salesRep->sales_target > 0
+            ? ($totalSalesAmount / $salesRep->sales_target) * 100
+            : 0;
+
+        return view('reports.sales-rep-detail', compact(
+            'salesRep',
+            'year',
+            'monthlySales',
+            'topCustomers',
+            'recentSales',
+            'totalSalesAmount',
+            'totalCollectionsAmount',
+            'collectionRate',
+            'targetAchievement'
         ));
     }
 }

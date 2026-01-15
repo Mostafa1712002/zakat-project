@@ -21,6 +21,8 @@ use App\Http\Controllers\UxAnalysisController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\SalesRepDashboardController;
+use App\Http\Controllers\PaymentController;
 
 // Authentication Routes
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('guest');
@@ -40,6 +42,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Customers (العملاء)
     Route::resource('customers', CustomerController::class);
+    Route::get('customers/{customer}/collect', [PaymentController::class, 'showCollectFromCustomer'])->name('customers.collect.form');
+    Route::post('customers/{customer}/collect', [PaymentController::class, 'collectFromCustomer'])->name('customers.collect');
 
     // Sales Representatives (المندوبين)
     Route::resource('sales-reps', SalesRepController::class);
@@ -61,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Suppliers (الموردين)
     Route::resource('suppliers', SupplierController::class);
+    Route::get('suppliers/{supplier}/pay', [PaymentController::class, 'showPayToSupplier'])->name('suppliers.pay.form');
+    Route::post('suppliers/{supplier}/pay', [PaymentController::class, 'payToSupplier'])->name('suppliers.pay');
 
     // Employees (الموظفين)
     Route::resource('employees', EmployeeController::class);
@@ -70,6 +76,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('expense-payment-methods', ExpensePaymentMethodController::class)
         ->except(['show']);
 
+    // Payments (التحصيلات والمدفوعات)
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+
     // Reports (التقارير)
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
@@ -78,6 +88,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
         Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
         Route::get('/stock-movements', [ReportController::class, 'stockMovements'])->name('stock-movements');
+        Route::get('/sales-reps', [ReportController::class, 'salesRepsPerformance'])->name('sales-reps');
+        Route::get('/sales-reps/{salesRep}', [ReportController::class, 'salesRepDetail'])->name('sales-rep-detail');
     });
 
     // Settings (الإعدادات)
@@ -100,6 +112,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('index');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password');
+    });
+
+    // Sales Rep Dashboard (لوحة تحكم المندوب)
+    Route::prefix('my-dashboard')->name('sales-rep.')->group(function () {
+        Route::get('/', [SalesRepDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/customers', [SalesRepDashboardController::class, 'customers'])->name('customers');
+        Route::get('/sales', [SalesRepDashboardController::class, 'sales'])->name('sales');
+        Route::get('/collections', [SalesRepDashboardController::class, 'collections'])->name('collections');
+        Route::get('/reports', [SalesRepDashboardController::class, 'reports'])->name('reports');
     });
 
     // Portfolio (معرض الأعمال)

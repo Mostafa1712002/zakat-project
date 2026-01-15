@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Auditable;
+use App\Traits\SalesRepScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
-    use HasFactory, SoftDeletes, Auditable;
+    use HasFactory, SoftDeletes, Auditable, SalesRepScope;
 
     public const TYPE_RECEIVED = 'received';
     public const TYPE_PAID = 'paid';
@@ -42,6 +43,7 @@ class Payment extends Model
         'bank_account',
         'branch_id',
         'user_id',
+        'sales_rep_id',
         'status',
         'notes',
     ];
@@ -65,6 +67,14 @@ class Payment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * المندوب الذي قام بالتحصيل
+     */
+    public function salesRep(): BelongsTo
+    {
+        return $this->belongsTo(SalesRep::class);
     }
 
     public function scopeReceived($query)

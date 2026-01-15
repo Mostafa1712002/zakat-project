@@ -6,6 +6,7 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -102,5 +103,48 @@ class SalesRep extends Model
     public function hasMetTarget(): bool
     {
         return $this->total_sales >= $this->sales_target;
+    }
+
+    /**
+     * المخازن المرتبطة بالمندوب
+     */
+    public function warehouses(): BelongsToMany
+    {
+        return $this->belongsToMany(Warehouse::class, 'sales_rep_warehouse')
+            ->withPivot('is_default')
+            ->withTimestamps();
+    }
+
+    /**
+     * الحصول على المخزن الافتراضي للمندوب
+     */
+    public function getDefaultWarehouseAttribute(): ?Warehouse
+    {
+        return $this->warehouses()->wherePivot('is_default', true)->first();
+    }
+
+    /**
+     * التحصيلات التي قام بها المندوب
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * الحصول على المندوب المرتبط بالمستخدم الحالي
+     */
+    public static function forUser(?User $user): ?SalesRep
+    {
+        if (!$user) return null;
+        return self::where('user_id', $user->id)->first();
+    }
+
+    /**
+     * الحصول على المندوب للمستخدم الحالي
+     */
+    public static function current(): ?SalesRep
+    {
+        return self::forUser(auth()->user());
     }
 }

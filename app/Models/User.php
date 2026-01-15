@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -39,6 +40,30 @@ class User extends Authenticatable
     public function sales(): HasMany
     {
         return $this->hasMany(Sale::class);
+    }
+
+    /**
+     * المندوب المرتبط بالمستخدم
+     */
+    public function salesRep(): HasOne
+    {
+        return $this->hasOne(SalesRep::class);
+    }
+
+    /**
+     * التحقق من كون المستخدم مندوب مبيعات
+     */
+    public function isSalesRep(): bool
+    {
+        return $this->salesRep()->exists() || $this->hasRole('sales_rep');
+    }
+
+    /**
+     * الحصول على معرف المندوب
+     */
+    public function getSalesRepIdAttribute(): ?int
+    {
+        return $this->salesRep?->id;
     }
 
     /**

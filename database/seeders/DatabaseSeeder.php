@@ -52,6 +52,12 @@ class DatabaseSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'approve_returns']);
         Permission::firstOrCreate(['name' => 'view_financial_reports']);
         Permission::firstOrCreate(['name' => 'export_data']);
+
+        // Sales Rep specific permissions
+        Permission::firstOrCreate(['name' => 'collect_customer_payments']);
+        Permission::firstOrCreate(['name' => 'view_own_reports']);
+        Permission::firstOrCreate(['name' => 'view_all_sales_reps_reports']);
+        Permission::firstOrCreate(['name' => 'pay_suppliers']);
     }
 
     private function createRoles(): void
@@ -75,16 +81,17 @@ class DatabaseSeeder extends Seeder
             'view_suppliers', 'view_employees', 'view_sales_reps',
             'view_sales', 'create_sales', 'edit_sales',
             'view_purchases', 'create_purchases', 'edit_purchases',
-            'view_payments', 'create_payments',
+            'view_payments', 'create_payments', 'pay_suppliers',
             'view_expenses', 'create_expenses', 'approve_expenses',
-            'view_inventory', 'view_reports'
+            'view_inventory', 'view_reports', 'view_all_sales_reps_reports'
         ])->get());
 
         // Sales Rep
         $salesRep = Role::firstOrCreate(['name' => 'sales_rep']);
         $salesRep->syncPermissions(Permission::whereIn('name', [
-            'view_products', 'view_customers', 'create_customers',
-            'view_sales', 'create_sales', 'view_inventory'
+            'view_products', 'view_customers', 'create_customers', 'edit_customers',
+            'view_sales', 'create_sales', 'edit_sales', 'view_inventory',
+            'collect_customer_payments', 'view_own_reports', 'view_payments', 'create_payments'
         ])->get());
 
         // Accountant
@@ -92,7 +99,7 @@ class DatabaseSeeder extends Seeder
         $accountant->syncPermissions(Permission::whereIn('name', [
             'view_sales', 'view_purchases', 'view_payments', 'create_payments',
             'view_expenses', 'create_expenses', 'view_reports',
-            'view_financial_reports', 'export_data'
+            'view_financial_reports', 'export_data', 'pay_suppliers', 'view_all_sales_reps_reports'
         ])->get());
 
         // Warehouse Keeper

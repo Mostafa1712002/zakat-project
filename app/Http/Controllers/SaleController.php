@@ -20,7 +20,8 @@ class SaleController extends Controller
      */
     public function index()
     {
-        $sales = Sale::with(['customer', 'branch', 'warehouse', 'user'])
+        $sales = Sale::with(['customer', 'branch', 'warehouse', 'user', 'salesRep'])
+            ->forSalesRep()
             ->latest()
             ->paginate(15);
 
@@ -32,13 +33,26 @@ class SaleController extends Controller
      */
     public function create()
     {
-        $customers = Customer::active()->get();
+        $user = auth()->user();
         $products = Product::active()->with('unit')->get();
-        $warehouses = Warehouse::active()->get();
         $branches = Branch::where('is_active', true)->get();
-        $salesReps = SalesRep::where('is_active', true)->get();
 
-        return view('sales.create', compact('customers', 'products', 'warehouses', 'branches', 'salesReps'));
+        // إذا كان المستخدم مندوب مبيعات
+        if ($user->isSalesRep() && $user->salesRep) {
+            $salesRep = $user->salesRep;
+            // المندوب يرى فقط عملائه والمخازن المرتبطة به
+            $customers = Customer::forSalesRep($salesRep->id)->active()->get();
+            $warehouses = $salesRep->warehouses()->where('is_active', true)->get();
+            $salesReps = collect(); // لا يرى قائمة المندوبين
+            $currentSalesRep = $salesRep;
+        } else {
+            $customers = Customer::active()->get();
+            $warehouses = Warehouse::active()->get();
+            $salesReps = SalesRep::where('is_active', true)->get();
+            $currentSalesRep = null;
+        }
+
+        return view('sales.create', compact('customers', 'products', 'warehouses', 'branches', 'salesReps', 'currentSalesRep'));
     }
 
     /**
@@ -73,13 +87,20 @@ class SaleController extends Controller
         DB::beginTransaction();
 
         try {
+            // تعيين المندوب تلقائياً إذا كان المستخدم مندوب
+            $user = auth()->user();
+            $salesRepId = $validated['sales_rep_id'] ?? null;
+            if ($user->isSalesRep() && $user->salesRep) {
+                $salesRepId = $user->salesRep->id;
+            }
+
             // Create the sale
             $sale = Sale::create([
                 'invoice_number' => Sale::generateInvoiceNumber(),
                 'customer_id' => $validated['customer_id'],
                 'branch_id' => $validated['branch_id'] ?? auth()->user()->branch_id,
                 'warehouse_id' => $validated['warehouse_id'],
-                'sales_rep_id' => $validated['sales_rep_id'],
+                'sales_rep_id' => $salesRepId,
                 'user_id' => auth()->id(),
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $validated['due_date'],
@@ -142,6 +163,11 @@ class SaleController extends Controller
      */
     public function show(Sale $sale)
     {
+        // التحقق من صلاحية الوصول
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
+        }
+
         $sale->load(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'items.product', 'payments']);
 
         return view('sales.show', compact('sale'));
@@ -152,17 +178,32 @@ class SaleController extends Controller
      */
     public function edit(Sale $sale)
     {
+        // التحقق من صلاحية الوصول
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
+        }
+
         // Only allow editing draft sales
         if ($sale->status !== Sale::STATUS_DRAFT) {
             return back()->with('error', 'لا يمكن تعديل فاتورة تم تأكيدها');
         }
 
+        $user = auth()->user();
         $sale->load('items.product');
-        $customers = Customer::active()->get();
         $products = Product::active()->with('unit')->get();
-        $warehouses = Warehouse::active()->get();
         $branches = Branch::where('is_active', true)->get();
-        $salesReps = SalesRep::where('is_active', true)->get();
+
+        // إذا كان المستخدم مندوب مبيعات
+        if ($user->isSalesRep() && $user->salesRep) {
+            $salesRep = $user->salesRep;
+            $customers = Customer::forSalesRep($salesRep->id)->active()->get();
+            $warehouses = $salesRep->warehouses()->where('is_active', true)->get();
+            $salesReps = collect();
+        } else {
+            $customers = Customer::active()->get();
+            $warehouses = Warehouse::active()->get();
+            $salesReps = SalesRep::where('is_active', true)->get();
+        }
 
         return view('sales.edit', compact('sale', 'customers', 'products', 'warehouses', 'branches', 'salesReps'));
     }
@@ -172,6 +213,11 @@ class SaleController extends Controller
      */
     public function update(Request $request, Sale $sale)
     {
+        // التحقق من صلاحية الوصول
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
+        }
+
         // Only allow editing draft sales
         if ($sale->status !== Sale::STATUS_DRAFT) {
             return back()->with('error', 'لا يمكن تعديل فاتورة تم تأكيدها');
@@ -271,6 +317,11 @@ class SaleController extends Controller
      */
     public function destroy(Sale $sale)
     {
+        // التحقق من صلاحية الوصول
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
+        }
+
         // Only allow deleting draft sales
         if ($sale->status !== Sale::STATUS_DRAFT) {
             return back()->with('error', 'لا يمكن حذف فاتورة تم تأكيدها');
@@ -307,6 +358,11 @@ class SaleController extends Controller
      */
     public function confirm(Sale $sale)
     {
+        // التحقق من صلاحية الوصول
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
+        }
+
         if ($sale->status !== Sale::STATUS_DRAFT) {
             return back()->with('error', 'هذه الفاتورة تم تأكيدها مسبقاً');
         }
@@ -355,6 +411,11 @@ class SaleController extends Controller
      */
     public function cancel(Sale $sale)
     {
+        // التحقق من صلاحية الوصول
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
+        }
+
         if ($sale->status === Sale::STATUS_CANCELLED) {
             return back()->with('error', 'هذه الفاتورة ملغاة مسبقاً');
         }

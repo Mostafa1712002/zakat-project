@@ -15,6 +15,7 @@ class CustomerController extends Controller
     public function index()
     {
         $customers = Customer::with(['branch', 'salesRep'])
+            ->forSalesRep()
             ->latest()
             ->paginate(15);
 
@@ -26,10 +27,17 @@ class CustomerController extends Controller
      */
     public function create()
     {
+        $user = auth()->user();
         $branches = Branch::where('is_active', true)->get();
-        $salesReps = SalesRep::where('is_active', true)->get();
 
-        return view('customers.create', compact('branches', 'salesReps'));
+        // المندوب لا يرى قائمة المندوبين - يتم تعيينه تلقائياً
+        $salesReps = $user->isSalesRep()
+            ? collect()
+            : SalesRep::where('is_active', true)->get();
+
+        $currentSalesRep = $user->salesRep;
+
+        return view('customers.create', compact('branches', 'salesReps', 'currentSalesRep'));
     }
 
     /**
@@ -69,6 +77,12 @@ class CustomerController extends Controller
             } while (Customer::where('code', $validated['code'])->exists());
         }
 
+        // إذا كان المستخدم مندوب، يتم تعيينه تلقائياً للعميل
+        $user = auth()->user();
+        if ($user->isSalesRep() && $user->salesRep) {
+            $validated['sales_rep_id'] = $user->salesRep->id;
+        }
+
         Customer::create($validated);
 
         return redirect()->route('customers.index')
@@ -80,6 +94,11 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
+        // التحقق من صلاحية الوصول
+        if (!$customer->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
+        }
+
         $customer->load(['branch', 'salesRep', 'sales' => function ($query) {
             $query->latest()->take(10);
         }]);
@@ -92,8 +111,18 @@ class CustomerController extends Controller
      */
     public function edit(Customer $customer)
     {
+        // التحقق من صلاحية الوصول
+        if (!$customer->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
+        }
+
+        $user = auth()->user();
         $branches = Branch::where('is_active', true)->get();
-        $salesReps = SalesRep::where('is_active', true)->get();
+
+        // المندوب لا يرى قائمة المندوبين
+        $salesReps = $user->isSalesRep()
+            ? collect()
+            : SalesRep::where('is_active', true)->get();
 
         return view('customers.edit', compact('customer', 'branches', 'salesReps'));
     }
@@ -103,6 +132,11 @@ class CustomerController extends Controller
      */
     public function update(Request $request, Customer $customer)
     {
+        // التحقق من صلاحية الوصول
+        if (!$customer->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50|unique:customers,code,' . $customer->id,
@@ -138,6 +172,11 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
+        // التحقق من صلاحية الوصول
+        if (!$customer->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
+        }
+
         // Check if customer has sales
         if ($customer->sales()->exists()) {
             return back()->with('error', 'لا يمكن حذف العميل لأنه لديه فواتير مسجلة');
