@@ -72,6 +72,8 @@
                     <select name="method" id="method" class="form-control" required onchange="toggleCheckFields()">
                         <option value="cash" {{ old('method') === 'cash' ? 'selected' : '' }}>نقدي</option>
                         <option value="bank_transfer" {{ old('method') === 'bank_transfer' ? 'selected' : '' }}>تحويل بنكي</option>
+                        <option value="instapay" {{ old('method') === 'instapay' ? 'selected' : '' }}>انستا باي</option>
+                        <option value="vodafone_cash" {{ old('method') === 'vodafone_cash' ? 'selected' : '' }}>فودافون كاش</option>
                         <option value="check" {{ old('method') === 'check' ? 'selected' : '' }}>شيك</option>
                         <option value="card" {{ old('method') === 'card' ? 'selected' : '' }}>بطاقة</option>
                         <option value="other" {{ old('method') === 'other' ? 'selected' : '' }}>أخرى</option>
@@ -168,7 +170,7 @@ function toggleCheckFields() {
     const bankFields = document.getElementById('bankFields');
 
     checkFields.style.display = method === 'check' ? 'block' : 'none';
-    bankFields.style.display = (method === 'check' || method === 'bank_transfer') ? 'block' : 'none';
+    bankFields.style.display = (method === 'check' || method === 'bank_transfer' || method === 'instapay') ? 'block' : 'none';
 }
 
 document.addEventListener('DOMContentLoaded', toggleCheckFields);

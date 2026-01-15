@@ -56,6 +56,8 @@
                     @switch($payment->method)
                         @case('cash') نقدي @break
                         @case('bank_transfer') تحويل بنكي @break
+                        @case('instapay') انستا باي @break
+                        @case('vodafone_cash') فودافون كاش @break
                         @case('check') شيك @break
                         @case('card') بطاقة @break
                         @default أخرى

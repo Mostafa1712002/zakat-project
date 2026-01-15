@@ -66,7 +66,7 @@ class PaymentController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'method' => 'required|in:cash,bank_transfer,check,card,other',
+            'method' => 'required|in:cash,bank_transfer,instapay,vodafone_cash,check,card,other',
             'payment_date' => 'required|date',
             'reference_number' => 'nullable|string|max:100',
             'check_number' => 'nullable|string|max:50|required_if:method,check',
@@ -142,7 +142,7 @@ class PaymentController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'method' => 'required|in:cash,bank_transfer,check,card,other',
+            'method' => 'required|in:cash,bank_transfer,instapay,vodafone_cash,check,card,other',
             'payment_date' => 'required|date',
             'reference_number' => 'nullable|string|max:100',
             'check_number' => 'nullable|string|max:50|required_if:method,check',
