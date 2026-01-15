@@ -9,6 +9,7 @@
         <p>إدارة المخازن والمستودعات</p>
     </div>
     <div class="header-actions">
+        <a href="{{ route('warehouses.transfer') }}" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; margin-left: 10px;">🔄 ترحيل الأصناف</a>
         <a href="{{ route('warehouses.create') }}" class="btn btn-primary">+ إضافة مخزن</a>
     </div>
 </div>

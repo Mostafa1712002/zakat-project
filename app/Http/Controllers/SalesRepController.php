@@ -32,6 +32,13 @@ class SalesRepController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Auto-generate sales rep code if not provided
+        if (empty($validated['code'])) {
+            do {
+                $validated['code'] = 'REP-' . date('Ymd') . '-' . rand(100, 999);
+            } while (SalesRep::where('code', $validated['code'])->exists());
+        }
+
         SalesRep::create($validated);
 
         return redirect()->route('sales-reps.index')->with('success', 'تم إضافة المندوب بنجاح');
