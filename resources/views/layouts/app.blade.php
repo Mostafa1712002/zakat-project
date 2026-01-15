@@ -77,14 +77,8 @@
         .logo-icon {
             width: 45px;
             height: 45px;
-            background: linear-gradient(135deg, var(--warning), #fbbf24);
             border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            color: white;
+            object-fit: contain;
         }
 
         .logo-text { font-size: 16px; font-weight: 700; }
@@ -413,12 +407,12 @@
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <a href="{{ route('dashboard') }}" class="logo">
-                <div class="logo-icon">CRM</div>
+                <img src="{{ asset('logo.png') }}" alt="Rogence System" class="logo-icon">
                 <div class="logo-text">Rogence System</div>
             </a>
 
             <div class="user-info">
-                <img src="{{ asset('logo.png') }}" alt="Logo" class="user-avatar" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+                <div class="user-avatar">{{ mb_substr(auth()->user()->name, 0, 1) }}</div>
                 <div class="user-details">
                     <div class="user-name">{{ auth()->user()->name }}</div>
                     <div class="user-role">{{ auth()->user()->email }}</div>
