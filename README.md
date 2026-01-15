@@ -31,12 +31,28 @@ Explore our comprehensive visual documentation:
 - 💰 **Sales Tracking** - Sales monitoring and analytics
 - 💸 **Expense Management** - Track and categorize expenses
 
+### Sales Representative System
+- 👤 **Sales Rep Dashboard** - Personal dashboard for each sales rep
+- 🔒 **Data Isolation** - Sales reps see only their own customers, sales, and collections
+- 🏪 **Multi-Warehouse Assignment** - Assign sales reps to multiple warehouses
+- 💰 **Payment Collection** - Sales reps can collect payments from customers
+- 📊 **Performance Reports** - Admin can view all sales reps' performance
+
+### Payment Methods
+- 💵 Cash payments
+- 🏦 Bank transfers
+- 📱 **InstaPay** - Modern digital payment
+- 📲 **Vodafone Cash** - Mobile wallet payments
+- 📝 Check payments
+- 💳 Card payments
+
 ### Advanced Features
 - 🔍 Search & Filter on all pages
 - 📊 Real-time dashboard statistics
 - 💳 Payment status tracking (paid, pending, overdue)
 - 📈 Financial reports & analytics
 - ⚙️ System settings and configuration
+- 🎛️ **Feature Management** - Enable/disable system features
 - 🌍 Arabic RTL interface
 - 📱 Fully responsive design
 - 🎨 Modern UI with Tailwind CSS
