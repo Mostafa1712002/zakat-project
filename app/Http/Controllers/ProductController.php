@@ -63,10 +63,18 @@ class ProductController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['track_inventory'] = $request->boolean('track_inventory', true);
 
+        // Auto-generate SKU if not provided
         if (empty($validated['sku'])) {
             do {
                 $validated['sku'] = 'PRD-' . Str::upper(Str::random(8));
             } while (Product::where('sku', $validated['sku'])->exists());
+        }
+
+        // Auto-generate Barcode if not provided
+        if (empty($validated['barcode'])) {
+            do {
+                $validated['barcode'] = date('Ymd') . rand(1000, 9999);
+            } while (Product::where('barcode', $validated['barcode'])->exists());
         }
 
         Product::create($validated);

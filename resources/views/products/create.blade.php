@@ -29,7 +29,8 @@
 
                 <div class="form-group">
                     <label for="sku" class="form-label">كود المنتج (SKU)</label>
-                    <input type="text" name="sku" id="sku" class="form-control" value="{{ old('sku') }}" placeholder="كود فريد">
+                    <input type="text" name="sku" id="sku" class="form-control" value="{{ old('sku') }}" placeholder="سيتم توليده تلقائياً" style="background: rgba(0,0,0,0.05);">
+                    <small style="color: #64748b; font-size: 12px;">⚡ يتم توليده تلقائياً إذا تُرك فارغاً</small>
                     @error('sku')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
@@ -39,7 +40,8 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="barcode" class="form-label">الباركود</label>
-                    <input type="text" name="barcode" id="barcode" class="form-control" value="{{ old('barcode') }}" placeholder="رقم الباركود">
+                    <input type="text" name="barcode" id="barcode" class="form-control" value="{{ old('barcode') }}" placeholder="سيتم توليده تلقائياً" style="background: rgba(0,0,0,0.05);">
+                    <small style="color: #64748b; font-size: 12px;">⚡ يتم توليده تلقائياً إذا تُرك فارغاً</small>
                     @error('barcode')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
