@@ -29,7 +29,8 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">كود الموظف</label>
-                        <input type="text" name="employee_code" class="form-control" value="{{ old('employee_code') }}" placeholder="سيتم إنشاؤه تلقائياً">
+                        <input type="text" name="employee_code" class="form-control" value="{{ old('employee_code') }}" placeholder="سيتم توليده تلقائياً" style="background: rgba(0,0,0,0.05);">
+                        <small style="color: #64748b; font-size: 12px;">⚡ يتم توليده تلقائياً إذا تُرك فارغاً</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">الرقم القومي</label>

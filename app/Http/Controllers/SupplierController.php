@@ -37,6 +37,13 @@ class SupplierController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Auto-generate supplier code if not provided
+        if (empty($validated['code'])) {
+            do {
+                $validated['code'] = 'SUPP-' . date('Ymd') . '-' . rand(100, 999);
+            } while (Supplier::where('code', $validated['code'])->exists());
+        }
+
         Supplier::create($validated);
 
         return redirect()->route('suppliers.index')->with('success', 'تم إضافة المورد بنجاح');

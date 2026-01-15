@@ -31,7 +31,8 @@
 
                 <div class="form-group">
                     <label for="code" class="form-label">كود العميل</label>
-                    <input type="text" name="code" id="code" class="form-control" value="{{ old('code') }}" placeholder="كود فريد للعميل">
+                    <input type="text" name="code" id="code" class="form-control" value="{{ old('code') }}" placeholder="سيتم توليده تلقائياً" style="background: rgba(0,0,0,0.05);">
+                    <small style="color: #64748b; font-size: 12px;">⚡ يتم توليده تلقائياً إذا تُرك فارغاً</small>
                     @error('code')
                         <div class="form-error">{{ $message }}</div>
                     @enderror

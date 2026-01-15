@@ -28,8 +28,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="code" class="form-label">الكود</label>
-                    <input type="text" name="code" id="code" class="form-control" value="{{ old('code') }}">
+                    <label for="code" class="form-label">كود المورد</label>
+                    <input type="text" name="code" id="code" class="form-control" value="{{ old('code') }}" placeholder="سيتم توليده تلقائياً" style="background: rgba(0,0,0,0.05);">
+                    <small style="color: #64748b; font-size: 12px;">⚡ يتم توليده تلقائياً إذا تُرك فارغاً</small>
                 </div>
             </div>
 

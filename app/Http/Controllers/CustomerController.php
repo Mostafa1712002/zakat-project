@@ -62,6 +62,13 @@ class CustomerController extends Controller
             $validated['price_tier'] = 'retail';
         }
 
+        // Auto-generate customer code if not provided
+        if (empty($validated['code'])) {
+            do {
+                $validated['code'] = 'CUST-' . date('Ymd') . '-' . rand(100, 999);
+            } while (Customer::where('code', $validated['code'])->exists());
+        }
+
         Customer::create($validated);
 
         return redirect()->route('customers.index')
