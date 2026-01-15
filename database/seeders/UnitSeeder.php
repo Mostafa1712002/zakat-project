@@ -11,24 +11,24 @@ class UnitSeeder extends Seeder
     {
         $units = [
             // وحدات الوزن
-            ['name' => 'كيلوجرام', 'symbol' => 'كجم', 'type' => 'weight', 'is_active' => true],
-            ['name' => 'جرام', 'symbol' => 'جم', 'type' => 'weight', 'is_active' => true],
-            ['name' => 'طن', 'symbol' => 'طن', 'type' => 'weight', 'is_active' => true],
-            
+            ['name' => 'كيلوجرام', 'code' => 'KG', 'symbol' => 'كجم', 'is_active' => true],
+            ['name' => 'جرام', 'code' => 'G', 'symbol' => 'جم', 'is_active' => true],
+            ['name' => 'طن', 'code' => 'TON', 'symbol' => 'طن', 'is_active' => true],
+
             // وحدات الطول
-            ['name' => 'متر', 'symbol' => 'م', 'type' => 'length', 'is_active' => true],
-            ['name' => 'سنتيمتر', 'symbol' => 'سم', 'type' => 'length', 'is_active' => true],
-            
+            ['name' => 'متر', 'code' => 'M', 'symbol' => 'م', 'is_active' => true],
+            ['name' => 'سنتيمتر', 'code' => 'CM', 'symbol' => 'سم', 'is_active' => true],
+
             // وحدات الحجم
-            ['name' => 'لتر', 'symbol' => 'لتر', 'type' => 'volume', 'is_active' => true],
-            ['name' => 'ملليلتر', 'symbol' => 'مل', 'type' => 'volume', 'is_active' => true],
-            
+            ['name' => 'لتر', 'code' => 'L', 'symbol' => 'لتر', 'is_active' => true],
+            ['name' => 'ملليلتر', 'code' => 'ML', 'symbol' => 'مل', 'is_active' => true],
+
             // وحدات العد
-            ['name' => 'قطعة', 'symbol' => 'قطعة', 'type' => 'piece', 'is_active' => true],
-            ['name' => 'علبة', 'symbol' => 'علبة', 'type' => 'package', 'is_active' => true],
-            ['name' => 'كرتونة', 'symbol' => 'كرتونة', 'type' => 'package', 'is_active' => true],
-            ['name' => 'صندوق', 'symbol' => 'صندوق', 'type' => 'package', 'is_active' => true],
-            ['name' => 'دزينة', 'symbol' => 'دزينة', 'type' => 'piece', 'is_active' => true],
+            ['name' => 'قطعة', 'code' => 'PC', 'symbol' => 'قطعة', 'is_active' => true],
+            ['name' => 'علبة', 'code' => 'BOX', 'symbol' => 'علبة', 'is_active' => true],
+            ['name' => 'كرتونة', 'code' => 'CTN', 'symbol' => 'كرتونة', 'is_active' => true],
+            ['name' => 'صندوق', 'code' => 'CASE', 'symbol' => 'صندوق', 'is_active' => true],
+            ['name' => 'دزينة', 'code' => 'DOZ', 'symbol' => 'دزينة', 'is_active' => true],
         ];
 
         foreach ($units as $unit) {
