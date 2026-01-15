@@ -414,14 +414,14 @@
         <aside class="sidebar" id="sidebar">
             <a href="{{ route('dashboard') }}" class="logo">
                 <div class="logo-icon">CRM</div>
-                <div class="logo-text">سلسلة البيان التجارية</div>
+                <div class="logo-text">Rogence System</div>
             </a>
 
             <div class="user-info">
-                <div class="user-avatar">م</div>
+                <img src="{{ asset('logo.png') }}" alt="Logo" class="user-avatar" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
                 <div class="user-details">
-                    <div class="user-name">مدير النظام</div>
-                    <div class="user-role">admin@crm.test</div>
+                    <div class="user-name">{{ auth()->user()->name }}</div>
+                    <div class="user-role">{{ auth()->user()->email }}</div>
                 </div>
             </div>
 
