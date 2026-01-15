@@ -23,7 +23,7 @@
 @if($hasVideo)
 <div style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
     <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">🎬 جولة فيديو في النظام</h2>
-    <p style="color: #64748b; margin-bottom: 16px;">شاهد جولة كاملة في جميع صفحات نظام CRM (~70 ثانية)</p>
+    <p style="color: #64748b; margin-bottom: 16px;">شاهد جولة كاملة في جميع صفحات Rogence System (~70 ثانية)</p>
     <video controls style="width: 100%; border-radius: 8px; max-height: 600px;">
         <source src="{{ asset($videoPath) }}" type="video/webm">
         متصفحك لا يدعم تشغيل الفيديو

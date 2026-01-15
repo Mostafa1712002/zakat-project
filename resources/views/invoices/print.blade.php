@@ -166,8 +166,8 @@
     <div class="invoice-container">
         <div class="invoice-header">
             <div class="company-info">
-                <h1>نظام إدارة العملاء</h1>
-                <p>CRM System</p>
+                <h1>Rogence System</h1>
+                <p>نظام إدارة شامل</p>
                 <p>العنوان: القاهرة، مصر</p>
                 <p>الهاتف: 01234567890</p>
             </div>
