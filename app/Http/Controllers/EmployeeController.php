@@ -21,11 +21,11 @@ class EmployeeController extends Controller
             });
         }
 
-        if ($request->department) {
+        if ($request->filled('department')) {
             $query->where('department', $request->department);
         }
 
-        if ($request->has('is_active')) {
+        if ($request->filled('is_active') && $request->is_active !== '') {
             $query->where('is_active', $request->is_active);
         }
 
@@ -49,7 +49,7 @@ class EmployeeController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'national_id' => 'nullable|string|max:20',
+            'national_id' => 'nullable|digits:14',
             'job_title' => 'nullable|string|max:100',
             'department' => 'nullable|string|max:100',
             'branch_id' => 'nullable|exists:branches,id',
@@ -88,7 +88,7 @@ class EmployeeController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'national_id' => 'nullable|string|max:20',
+            'national_id' => 'nullable|digits:14',
             'job_title' => 'nullable|string|max:100',
             'department' => 'nullable|string|max:100',
             'branch_id' => 'nullable|exists:branches,id',

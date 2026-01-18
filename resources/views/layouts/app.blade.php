@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'لوحة التحكم') - Rogence System</title>
+    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -65,23 +67,25 @@
 
         .logo {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             padding-bottom: 20px;
             border-bottom: 1px solid rgba(255,255,255,0.2);
             margin-bottom: 20px;
             text-decoration: none;
             color: white;
+            text-align: center;
         }
 
         .logo-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
             object-fit: contain;
         }
 
-        .logo-text { font-size: 16px; font-weight: 700; }
+        .logo-text { font-size: 18px; font-weight: 700; }
 
         .user-info {
             display: flex;
@@ -388,6 +392,23 @@
             .main { margin-right: 0; padding: 70px 16px 16px; }
             .page-header { flex-direction: column; align-items: flex-start; }
             .stats-grid { grid-template-columns: 1fr; }
+
+            /* Responsive Tables */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -16px;
+                padding: 0 16px;
+            }
+            .table { min-width: 600px; font-size: 13px; }
+            .table th, .table td { padding: 10px 8px; }
+            .table-actions { flex-wrap: wrap; gap: 4px; }
+            .table-actions .btn { padding: 4px 8px; font-size: 12px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .btn-sm { padding: 4px 8px; font-size: 12px; }
+            .card-body { padding: 16px; }
+            .header-actions { width: 100%; flex-direction: column; }
+            .header-actions .btn { width: 100%; justify-content: center; }
         }
 
         .text-center { text-align: center; }
@@ -443,7 +464,7 @@
                 <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}"><span class="nav-icon">👥</span> العملاء</a></li>
                 @endif
                 @if(feature_enabled('sales_reps'))
-                <li><a href="{{ route('sales-reps.index') }}" class="{{ request()->routeIs('sales-reps.*') ? 'active' : '' }}"><span class="nav-icon">🧑‍💼</span> المندوبين</a></li>
+                <li><a href="{{ route('sales-reps.index') }}" class="{{ request()->routeIs('sales-reps.*') ? 'active' : '' }}"><span class="nav-icon">👔</span> المندوبين</a></li>
                 @endif
                 @if(feature_enabled('employees'))
                 <li><a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}"><span class="nav-icon">👨‍💻</span> الموظفين</a></li>

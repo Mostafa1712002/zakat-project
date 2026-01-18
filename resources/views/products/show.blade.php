@@ -75,9 +75,10 @@
                 <tr>
                     <td colspan="5">
                         <div class="empty-state">
-                            <div class="empty-state-icon">🏭</div>
-                            <h3>لا توجد بيانات مخزون</h3>
-                            <p>لم يتم تسجيل مستويات مخزون لهذا الصنف بعد</p>
+                            <div class="empty-state-icon">📦</div>
+                            <h3>المخزون الحالي: 0</h3>
+                            <p>قم بإنشاء فاتورة شراء لإضافة مخزون لهذا الصنف</p>
+                            <a href="{{ route('purchases.create') }}" class="btn btn-primary" style="margin-top: 12px;">+ فاتورة شراء جديدة</a>
                         </div>
                     </td>
                 </tr>

@@ -22,13 +22,16 @@
                 <h3>📋 بيانات الفاتورة</h3>
 
                 <div class="form-group">
-                    <label class="form-label">المورد *</label>
+                    <label class="form-label">المورد * <a href="{{ route('suppliers.create') }}" target="_blank" style="font-size: 12px; margin-right: 8px;">+ إضافة مورد جديد</a></label>
                     <select name="supplier_id" class="form-control" required>
                         <option value="">اختر المورد</option>
                         @foreach($suppliers as $supplier)
                         <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
                         @endforeach
                     </select>
+                    @if($suppliers->isEmpty())
+                    <p class="form-text text-danger">لا يوجد موردين. <a href="{{ route('suppliers.create') }}">أضف مورد جديد</a> أولاً.</p>
+                    @endif
                 </div>
 
                 <div class="form-row">

@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Branch;
 use App\Models\SalesRep;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
@@ -47,8 +48,8 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:customers,code',
-            'email' => 'nullable|email|max:255|unique:customers,email',
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('customers', 'code')->whereNull('deleted_at')],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('customers', 'email')->whereNull('deleted_at')],
             'phone' => 'nullable|string|max:20',
             'mobile' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
@@ -139,8 +140,8 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:customers,code,' . $customer->id,
-            'email' => 'nullable|email|max:255|unique:customers,email,' . $customer->id,
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('customers', 'code')->ignore($customer->id)->whereNull('deleted_at')],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('customers', 'email')->ignore($customer->id)->whereNull('deleted_at')],
             'phone' => 'nullable|string|max:20',
             'mobile' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',

@@ -130,13 +130,13 @@
         <div class="stat-value">{{ count($documentation) }}</div>
         <div class="stat-label">التوثيق الشامل</div>
     </div>
-    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #0c4a6e;">
         <div class="stat-value">2,388</div>
-        <div class="stat-label">سطر من التحليل</div>
+        <div class="stat-label" style="color: #1e3a5f;">سطر من التحليل</div>
     </div>
-    <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+    <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #064e3b;">
         <div class="stat-value">244 KB</div>
-        <div class="stat-label">حجم المحتوى</div>
+        <div class="stat-label" style="color: #14532d;">حجم المحتوى</div>
     </div>
 </div>
 

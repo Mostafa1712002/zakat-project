@@ -51,9 +51,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('sales-reps', SalesRepController::class);
 
     // Warehouses (المخازن)
-    Route::resource('warehouses', WarehouseController::class);
     Route::get('warehouses/transfer', [WarehouseController::class, 'showTransferForm'])->name('warehouses.transfer');
     Route::post('warehouses/transfer', [WarehouseController::class, 'transfer'])->name('warehouses.process-transfer');
+    Route::resource('warehouses', WarehouseController::class);
 
     // Sales (المبيعات)
     Route::resource('sales', SaleController::class);

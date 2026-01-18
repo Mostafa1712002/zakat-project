@@ -110,11 +110,11 @@ class SaleController extends Controller
                 'discount_type' => $validated['discount_type'] ?? 'fixed',
                 'discount_value' => $validated['discount_value'] ?? 0,
                 'shipping_amount' => $validated['shipping_amount'] ?? 0,
-                'payment_method' => $validated['payment_method'],
-                'purchase_order_number' => $validated['purchase_order_number'],
-                'shipping_address' => $validated['shipping_address'],
-                'notes' => $validated['notes'],
-                'terms' => $validated['terms'],
+                'payment_method' => $validated['payment_method'] ?? null,
+                'purchase_order_number' => $validated['purchase_order_number'] ?? null,
+                'shipping_address' => $validated['shipping_address'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'terms' => $validated['terms'] ?? null,
             ]);
 
             // Create sale items
@@ -262,11 +262,11 @@ class SaleController extends Controller
                 'discount_type' => $validated['discount_type'] ?? 'fixed',
                 'discount_value' => $validated['discount_value'] ?? 0,
                 'shipping_amount' => $validated['shipping_amount'] ?? 0,
-                'payment_method' => $validated['payment_method'],
-                'purchase_order_number' => $validated['purchase_order_number'],
-                'shipping_address' => $validated['shipping_address'],
-                'notes' => $validated['notes'],
-                'terms' => $validated['terms'],
+                'payment_method' => $validated['payment_method'] ?? null,
+                'purchase_order_number' => $validated['purchase_order_number'] ?? null,
+                'shipping_address' => $validated['shipping_address'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'terms' => $validated['terms'] ?? null,
             ]);
 
             // Delete existing items and recreate
