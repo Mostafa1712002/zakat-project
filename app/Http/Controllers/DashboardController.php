@@ -62,10 +62,10 @@ class DashboardController extends Controller
             ->get();
 
         // Low stock products - get products with low inventory
-        $lowStockIds = InventoryLevel::where('quantity', '<', 20)
-            ->pluck('product_id')
-            ->unique();
-        $low_stock_products = Product::whereIn('id', $lowStockIds)
+        $low_stock_products = Product::select('products.*')
+            ->selectRaw('(SELECT COALESCE(SUM(quantity), 0) FROM inventory_levels WHERE inventory_levels.product_id = products.id) as total_stock')
+            ->havingRaw('total_stock < 20')
+            ->orderBy('total_stock', 'asc')
             ->take(5)
             ->get();
 

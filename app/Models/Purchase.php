@@ -175,7 +175,8 @@ class Purchase extends Model
     public static function generateInvoiceNumber(): string
     {
         $prefix = 'PUR-' . date('Ym');
-        $last = self::where('invoice_number', 'like', $prefix . '%')
+        $last = self::withTrashed()
+            ->where('invoice_number', 'like', $prefix . '%')
             ->orderBy('invoice_number', 'desc')
             ->first();
 

@@ -393,17 +393,48 @@
             .page-header { flex-direction: column; align-items: flex-start; }
             .stats-grid { grid-template-columns: 1fr; }
 
-            /* Responsive Tables */
+            /* Responsive Tables - Enhanced */
             .table-container {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 margin: 0 -16px;
                 padding: 0 16px;
+                position: relative;
             }
-            .table { min-width: 600px; font-size: 13px; }
-            .table th, .table td { padding: 10px 8px; }
-            .table-actions { flex-wrap: wrap; gap: 4px; }
-            .table-actions .btn { padding: 4px 8px; font-size: 12px; }
+            .table-container::after {
+                content: '← اسحب للمزيد →';
+                display: block;
+                text-align: center;
+                font-size: 11px;
+                color: var(--text-muted);
+                padding: 8px;
+                background: linear-gradient(to right, rgba(241,245,249,0.9), transparent 20%, transparent 80%, rgba(241,245,249,0.9));
+            }
+            .table { min-width: 700px; font-size: 12px; }
+            .table th, .table td {
+                padding: 10px 8px;
+                white-space: nowrap;
+            }
+            .table th:first-child, .table td:first-child {
+                position: sticky;
+                right: 0;
+                background: var(--card);
+                z-index: 1;
+                box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            }
+            .table tr:hover td:first-child {
+                background: rgba(8,145,178,0.03);
+            }
+            .table-actions {
+                flex-wrap: nowrap;
+                gap: 4px;
+                justify-content: flex-start;
+            }
+            .table-actions .btn {
+                padding: 4px 8px;
+                font-size: 11px;
+                white-space: nowrap;
+            }
             .btn { padding: 8px 14px; font-size: 13px; }
             .btn-sm { padding: 4px 8px; font-size: 12px; }
             .card-body { padding: 16px; }
@@ -447,6 +478,7 @@
                 @endif
                 @if(feature_enabled('purchases'))
                 <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"><span class="nav-icon">🛒</span> المشتريات</a></li>
+                <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><span class="nav-icon">🏢</span> الموردين</a></li>
                 @endif
                 @if(feature_enabled('invoices'))
                 <li><a href="{{ route('invoices.index') }}" class="{{ request()->routeIs('invoices.*') ? 'active' : '' }}"><span class="nav-icon">📄</span> الفواتير</a></li>

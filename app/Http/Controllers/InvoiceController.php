@@ -150,6 +150,16 @@ class InvoiceController extends Controller
 
     public function destroy(Sale $invoice)
     {
+        // Only allow deleting draft invoices
+        if ($invoice->status !== Sale::STATUS_DRAFT) {
+            return back()->with('error', 'لا يمكن حذف فاتورة تم تأكيدها');
+        }
+
+        // Check if invoice has payments
+        if ($invoice->paid_amount > 0) {
+            return back()->with('error', 'لا يمكن حذف فاتورة تم دفع جزء منها');
+        }
+
         $invoice->items()->delete();
         $invoice->delete();
         return redirect()->route('invoices.index')->with('success', 'تم حذف الفاتورة بنجاح');

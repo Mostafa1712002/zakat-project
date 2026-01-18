@@ -16,6 +16,17 @@
 <form action="{{ route('employees.store') }}" method="POST">
     @csrf
 
+    @if ($errors->any())
+        <div class="alert alert-danger" style="margin-bottom: 20px;">
+            <strong>⚠️ يرجى تصحيح الأخطاء التالية:</strong>
+            <ul style="margin: 10px 0 0 0; padding-right: 20px;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="grid-2">
         <div class="card">
             <div class="card-body">
@@ -34,7 +45,14 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">الرقم القومي</label>
-                        <input type="text" name="national_id" class="form-control" value="{{ old('national_id') }}">
+                        <input type="text" name="national_id" class="form-control" value="{{ old('national_id') }}"
+                               pattern="[0-9]{14}" maxlength="14" inputmode="numeric"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 14)"
+                               placeholder="أدخل 14 رقم">
+                        <small style="color: #64748b; font-size: 12px;">📝 يجب أن يكون 14 رقم فقط</small>
+                        @error('national_id')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 

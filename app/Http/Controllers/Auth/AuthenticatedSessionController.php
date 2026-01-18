@@ -43,6 +43,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Clear intended URL to prevent redirect loop
+        $request->session()->forget('url.intended');
+
+        return redirect()->route('login');
     }
 }

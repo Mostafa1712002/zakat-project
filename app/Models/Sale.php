@@ -189,7 +189,8 @@ class Sale extends Model
     public static function generateInvoiceNumber(): string
     {
         $prefix = 'INV-' . date('Ym');
-        $lastSale = self::where('invoice_number', 'like', $prefix . '%')
+        $lastSale = self::withTrashed()
+            ->where('invoice_number', 'like', $prefix . '%')
             ->orderBy('invoice_number', 'desc')
             ->first();
 
