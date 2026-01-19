@@ -129,6 +129,8 @@ class SaleController extends Controller
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
+                    'product_name' => $product->name,
+                    'product_sku' => $product->sku,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'cost_price' => $product->cost_price,
@@ -283,6 +285,8 @@ class SaleController extends Controller
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
+                    'product_name' => $product->name,
+                    'product_sku' => $product->sku,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'cost_price' => $product->cost_price,

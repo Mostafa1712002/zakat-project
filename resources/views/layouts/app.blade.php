@@ -219,12 +219,13 @@
         .card-body { padding: 20px; }
 
         /* Tables */
-        .table-container { overflow-x: auto; }
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
         .table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            white-space: nowrap;
         }
 
         .table th {
@@ -242,6 +243,7 @@
             padding: 14px 16px;
             border-bottom: 1px solid var(--border);
             vertical-align: middle;
+            white-space: nowrap;
         }
 
         .table tr:hover { background: rgba(8,145,178,0.03); }

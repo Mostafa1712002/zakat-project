@@ -55,13 +55,16 @@ class EmployeeController extends Controller
             'branch_id' => 'nullable|exists:branches,id',
             'hire_date' => 'nullable|date',
             'salary' => 'nullable|numeric|min:0',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|in:0,1,true,false',
             'notes' => 'nullable|string',
         ]);
 
         if (empty($validated['employee_code'])) {
             $validated['employee_code'] = 'EMP-' . str_pad(Employee::count() + 1, 4, '0', STR_PAD_LEFT);
         }
+
+        // Explicitly set is_active with default true
+        $validated['is_active'] = $request->input('is_active', 1) == 1;
 
         Employee::create($validated);
 
@@ -95,9 +98,12 @@ class EmployeeController extends Controller
             'hire_date' => 'nullable|date',
             'termination_date' => 'nullable|date',
             'salary' => 'nullable|numeric|min:0',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|in:0,1,true,false',
             'notes' => 'nullable|string',
         ]);
+
+        // Explicitly set is_active
+        $validated['is_active'] = $request->input('is_active', 1) == 1;
 
         $employee->update($validated);
 
