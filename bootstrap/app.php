@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             env('SESSION_COOKIE', 'crm-session'),
         ]);
 
+        // Prevent browser back button after logout
+        $middleware->web(append: [
+            \App\Http\Middleware\PreventBackHistory::class,
+        ]);
+
         $middleware->alias([
             'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'feature' => \App\Http\Middleware\CheckFeatureMiddleware::class,
