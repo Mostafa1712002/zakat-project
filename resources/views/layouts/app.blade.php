@@ -490,6 +490,8 @@
                 @endif
                 @if(feature_enabled('purchases'))
                 <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"><span class="nav-icon">🛒</span> المشتريات</a></li>
+                @endif
+                @if(feature_enabled('suppliers'))
                 <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><span class="nav-icon">🏢</span> الموردين</a></li>
                 @endif
                 @if(feature_enabled('invoices'))
