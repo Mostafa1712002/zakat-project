@@ -60,15 +60,29 @@ class EmployeeController extends Controller
         ]);
 
         if (empty($validated['employee_code'])) {
-            $validated['employee_code'] = 'EMP-' . str_pad(Employee::count() + 1, 4, '0', STR_PAD_LEFT);
+            // Get the last employee code including soft-deleted records
+            $lastEmployee = Employee::withTrashed()
+                ->where('employee_code', 'like', 'EMP-%')
+                ->orderBy('employee_code', 'desc')
+                ->first();
+
+            if ($lastEmployee) {
+                $lastNumber = (int) substr($lastEmployee->employee_code, 4);
+                $validated['employee_code'] = 'EMP-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            } else {
+                $validated['employee_code'] = 'EMP-0001';
+            }
         }
 
         // Explicitly set is_active with default true
         $validated['is_active'] = $request->input('is_active', 1) == 1;
 
-        Employee::create($validated);
-
-        return redirect()->route('employees.index')->with('success', 'تم إضافة الموظف بنجاح');
+        try {
+            Employee::create($validated);
+            return redirect()->route('employees.index')->with('success', 'تم إضافة الموظف بنجاح');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'حدث خطأ أثناء إضافة الموظف: ' . $e->getMessage());
+        }
     }
 
     public function show(Employee $employee)
