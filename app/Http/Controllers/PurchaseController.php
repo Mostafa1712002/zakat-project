@@ -58,52 +58,63 @@ class PurchaseController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        $purchase = Purchase::create([
-            'invoice_number' => Purchase::generateInvoiceNumber(),
-            'supplier_id' => $validated['supplier_id'],
-            'warehouse_id' => $validated['warehouse_id'],
-            'invoice_date' => $validated['invoice_date'],
-            'due_date' => $request->due_date,
-            'payment_type' => $request->payment_type ?? 'credit',
-            'supplier_invoice_number' => $request->supplier_invoice_number,
-            'branch_id' => $request->branch_id,
-            'user_id' => auth()->id(),
-            'status' => 'draft',
-            'payment_status' => 'unpaid',
-            'discount_type' => $request->discount_type ?? 'fixed',
-            'discount_value' => $request->discount_value ?? 0,
-            'shipping_amount' => $request->shipping_amount ?? 0,
-            'notes' => $request->notes,
-        ]);
+        try {
+            // Get branch_id with fallback
+            $branchId = $request->branch_id
+                ?? auth()->user()->branch_id
+                ?? Branch::where('is_main', true)->value('id')
+                ?? Branch::where('is_active', true)->value('id');
 
-        $subtotal = 0;
-        foreach ($validated['items'] as $item) {
-            $product = Product::find($item['product_id']);
-            $itemSubtotal = $item['quantity'] * $item['unit_price'];
-
-            PurchaseItem::create([
-                'purchase_id' => $purchase->id,
-                'product_id' => $item['product_id'],
-                'product_name' => $product->name,
-                'product_sku' => $product->sku,
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'subtotal' => $itemSubtotal,
+            $purchase = Purchase::create([
+                'invoice_number' => Purchase::generateInvoiceNumber(),
+                'supplier_id' => $validated['supplier_id'],
+                'warehouse_id' => $validated['warehouse_id'],
+                'invoice_date' => $validated['invoice_date'],
+                'due_date' => $request->due_date,
+                'payment_type' => $request->payment_type ?? 'credit',
+                'supplier_invoice_number' => $request->supplier_invoice_number,
+                'branch_id' => $branchId,
+                'user_id' => auth()->id(),
+                'status' => 'draft',
+                'payment_status' => 'unpaid',
+                'discount_type' => $request->discount_type ?? 'fixed',
+                'discount_value' => $request->discount_value ?? 0,
+                'shipping_amount' => $request->shipping_amount ?? 0,
+                'notes' => $request->notes,
             ]);
 
-            $subtotal += $itemSubtotal;
+            $subtotal = 0;
+            foreach ($validated['items'] as $item) {
+                $product = Product::find($item['product_id']);
+                $itemSubtotal = $item['quantity'] * $item['unit_price'];
+
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $item['product_id'],
+                    'product_name' => $product->name,
+                    'product_sku' => $product->sku,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'subtotal' => $itemSubtotal,
+                ]);
+
+                $subtotal += $itemSubtotal;
+            }
+
+            $purchase->subtotal = $subtotal;
+            $discount = $purchase->discount_type === 'percentage'
+                ? $subtotal * ($purchase->discount_value / 100)
+                : $purchase->discount_value;
+            $purchase->discount_amount = $discount;
+            $purchase->total_amount = $subtotal - $discount + ($purchase->shipping_amount ?? 0);
+            $purchase->remaining_amount = $purchase->total_amount;
+            $purchase->save();
+
+            return redirect()->route('purchases.index')->with('success', 'تم إنشاء فاتورة المشتريات بنجاح');
+
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'حدث خطأ أثناء إنشاء الفاتورة: ' . $e->getMessage());
         }
-
-        $purchase->subtotal = $subtotal;
-        $discount = $purchase->discount_type === 'percentage'
-            ? $subtotal * ($purchase->discount_value / 100)
-            : $purchase->discount_value;
-        $purchase->discount_amount = $discount;
-        $purchase->total_amount = $subtotal - $discount + ($purchase->shipping_amount ?? 0);
-        $purchase->remaining_amount = $purchase->total_amount;
-        $purchase->save();
-
-        return redirect()->route('purchases.index')->with('success', 'تم إنشاء فاتورة المشتريات بنجاح');
     }
 
     public function show(Purchase $purchase)
