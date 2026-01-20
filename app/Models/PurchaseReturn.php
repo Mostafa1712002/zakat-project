@@ -112,7 +112,8 @@ class PurchaseReturn extends Model
     public static function generateReturnNumber(): string
     {
         $prefix = 'PRT-' . date('Ym');
-        $last = self::where('return_number', 'like', $prefix . '%')
+        $last = self::withTrashed()
+            ->where('return_number', 'like', $prefix . '%')
             ->orderBy('return_number', 'desc')
             ->first();
 

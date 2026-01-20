@@ -161,7 +161,8 @@ class Payment extends Model
     public static function generatePaymentNumber(string $type): string
     {
         $prefix = ($type === self::TYPE_RECEIVED ? 'RCV' : 'PAY') . '-' . date('Ym');
-        $last = self::where('payment_number', 'like', $prefix . '%')
+        $last = self::withTrashed()
+            ->where('payment_number', 'like', $prefix . '%')
             ->orderBy('payment_number', 'desc')
             ->first();
 

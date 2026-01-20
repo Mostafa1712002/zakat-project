@@ -112,7 +112,8 @@ class SaleReturn extends Model
     public static function generateReturnNumber(): string
     {
         $prefix = 'SRT-' . date('Ym');
-        $last = self::where('return_number', 'like', $prefix . '%')
+        $last = self::withTrashed()
+            ->where('return_number', 'like', $prefix . '%')
             ->orderBy('return_number', 'desc')
             ->first();
 

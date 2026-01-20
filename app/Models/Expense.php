@@ -145,7 +145,8 @@ class Expense extends Model
     public static function generateExpenseNumber(): string
     {
         $prefix = 'EXP-' . date('Ym');
-        $last = self::where('expense_number', 'like', $prefix . '%')
+        $last = self::withTrashed()
+            ->where('expense_number', 'like', $prefix . '%')
             ->orderBy('expense_number', 'desc')
             ->first();
 

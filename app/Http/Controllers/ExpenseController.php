@@ -54,8 +54,8 @@ class ExpenseController extends Controller
 
         $validated['payment_method'] = $this->resolveLegacyPaymentMethod($paymentMethod);
 
-        // Generate expense number
-        $validated['expense_number'] = 'EXP-' . date('Ymd') . '-' . str_pad(Expense::count() + 1, 4, '0', STR_PAD_LEFT);
+        // Generate expense number using model method (includes soft-deleted records)
+        $validated['expense_number'] = Expense::generateExpenseNumber();
         $validated['total_amount'] = $validated['amount'];
         $validated['user_id'] = auth()->id();
 
