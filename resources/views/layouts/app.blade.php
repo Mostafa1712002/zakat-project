@@ -219,13 +219,25 @@
         .card-body { padding: 20px; }
 
         /* Tables */
-        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-container {
+            overflow-x: auto !important;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
 
         .table {
             width: 100%;
+            min-width: max-content;
             border-collapse: collapse;
             font-size: 14px;
-            white-space: nowrap;
+            white-space: nowrap !important;
+        }
+
+        .table th,
+        .table td {
+            white-space: nowrap !important;
+            word-break: keep-all;
         }
 
         .table th {
@@ -236,14 +248,12 @@
             color: var(--text-muted);
             font-weight: 600;
             font-size: 13px;
-            white-space: nowrap;
         }
 
         .table td {
             padding: 14px 16px;
             border-bottom: 1px solid var(--border);
             vertical-align: middle;
-            white-space: nowrap;
         }
 
         .table tr:hover { background: rgba(8,145,178,0.03); }
