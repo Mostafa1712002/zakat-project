@@ -94,11 +94,17 @@ class SaleController extends Controller
                 $salesRepId = $user->salesRep->id;
             }
 
+            // Get branch_id with fallback
+            $branchId = $validated['branch_id']
+                ?? auth()->user()->branch_id
+                ?? \App\Models\Branch::where('is_main', true)->value('id')
+                ?? \App\Models\Branch::where('is_active', true)->value('id');
+
             // Create the sale
             $sale = Sale::create([
                 'invoice_number' => Sale::generateInvoiceNumber(),
                 'customer_id' => $validated['customer_id'],
-                'branch_id' => $validated['branch_id'] ?? auth()->user()->branch_id,
+                'branch_id' => $branchId,
                 'warehouse_id' => $validated['warehouse_id'],
                 'sales_rep_id' => $salesRepId,
                 'user_id' => auth()->id(),
@@ -252,10 +258,16 @@ class SaleController extends Controller
         DB::beginTransaction();
 
         try {
+            // Get branch_id with fallback
+            $branchId = $validated['branch_id']
+                ?? auth()->user()->branch_id
+                ?? \App\Models\Branch::where('is_main', true)->value('id')
+                ?? \App\Models\Branch::where('is_active', true)->value('id');
+
             // Update the sale
             $sale->update([
                 'customer_id' => $validated['customer_id'],
-                'branch_id' => $validated['branch_id'] ?? auth()->user()->branch_id,
+                'branch_id' => $branchId,
                 'warehouse_id' => $validated['warehouse_id'],
                 'sales_rep_id' => $validated['sales_rep_id'],
                 'invoice_date' => $validated['invoice_date'],
