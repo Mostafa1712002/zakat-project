@@ -94,7 +94,7 @@ class PurchaseController extends Controller
                     'product_name' => $product->name,
                     'product_sku' => $product->sku,
                     'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
+                    'unit_cost' => $item['unit_price'],
                     'subtotal' => $itemSubtotal,
                 ]);
 
