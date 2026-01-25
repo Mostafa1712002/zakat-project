@@ -9,6 +9,7 @@ use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class SalesRepController extends Controller
 {
@@ -69,7 +70,8 @@ class SalesRepController extends Controller
             ]);
 
             // تعيين صلاحية المندوب
-            $user->assignRole('sales_rep');
+            $role = Role::firstOrCreate(['name' => 'sales_rep', 'guard_name' => 'web']);
+            $user->assignRole($role);
 
             // إنشاء سجل المندوب
             $salesRep = SalesRep::create([
