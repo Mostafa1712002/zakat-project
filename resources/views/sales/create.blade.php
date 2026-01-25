@@ -143,11 +143,12 @@
                 <table class="table" id="itemsTable">
                     <thead>
                         <tr>
-                            <th style="width: 35%;">الصنف</th>
-                            <th style="width: 15%;">الكمية</th>
-                            <th style="width: 15%;">سعر الوحدة</th>
-                            <th style="width: 15%;">الخصم</th>
-                            <th style="width: 15%;">الإجمالي</th>
+                            <th style="width: 30%;">الصنف</th>
+                            <th style="width: 12%;">نوع السعر</th>
+                            <th style="width: 12%;">الكمية</th>
+                            <th style="width: 12%;">سعر الوحدة</th>
+                            <th style="width: 12%;">الخصم</th>
+                            <th style="width: 12%;">الإجمالي</th>
                             <th style="width: 5%;"></th>
                         </tr>
                     </thead>
@@ -157,10 +158,16 @@
                                 <select name="items[0][product_id]" class="form-control product-select" required>
                                     <option value="">اختر الصنف</option>
                                     @foreach($products as $product)
-                                        <option value="{{ $product->id }}" data-price="{{ $product->selling_price }}">
-                                            {{ $product->name }} - {{ number_format($product->selling_price, 2) }} ج.م
+                                        <option value="{{ $product->id }}">
+                                            {{ $product->name }}
                                         </option>
                                     @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <select name="items[0][price_type]" class="form-control price-type-select">
+                                    <option value="retail">مستهلك</option>
+                                    <option value="wholesale">جملة</option>
                                 </select>
                             </td>
                             <td>
@@ -182,7 +189,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <button type="button" class="btn btn-sm" id="addRowBtn">+ إضافة صنف</button>
                             </td>
                         </tr>
@@ -258,7 +265,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let rowIndex = 1;
-    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => $p->selling_price]));
+    // Products data with both prices
+    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'wholesale' => $p->wholesale_price ?? $p->selling_price]]));
 
     // Add new row
     document.getElementById('addRowBtn').addEventListener('click', function() {
@@ -272,6 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
             input.name = input.name.replace('[0]', '[' + rowIndex + ']');
             if (input.classList.contains('quantity-input')) input.value = 1;
             else if (input.classList.contains('product-select')) input.value = '';
+            else if (input.classList.contains('price-type-select')) input.value = 'retail';
             else input.value = 0;
         });
 
@@ -300,6 +309,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const btn = row.querySelector('.remove-row');
             btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
         });
+    }
+
+    // Get price based on type
+    function getPrice(productId, priceType) {
+        const product = productsData[productId];
+        if (!product) return 0;
+        return priceType === 'wholesale' ? product.wholesale : product.retail;
+    }
+
+    // Update price based on product and price type
+    function updateRowPrice(row) {
+        const productId = row.querySelector('.product-select').value;
+        const priceType = row.querySelector('.price-type-select').value;
+        const price = getPrice(productId, priceType);
+        row.querySelector('.price-input').value = price;
+        calculateTotals();
     }
 
     // Calculate row total
@@ -333,10 +358,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Attach events to row
     function attachRowEvents(row) {
+        // Product selection change
         row.querySelector('.product-select').addEventListener('change', function() {
-            const price = productsData[this.value] || 0;
-            row.querySelector('.price-input').value = price;
-            calculateTotals();
+            updateRowPrice(row);
+        });
+
+        // Price type change
+        row.querySelector('.price-type-select').addEventListener('change', function() {
+            updateRowPrice(row);
         });
 
         row.querySelectorAll('.quantity-input, .price-input, .discount-input').forEach(input => {
