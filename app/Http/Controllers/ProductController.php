@@ -30,8 +30,9 @@ class ProductController extends Controller
     {
         $categories = Category::active()->ordered()->get();
         $units = Unit::active()->get();
+        $existingProducts = Product::select('id', 'name', 'sku')->orderBy('name')->get();
 
-        return view('products.create', compact('categories', 'units'));
+        return view('products.create', compact('categories', 'units', 'existingProducts'));
     }
 
     /**
@@ -100,8 +101,12 @@ class ProductController extends Controller
     {
         $categories = Category::active()->ordered()->get();
         $units = Unit::active()->get();
+        $existingProducts = Product::select('id', 'name', 'sku')
+            ->where('id', '!=', $product->id)
+            ->orderBy('name')
+            ->get();
 
-        return view('products.edit', compact('product', 'categories', 'units'));
+        return view('products.edit', compact('product', 'categories', 'units', 'existingProducts'));
     }
 
     /**

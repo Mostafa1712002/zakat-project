@@ -20,9 +20,13 @@
             @method('PUT')
 
             <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                     <label for="name" class="form-label">اسم المنتج *</label>
-                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $product->name) }}" required>
+                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $product->name) }}" required autocomplete="off">
+                    <div id="nameSuggestions" class="suggestions-dropdown"></div>
+                    <div id="nameWarning" class="form-warning" style="display: none;">
+                        ⚠️ يوجد منتج بنفس الاسم أو اسم مشابه
+                    </div>
                     @error('name')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
@@ -195,4 +199,106 @@
         </form>
     </div>
 </div>
+
+<style>
+.suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.suggestions-dropdown.show { display: block; }
+.suggestion-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover { background: var(--bg); }
+.suggestion-item .name { font-weight: 500; }
+.suggestion-item .sku { font-size: 12px; color: var(--text-muted); }
+.suggestion-item.exact-match { background: #fef3c7; }
+.form-warning {
+    color: #b45309;
+    background: #fef3c7;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-top: 6px;
+}
+</style>
+
+@push('scripts')
+<script>
+const existingProducts = @json($existingProducts);
+const nameInput = document.getElementById('name');
+const suggestionsDiv = document.getElementById('nameSuggestions');
+const warningDiv = document.getElementById('nameWarning');
+
+nameInput.addEventListener('input', function() {
+    const value = this.value.trim().toLowerCase();
+
+    if (value.length < 2) {
+        suggestionsDiv.classList.remove('show');
+        warningDiv.style.display = 'none';
+        return;
+    }
+
+    const matches = existingProducts.filter(p =>
+        p.name.toLowerCase().includes(value)
+    ).slice(0, 10);
+
+    if (matches.length > 0) {
+        let html = '';
+        let hasExactMatch = false;
+
+        matches.forEach(p => {
+            const isExact = p.name.toLowerCase() === value;
+            if (isExact) hasExactMatch = true;
+            html += `<div class="suggestion-item ${isExact ? 'exact-match' : ''}" data-name="${p.name}">
+                <span class="name">${p.name}</span>
+                <span class="sku">${p.sku || ''}</span>
+            </div>`;
+        });
+
+        suggestionsDiv.innerHTML = html;
+        suggestionsDiv.classList.add('show');
+        warningDiv.style.display = hasExactMatch ? 'block' : 'none';
+
+        suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', function() {
+                nameInput.value = this.dataset.name;
+                suggestionsDiv.classList.remove('show');
+                warningDiv.style.display = 'block';
+            });
+        });
+    } else {
+        suggestionsDiv.classList.remove('show');
+        warningDiv.style.display = 'none';
+    }
+});
+
+document.addEventListener('click', function(e) {
+    if (!nameInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+        suggestionsDiv.classList.remove('show');
+    }
+});
+
+nameInput.addEventListener('blur', function() {
+    setTimeout(() => suggestionsDiv.classList.remove('show'), 200);
+});
+</script>
+@endpush
 @endsection
