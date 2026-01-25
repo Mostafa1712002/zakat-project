@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\ExpensePaymentMethod;
 use Illuminate\Http\Request;
 
@@ -16,12 +17,28 @@ class ExpenseController extends Controller
         'other',
     ];
 
-    public function index()
+    public function index(Request $request)
     {
-        $expenses = Expense::with('paymentMethod')
-            ->orderBy('expense_date', 'desc')
-            ->paginate(20);
-        return view('expenses.index', compact('expenses'));
+        $query = Expense::with(['paymentMethod', 'category'])
+            ->orderBy('expense_date', 'desc');
+
+        // Filter by category
+        if ($request->filled('category_id')) {
+            $query->where('expense_category_id', $request->category_id);
+        }
+
+        // Filter by date range
+        if ($request->filled('from_date')) {
+            $query->whereDate('expense_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('expense_date', '<=', $request->to_date);
+        }
+
+        $expenses = $query->paginate(20)->withQueryString();
+        $categories = ExpenseCategory::active()->orderBy('name')->get();
+
+        return view('expenses.index', compact('expenses', 'categories'));
     }
 
     public function create()
@@ -31,13 +48,16 @@ class ExpenseController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('expenses.create', compact('paymentMethods'));
+        $categories = ExpenseCategory::active()->orderBy('name')->get();
+
+        return view('expenses.create', compact('paymentMethods', 'categories'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'expense_category_id' => 'nullable|exists:expense_categories,id',
             'expense_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'expense_payment_method_id' => 'nullable|exists:expense_payment_methods,id',
@@ -77,13 +97,16 @@ class ExpenseController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('expenses.edit', compact('expense', 'paymentMethods'));
+        $categories = ExpenseCategory::active()->orderBy('name')->get();
+
+        return view('expenses.edit', compact('expense', 'paymentMethods', 'categories'));
     }
 
     public function update(Request $request, Expense $expense)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'expense_category_id' => 'nullable|exists:expense_categories,id',
             'expense_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'expense_payment_method_id' => 'nullable|exists:expense_payment_methods,id',

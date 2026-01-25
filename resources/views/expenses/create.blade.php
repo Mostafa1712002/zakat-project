@@ -29,6 +29,23 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="expense_category_id" class="form-label">نوع المصروف</label>
+                    <select name="expense_category_id" id="expense_category_id" class="form-control">
+                        <option value="">-- اختر النوع --</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ old('expense_category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('expense_category_id')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
                     <label for="expense_date" class="form-label">التاريخ *</label>
                     <input type="date" name="expense_date" id="expense_date" class="form-control" value="{{ old('expense_date', date('Y-m-d')) }}" required>
                 </div>

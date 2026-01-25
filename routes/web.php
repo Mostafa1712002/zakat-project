@@ -23,6 +23,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\SalesRepDashboardController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ExpenseCategoryController;
 
 // Authentication Routes
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('guest');
@@ -77,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Expenses (المصروفات)
     Route::resource('expenses', ExpenseController::class);
+    Route::resource('expense-categories', ExpenseCategoryController::class)->except(['show']);
     Route::resource('expense-payment-methods', ExpensePaymentMethodController::class)
         ->except(['show']);
 
