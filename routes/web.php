@@ -24,6 +24,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\SalesRepDashboardController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ExpenseCategoryController;
+use App\Http\Controllers\EmployeeTransactionController;
 
 // Authentication Routes
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('guest');
@@ -75,6 +76,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Employees (الموظفين)
     Route::resource('employees', EmployeeController::class);
+
+    // Employee Transactions (مرتبات وسحوبات الموظفين)
+    Route::get('employee-transactions/employee/{employee}', [EmployeeTransactionController::class, 'employeeHistory'])->name('employee-transactions.employee-history');
+    Route::resource('employee-transactions', EmployeeTransactionController::class);
 
     // Expenses (المصروفات)
     Route::resource('expenses', ExpenseController::class);
