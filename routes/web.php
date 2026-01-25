@@ -27,6 +27,7 @@ use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\EmployeeTransactionController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerTransactionController;
+use App\Http\Controllers\ProfitDistributionController;
 
 // Authentication Routes
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('guest');
@@ -89,6 +90,13 @@ Route::middleware(['auth'])->group(function () {
     // Partner Transactions (معاملات الشركاء)
     Route::get('partner-transactions/partner/{partner}', [PartnerTransactionController::class, 'partnerHistory'])->name('partner-transactions.partner-history');
     Route::resource('partner-transactions', PartnerTransactionController::class);
+
+    // Profit Distribution (توزيع الأرباح)
+    Route::get('profit-distribution', [ProfitDistributionController::class, 'index'])->name('profit-distribution.index');
+    Route::get('profit-distribution/create', [ProfitDistributionController::class, 'create'])->name('profit-distribution.create');
+    Route::post('profit-distribution', [ProfitDistributionController::class, 'store'])->name('profit-distribution.store');
+    Route::post('profit-distribution/preview', [ProfitDistributionController::class, 'preview'])->name('profit-distribution.preview');
+    Route::get('profit-distribution/{period}', [ProfitDistributionController::class, 'show'])->name('profit-distribution.show');
 
     // Expenses (المصروفات)
     Route::resource('expenses', ExpenseController::class);

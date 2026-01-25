@@ -518,6 +518,7 @@
                 @endif
                 <li><a href="{{ route('partners.index') }}" class="{{ request()->routeIs('partners.*') ? 'active' : '' }}"><span class="nav-icon">🤝</span> الشركاء</a></li>
                 <li><a href="{{ route('partner-transactions.index') }}" class="{{ request()->routeIs('partner-transactions.*') ? 'active' : '' }}"><span class="nav-icon">📊</span> معاملات الشركاء</a></li>
+                <li><a href="{{ route('profit-distribution.index') }}" class="{{ request()->routeIs('profit-distribution.*') ? 'active' : '' }}"><span class="nav-icon">💹</span> توزيع الأرباح</a></li>
                 @if(feature_enabled('expenses'))
                 <li><a href="{{ route('expenses.index') }}" class="{{ request()->routeIs('expenses.*') ? 'active' : '' }}"><span class="nav-icon">💸</span> المصروفات</a></li>
                 @endif
