@@ -56,6 +56,9 @@
 <div class="card" style="margin-top: 1.5rem;">
     <div class="card-header">
         <h2>📦 المخزون الحالي</h2>
+        <div class="search-box">
+            <input type="text" id="productSearch" class="form-control" placeholder="🔍 بحث بإسم الصنف..." style="width: 250px;">
+        </div>
     </div>
     <div class="table-container">
         <table class="table">
@@ -98,5 +101,43 @@
 <style>
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
 .card-body h3 { margin-bottom: 1rem; font-size: 1rem; color: var(--primary); }
+.search-box input { padding: 8px 12px; font-size: 14px; }
+.highlight { background-color: #fef08a; }
 </style>
+
+@push('scripts')
+<script>
+document.getElementById('productSearch').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.table tbody tr');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const productName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+        if (searchTerm === '' || productName.includes(searchTerm)) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Show "no results" message if no matches
+    const emptyRow = document.querySelector('.table tbody .empty-state');
+    if (visibleCount === 0 && !emptyRow && searchTerm !== '') {
+        const tbody = document.querySelector('.table tbody');
+        const existingNoResults = document.getElementById('noSearchResults');
+        if (!existingNoResults) {
+            const noResultsRow = document.createElement('tr');
+            noResultsRow.id = 'noSearchResults';
+            noResultsRow.innerHTML = '<td colspan="6" class="text-center text-muted">لا توجد نتائج للبحث</td>';
+            tbody.appendChild(noResultsRow);
+        }
+    } else {
+        const existingNoResults = document.getElementById('noSearchResults');
+        if (existingNoResults) existingNoResults.remove();
+    }
+});
+</script>
+@endpush
 @endsection
