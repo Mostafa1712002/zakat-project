@@ -90,9 +90,9 @@
             </p>
         </div>
 
-        <form action="{{ route('logout') }}" method="POST">
+        <a href="{{ route('login') }}" class="btn" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">إعادة تسجيل الدخول</a>
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
             @csrf
-            <button type="submit" class="btn">تسجيل الخروج</button>
         </form>
 
         <div class="user-info">

@@ -53,11 +53,13 @@ class ExpenseController extends Controller
             ->orderBy('name')
             ->get();
 
-        $categories = ExpenseCategory::active()->orderBy('name')->get();
-        $employees = Employee::where('is_active', true)->orderBy('name')->get();
-        $partners = Partner::where('is_active', true)->orderBy('name')->get();
+        // استبعاد فئات الموظفين والشركاء - يتم إنشاؤها تلقائياً من صفحات الموظفين والشركاء
+        $categories = ExpenseCategory::active()
+            ->whereNotIn('code', ['SAL', 'ADV', 'EMP_ADVANCE', 'PARTNER_PROFIT'])
+            ->orderBy('name')
+            ->get();
 
-        return view('expenses.create', compact('paymentMethods', 'categories', 'employees', 'partners'));
+        return view('expenses.create', compact('paymentMethods', 'categories'));
     }
 
     public function store(Request $request)
