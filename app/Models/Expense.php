@@ -22,6 +22,10 @@ class Expense extends Model
         'expense_category_id',
         'branch_id',
         'user_id',
+        'employee_id',
+        'partner_id',
+        'employee_transaction_id',
+        'partner_transaction_id',
         'expense_date',
         'title',
         'description',
@@ -70,6 +74,26 @@ class Expense extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
+    }
+
+    public function employeeTransaction(): BelongsTo
+    {
+        return $this->belongsTo(EmployeeTransaction::class);
+    }
+
+    public function partnerTransaction(): BelongsTo
+    {
+        return $this->belongsTo(PartnerTransaction::class);
     }
 
     public function scopeOfStatus($query, string $status)

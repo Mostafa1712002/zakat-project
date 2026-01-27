@@ -22,38 +22,87 @@
             <h3 class="card-title">بيانات حساب تسجيل الدخول</h3>
         </div>
         <div class="card-body">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="name" class="form-label">اسم المندوب *</label>
-                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required>
-                    @error('name')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
+            @if($availableUsers->count() > 0)
+            {{-- خيار الاختيار بين مستخدم موجود أو جديد --}}
+            <div class="form-group">
+                <label class="form-label">طريقة الإنشاء</label>
+                <div class="user-type-selector">
+                    <label class="radio-label">
+                        <input type="radio" name="user_type" value="existing" id="userTypeExisting" {{ old('user_type', 'existing') == 'existing' ? 'checked' : '' }}>
+                        <span>اختيار من مستخدم موجود</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="user_type" value="new" id="userTypeNew" {{ old('user_type') == 'new' ? 'checked' : '' }}>
+                        <span>إنشاء مستخدم جديد</span>
+                    </label>
                 </div>
+            </div>
 
+            {{-- اختيار من المستخدمين الموجودين --}}
+            <div id="existingUserSection" class="user-section">
                 <div class="form-group">
-                    <label for="email" class="form-label">البريد الإلكتروني (لتسجيل الدخول) *</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" required>
-                    @error('email')
+                    <label for="existing_user_id" class="form-label">اختر المستخدم *</label>
+                    <select name="existing_user_id" id="existing_user_id" class="form-control">
+                        <option value="">اختر مستخدم...</option>
+                        @foreach($availableUsers as $user)
+                            <option value="{{ $user->id }}" {{ old('existing_user_id') == $user->id ? 'selected' : '' }}>
+                                {{ $user->name }} - {{ $user->email }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">المستخدمين الذين لديهم دور "مندوب" ولم يتم ربطهم بمندوب بعد</small>
+                    @error('existing_user_id')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="password" class="form-label">كلمة المرور *</label>
-                    <input type="password" name="password" id="password" class="form-control" required minlength="8">
-                    @error('password')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
+            {{-- إنشاء مستخدم جديد --}}
+            <div id="newUserSection" class="user-section" style="display: none;">
+                <input type="hidden" name="create_new_user" id="createNewUser" value="0">
+            @else
+            <div id="newUserSection" class="user-section">
+                <input type="hidden" name="create_new_user" value="1">
+                <div class="alert alert-info" style="margin-bottom: 16px;">
+                    <strong>ℹ️</strong> لا يوجد مستخدمين متاحين بدور "مندوب". سيتم إنشاء حساب جديد.
+                </div>
+            @endif
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name" class="form-label">اسم المندوب *</label>
+                        <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}">
+                        @error('name')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">البريد الإلكتروني (لتسجيل الدخول) *</label>
+                        <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}">
+                        @error('email')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="password_confirmation" class="form-label">تأكيد كلمة المرور *</label>
-                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password" class="form-label">كلمة المرور *</label>
+                        <input type="password" name="password" id="password" class="form-control" minlength="8">
+                        @error('password')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password_confirmation" class="form-label">تأكيد كلمة المرور *</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                    </div>
                 </div>
             </div>
+            @if($availableUsers->count() > 0)
+            </div>
+            @endif
         </div>
     </div>
 
@@ -246,5 +295,87 @@
         color: var(--text-muted);
         font-size: 12px;
     }
+    .user-type-selector {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .radio-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .radio-label:hover {
+        border-color: var(--primary);
+    }
+    .radio-label input[type="radio"]:checked + span {
+        color: var(--primary);
+        font-weight: 600;
+    }
+    .radio-label:has(input[type="radio"]:checked) {
+        border-color: var(--primary);
+        background: rgba(8,145,178,0.05);
+    }
+    .user-section {
+        padding: 16px;
+        background: var(--bg);
+        border-radius: 8px;
+        margin-top: 16px;
+    }
+    .alert-info {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #7dd3fc;
+        padding: 12px 16px;
+        border-radius: 8px;
+    }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userTypeExisting = document.getElementById('userTypeExisting');
+    const userTypeNew = document.getElementById('userTypeNew');
+    const existingUserSection = document.getElementById('existingUserSection');
+    const newUserSection = document.getElementById('newUserSection');
+    const createNewUserInput = document.getElementById('createNewUser');
+
+    function toggleUserSections() {
+        if (!userTypeExisting || !userTypeNew) return;
+
+        if (userTypeExisting.checked) {
+            existingUserSection.style.display = 'block';
+            newUserSection.style.display = 'none';
+            if (createNewUserInput) createNewUserInput.value = '0';
+            // Disable new user fields
+            newUserSection.querySelectorAll('input').forEach(i => i.removeAttribute('required'));
+            // Enable existing user field
+            document.getElementById('existing_user_id').setAttribute('required', 'required');
+        } else {
+            existingUserSection.style.display = 'none';
+            newUserSection.style.display = 'block';
+            if (createNewUserInput) createNewUserInput.value = '1';
+            // Enable new user fields
+            document.getElementById('name').setAttribute('required', 'required');
+            document.getElementById('email').setAttribute('required', 'required');
+            document.getElementById('password').setAttribute('required', 'required');
+            // Disable existing user field
+            document.getElementById('existing_user_id').removeAttribute('required');
+        }
+    }
+
+    if (userTypeExisting && userTypeNew) {
+        userTypeExisting.addEventListener('change', toggleUserSections);
+        userTypeNew.addEventListener('change', toggleUserSections);
+        toggleUserSections(); // Initial state
+    }
+});
+</script>
 @endpush

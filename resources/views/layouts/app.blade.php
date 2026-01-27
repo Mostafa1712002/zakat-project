@@ -470,7 +470,12 @@
 
     <div class="app">
         <aside class="sidebar" id="sidebar">
-            <a href="{{ route('dashboard') }}" class="logo">
+            @php
+                $homeRoute = (auth()->user()->isSalesRep() && !auth()->user()->isSuperAdmin())
+                    ? route('sales-rep.dashboard')
+                    : route('dashboard');
+            @endphp
+            <a href="{{ $homeRoute }}" class="logo">
                 <img src="{{ asset('logo.png') }}" alt="Rogence System" class="logo-icon">
                 <div class="logo-text">Rogence System</div>
             </a>
@@ -484,54 +489,68 @@
             </div>
 
             <ul class="nav-menu">
-                <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
-                @if(feature_enabled('sales'))
-                <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}"><span class="nav-icon">💰</span> المبيعات</a></li>
-                @endif
-                @if(feature_enabled('purchases'))
-                <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"><span class="nav-icon">🛒</span> المشتريات</a></li>
-                @endif
-                @if(feature_enabled('suppliers'))
-                <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><span class="nav-icon">🏢</span> الموردين</a></li>
-                @endif
-                @if(feature_enabled('invoices'))
-                <li><a href="{{ route('invoices.index') }}" class="{{ request()->routeIs('invoices.*') ? 'active' : '' }}"><span class="nav-icon">📄</span> الفواتير</a></li>
-                @endif
-                @if(feature_enabled('warehouses'))
-                <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}"><span class="nav-icon">🏭</span> المخازن</a></li>
-                @endif
-                @if(feature_enabled('products'))
-                <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}"><span class="nav-icon">📦</span> الأصناف</a></li>
-                @endif
-                @if(feature_enabled('categories'))
-                <li><a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}"><span class="nav-icon">🏷️</span> الأقسام</a></li>
-                @endif
-                @if(feature_enabled('customers'))
-                <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}"><span class="nav-icon">👥</span> العملاء</a></li>
-                @endif
-                @if(feature_enabled('sales_reps'))
-                <li><a href="{{ route('sales-reps.index') }}" class="{{ request()->routeIs('sales-reps.*') ? 'active' : '' }}"><span class="nav-icon">👔</span> المندوبين</a></li>
-                @endif
-                @if(feature_enabled('employees'))
-                <li><a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}"><span class="nav-icon">👨‍💻</span> الموظفين</a></li>
-                <li><a href="{{ route('employee-transactions.index') }}" class="{{ request()->routeIs('employee-transactions.*') ? 'active' : '' }}"><span class="nav-icon">💰</span> المرتبات والسلف</a></li>
-                @endif
-                <li><a href="{{ route('partners.index') }}" class="{{ request()->routeIs('partners.*') ? 'active' : '' }}"><span class="nav-icon">🤝</span> الشركاء</a></li>
-                <li><a href="{{ route('partner-transactions.index') }}" class="{{ request()->routeIs('partner-transactions.*') ? 'active' : '' }}"><span class="nav-icon">📊</span> معاملات الشركاء</a></li>
-                <li><a href="{{ route('profit-distribution.index') }}" class="{{ request()->routeIs('profit-distribution.*') ? 'active' : '' }}"><span class="nav-icon">💹</span> توزيع الأرباح</a></li>
-                @if(feature_enabled('expenses'))
-                <li><a href="{{ route('expenses.index') }}" class="{{ request()->routeIs('expenses.*') ? 'active' : '' }}"><span class="nav-icon">💸</span> المصروفات</a></li>
-                @endif
-                @if(feature_enabled('reports'))
-                <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><span class="nav-icon">📈</span> التقارير</a></li>
-                @endif
-                @if(feature_enabled('settings'))
-                <li><a href="{{ route('settings.index') }}" class="{{ request()->routeIs('settings.*') ? 'active' : '' }}"><span class="nav-icon">⚙️</span> الإعدادات</a></li>
-                @endif
-                <li><a href="{{ route('portfolio.index') }}" class="{{ request()->routeIs('portfolio.*') ? 'active' : '' }}"><span class="nav-icon">📸</span> معرض الأعمال</a></li>
-                <li><a href="{{ route('ux-analysis.index') }}" class="{{ request()->routeIs('ux-analysis.*') ? 'active' : '' }}"><span class="nav-icon">🎨</span> تحليل تجربة المستخدم</a></li>
-                @if(auth()->user() && auth()->user()->isSuperAdmin())
-                <li><a href="{{ route('features.index') }}" class="{{ request()->routeIs('features.*') ? 'active' : '' }}" style="background: rgba(245,158,11,0.2);"><span class="nav-icon">🔧</span> إدارة المميزات</a></li>
+                @php
+                    $isSalesRepOnly = auth()->user()->isSalesRep() && !auth()->user()->isSuperAdmin();
+                @endphp
+
+                @if($isSalesRepOnly)
+                    {{-- Sales Rep Menu --}}
+                    <li><a href="{{ route('sales-rep.dashboard') }}" class="{{ request()->routeIs('sales-rep.*') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
+                    <li><a href="{{ route('sales-rep.customers') }}" class="{{ request()->routeIs('sales-rep.customers') ? 'active' : '' }}"><span class="nav-icon">👥</span> عملائي</a></li>
+                    <li><a href="{{ route('sales-rep.sales') }}" class="{{ request()->routeIs('sales-rep.sales') ? 'active' : '' }}"><span class="nav-icon">💰</span> مبيعاتي</a></li>
+                    <li><a href="{{ route('sales-rep.collections') }}" class="{{ request()->routeIs('sales-rep.collections') ? 'active' : '' }}"><span class="nav-icon">💵</span> تحصيلاتي</a></li>
+                    <li><a href="{{ route('sales-rep.reports') }}" class="{{ request()->routeIs('sales-rep.reports') ? 'active' : '' }}"><span class="nav-icon">📈</span> تقاريري</a></li>
+                @else
+                    {{-- Admin/Full Menu --}}
+                    <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
+                    @if(feature_enabled('sales'))
+                    <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}"><span class="nav-icon">💰</span> المبيعات</a></li>
+                    @endif
+                    @if(feature_enabled('purchases'))
+                    <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"><span class="nav-icon">🛒</span> المشتريات</a></li>
+                    @endif
+                    @if(feature_enabled('suppliers'))
+                    <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><span class="nav-icon">🏢</span> الموردين</a></li>
+                    @endif
+                    @if(feature_enabled('invoices'))
+                    <li><a href="{{ route('invoices.index') }}" class="{{ request()->routeIs('invoices.*') ? 'active' : '' }}"><span class="nav-icon">📄</span> الفواتير</a></li>
+                    @endif
+                    @if(feature_enabled('warehouses'))
+                    <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}"><span class="nav-icon">🏭</span> المخازن</a></li>
+                    @endif
+                    @if(feature_enabled('products'))
+                    <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}"><span class="nav-icon">📦</span> الأصناف</a></li>
+                    @endif
+                    @if(feature_enabled('categories'))
+                    <li><a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}"><span class="nav-icon">🏷️</span> الأقسام</a></li>
+                    @endif
+                    @if(feature_enabled('customers'))
+                    <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}"><span class="nav-icon">👥</span> العملاء</a></li>
+                    @endif
+                    @if(feature_enabled('sales_reps'))
+                    <li><a href="{{ route('sales-reps.index') }}" class="{{ request()->routeIs('sales-reps.*') ? 'active' : '' }}"><span class="nav-icon">👔</span> المندوبين</a></li>
+                    @endif
+                    @if(feature_enabled('employees'))
+                    <li><a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}"><span class="nav-icon">👨‍💻</span> الموظفين</a></li>
+                    <li><a href="{{ route('employee-transactions.index') }}" class="{{ request()->routeIs('employee-transactions.*') ? 'active' : '' }}"><span class="nav-icon">💰</span> المرتبات والسلف</a></li>
+                    @endif
+                    <li><a href="{{ route('partners.index') }}" class="{{ request()->routeIs('partners.*') ? 'active' : '' }}"><span class="nav-icon">🤝</span> الشركاء</a></li>
+                    <li><a href="{{ route('partner-transactions.index') }}" class="{{ request()->routeIs('partner-transactions.*') ? 'active' : '' }}"><span class="nav-icon">📊</span> معاملات الشركاء</a></li>
+                    <li><a href="{{ route('profit-distribution.index') }}" class="{{ request()->routeIs('profit-distribution.*') ? 'active' : '' }}"><span class="nav-icon">💹</span> توزيع الأرباح</a></li>
+                    @if(feature_enabled('expenses'))
+                    <li><a href="{{ route('expenses.index') }}" class="{{ request()->routeIs('expenses.*') ? 'active' : '' }}"><span class="nav-icon">💸</span> المصروفات</a></li>
+                    @endif
+                    @if(feature_enabled('reports'))
+                    <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><span class="nav-icon">📈</span> التقارير</a></li>
+                    @endif
+                    @if(feature_enabled('settings'))
+                    <li><a href="{{ route('settings.index') }}" class="{{ request()->routeIs('settings.*') ? 'active' : '' }}"><span class="nav-icon">⚙️</span> الإعدادات</a></li>
+                    @endif
+                    <li><a href="{{ route('portfolio.index') }}" class="{{ request()->routeIs('portfolio.*') ? 'active' : '' }}"><span class="nav-icon">📸</span> معرض الأعمال</a></li>
+                    <li><a href="{{ route('ux-analysis.index') }}" class="{{ request()->routeIs('ux-analysis.*') ? 'active' : '' }}"><span class="nav-icon">🎨</span> تحليل تجربة المستخدم</a></li>
+                    @if(auth()->user() && auth()->user()->isSuperAdmin())
+                    <li><a href="{{ route('features.index') }}" class="{{ request()->routeIs('features.*') ? 'active' : '' }}" style="background: rgba(245,158,11,0.2);"><span class="nav-icon">🔧</span> إدارة المميزات</a></li>
+                    @endif
                 @endif
             </ul>
 

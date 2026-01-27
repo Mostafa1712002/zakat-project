@@ -76,6 +76,60 @@
                 </div>
             </div>
 
+            {{-- قسم اختيار الموظف --}}
+            <div class="form-row employee-section" style="display: none;">
+                <div class="form-group">
+                    <label for="employee_id" class="form-label">الموظف *</label>
+                    <select name="employee_id" id="employee_id" class="form-control">
+                        <option value="">-- اختر الموظف --</option>
+                        @foreach($employees as $employee)
+                            <option value="{{ $employee->id }}" {{ old('employee_id') == $employee->id ? 'selected' : '' }}>
+                                {{ $employee->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('employee_id')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="transaction_type" class="form-label">نوع المعاملة</label>
+                    <select name="transaction_type" id="employee_transaction_type" class="form-control">
+                        <option value="salary" {{ old('transaction_type') == 'salary' ? 'selected' : '' }}>مرتب</option>
+                        <option value="advance" {{ old('transaction_type') == 'advance' ? 'selected' : '' }}>سلفة</option>
+                        <option value="bonus" {{ old('transaction_type') == 'bonus' ? 'selected' : '' }}>مكافأة</option>
+                        <option value="deduction" {{ old('transaction_type') == 'deduction' ? 'selected' : '' }}>خصم</option>
+                    </select>
+                </div>
+            </div>
+
+            {{-- قسم اختيار الشريك --}}
+            <div class="form-row partner-section" style="display: none;">
+                <div class="form-group">
+                    <label for="partner_id" class="form-label">الشريك *</label>
+                    <select name="partner_id" id="partner_id" class="form-control">
+                        <option value="">-- اختر الشريك --</option>
+                        @foreach($partners as $partner)
+                            <option value="{{ $partner->id }}" {{ old('partner_id') == $partner->id ? 'selected' : '' }}>
+                                {{ $partner->name }} ({{ $partner->ownership_percentage }}%)
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('partner_id')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="partner_transaction_type" class="form-label">نوع المعاملة</label>
+                    <select name="transaction_type" id="partner_transaction_type" class="form-control">
+                        <option value="withdrawal" {{ old('transaction_type') == 'withdrawal' ? 'selected' : '' }}>سحب</option>
+                        <option value="profit_share" {{ old('transaction_type') == 'profit_share' ? 'selected' : '' }}>توزيع أرباح</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="vendor_name" class="form-label">اسم المورد/الجهة</label>
@@ -105,4 +159,62 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('expense_category_id');
+    const employeeSection = document.querySelector('.employee-section');
+    const partnerSection = document.querySelector('.partner-section');
+    const employeeTransactionType = document.getElementById('employee_transaction_type');
+    const partnerTransactionType = document.getElementById('partner_transaction_type');
+
+    // فئات الموظفين والشركاء (بناءً على الكود)
+    const employeeCategories = ['SALARY', 'EMP_ADVANCE'];
+    const partnerCategories = ['PARTNER_PROFIT'];
+
+    // ربط الفئات بأنواع المعاملات
+    const categoryTransactionMap = {
+        'SALARY': 'salary',
+        'EMP_ADVANCE': 'advance',
+        'PARTNER_PROFIT': 'profit_share'
+    };
+
+    // بيانات الفئات
+    const categoriesData = @json($categories->mapWithKeys(fn($c) => [$c->id => $c->code]));
+
+    function updateSections() {
+        const selectedId = categorySelect.value;
+        const categoryCode = categoriesData[selectedId] || '';
+
+        // إخفاء كل الأقسام أولاً
+        employeeSection.style.display = 'none';
+        partnerSection.style.display = 'none';
+
+        // تعطيل الحقول
+        document.getElementById('employee_id').removeAttribute('required');
+        document.getElementById('partner_id').removeAttribute('required');
+
+        if (employeeCategories.includes(categoryCode)) {
+            employeeSection.style.display = 'flex';
+            document.getElementById('employee_id').setAttribute('required', 'required');
+            // تحديد نوع المعاملة تلقائياً
+            if (categoryTransactionMap[categoryCode]) {
+                employeeTransactionType.value = categoryTransactionMap[categoryCode];
+            }
+        } else if (partnerCategories.includes(categoryCode)) {
+            partnerSection.style.display = 'flex';
+            document.getElementById('partner_id').setAttribute('required', 'required');
+            // تحديد نوع المعاملة تلقائياً
+            if (categoryTransactionMap[categoryCode]) {
+                partnerTransactionType.value = categoryTransactionMap[categoryCode];
+            }
+        }
+    }
+
+    categorySelect.addEventListener('change', updateSections);
+    updateSections(); // تشغيل عند التحميل
+});
+</script>
+@endpush
 @endsection

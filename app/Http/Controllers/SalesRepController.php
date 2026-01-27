@@ -28,17 +28,25 @@ class SalesRepController extends Controller
         $branches = Branch::where('is_active', true)->get();
         $warehouses = Warehouse::where('is_active', true)->get();
 
-        return view('sales-reps.create', compact('branches', 'warehouses'));
+        // جلب المستخدمين الذين لديهم دور sales_rep ولم يتم ربطهم بمندوب بعد
+        $availableUsers = User::role('sales_rep')
+            ->whereDoesntHave('salesRep')
+            ->where('is_active', true)
+            ->get();
+
+        return view('sales-reps.create', compact('branches', 'warehouses', 'availableUsers'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
+        // التحقق من نوع الإنشاء: مستخدم موجود أو جديد
+        $createNewUser = $request->input('create_new_user', false);
+        $existingUserId = $request->input('existing_user_id');
+
+        // قواعد التحقق حسب النوع
+        $rules = [
             'code' => 'nullable|string|max:50|unique:sales_reps,code',
             'phone' => 'nullable|string|max:20',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'commission_type' => 'nullable|in:percentage,fixed',
             'sales_target' => 'nullable|numeric|min:0',
@@ -48,7 +56,19 @@ class SalesRepController extends Controller
             'default_warehouse_id' => 'nullable|exists:warehouses,id',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
-        ]);
+        ];
+
+        if ($createNewUser || empty($existingUserId)) {
+            // إنشاء مستخدم جديد
+            $rules['name'] = 'required|string|max:255';
+            $rules['email'] = 'required|email|max:255|unique:users,email';
+            $rules['password'] = 'required|string|min:8|confirmed';
+        } else {
+            // استخدام مستخدم موجود
+            $rules['existing_user_id'] = 'required|exists:users,id';
+        }
+
+        $validated = $request->validate($rules);
 
         // Auto-generate sales rep code if not provided
         if (empty($validated['code'])) {
@@ -60,32 +80,47 @@ class SalesRepController extends Controller
         DB::beginTransaction();
 
         try {
-            // إنشاء حساب المستخدم
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'branch_id' => $validated['branch_id'],
-                'is_active' => $validated['is_active'] ?? true,
-            ]);
+            if ($createNewUser || empty($existingUserId)) {
+                // إنشاء حساب المستخدم الجديد
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                    'branch_id' => $validated['branch_id'],
+                    'is_active' => $validated['is_active'] ?? true,
+                ]);
 
-            // تعيين صلاحية المندوب
-            $role = Role::firstOrCreate(['name' => 'sales_rep', 'guard_name' => 'web']);
-            $user->assignRole($role);
+                // تعيين صلاحية المندوب
+                $role = Role::firstOrCreate(['name' => 'sales_rep', 'guard_name' => 'web']);
+                $user->assignRole($role);
+
+                $name = $validated['name'];
+                $email = $validated['email'];
+            } else {
+                // استخدام المستخدم الموجود
+                $user = User::findOrFail($validated['existing_user_id']);
+                $user->update([
+                    'branch_id' => $validated['branch_id'],
+                    'is_active' => $validated['is_active'] ?? true,
+                ]);
+
+                $name = $user->name;
+                $email = $user->email;
+            }
 
             // إنشاء سجل المندوب
             $salesRep = SalesRep::create([
                 'user_id' => $user->id,
-                'name' => $validated['name'],
+                'name' => $name,
                 'code' => $validated['code'],
-                'phone' => $validated['phone'],
-                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? $user->phone,
+                'email' => $email,
                 'commission_rate' => $validated['commission_rate'] ?? 0,
                 'commission_type' => $validated['commission_type'] ?? 'percentage',
                 'sales_target' => $validated['sales_target'] ?? 0,
                 'branch_id' => $validated['branch_id'],
                 'is_active' => $validated['is_active'] ?? true,
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
             ]);
 
             // ربط المخازن
@@ -101,8 +136,11 @@ class SalesRepController extends Controller
 
             DB::commit();
 
-            return redirect()->route('sales-reps.index')
-                ->with('success', 'تم إضافة المندوب بنجاح وتم إنشاء حساب تسجيل الدخول');
+            $message = $createNewUser || empty($existingUserId)
+                ? 'تم إضافة المندوب بنجاح وتم إنشاء حساب تسجيل الدخول'
+                : 'تم إضافة المندوب بنجاح وتم ربطه بالمستخدم الموجود';
+
+            return redirect()->route('sales-reps.index')->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();

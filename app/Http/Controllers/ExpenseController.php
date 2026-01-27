@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
+use App\Models\EmployeeTransaction;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\ExpensePaymentMethod;
+use App\Models\Partner;
+use App\Models\PartnerTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ExpenseController extends Controller
 {
@@ -49,8 +54,10 @@ class ExpenseController extends Controller
             ->get();
 
         $categories = ExpenseCategory::active()->orderBy('name')->get();
+        $employees = Employee::where('is_active', true)->orderBy('name')->get();
+        $partners = Partner::where('is_active', true)->orderBy('name')->get();
 
-        return view('expenses.create', compact('paymentMethods', 'categories'));
+        return view('expenses.create', compact('paymentMethods', 'categories', 'employees', 'partners'));
     }
 
     public function store(Request $request)
@@ -65,6 +72,9 @@ class ExpenseController extends Controller
             'reference_number' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'notes' => 'nullable|string',
+            'employee_id' => 'nullable|exists:employees,id',
+            'partner_id' => 'nullable|exists:partners,id',
+            'transaction_type' => 'nullable|string', // salary, advance, bonus, deduction, withdrawal, profit_share
         ]);
 
         $paymentMethod = null;
@@ -73,15 +83,57 @@ class ExpenseController extends Controller
         }
 
         $validated['payment_method'] = $this->resolveLegacyPaymentMethod($paymentMethod);
-
-        // Generate expense number using model method (includes soft-deleted records)
         $validated['expense_number'] = Expense::generateExpenseNumber();
         $validated['total_amount'] = $validated['amount'];
         $validated['user_id'] = auth()->id();
 
-        Expense::create($validated);
+        DB::beginTransaction();
 
-        return redirect()->route('expenses.index')->with('success', 'تم إضافة المصروف بنجاح');
+        try {
+            // إنشاء معاملة موظف إذا تم اختيار موظف
+            if (!empty($validated['employee_id'])) {
+                $transactionType = $validated['transaction_type'] ?? 'salary';
+                $employeeTransaction = EmployeeTransaction::create([
+                    'employee_id' => $validated['employee_id'],
+                    'transaction_number' => EmployeeTransaction::generateTransactionNumber(),
+                    'type' => $transactionType,
+                    'amount' => $validated['amount'],
+                    'transaction_date' => $validated['expense_date'],
+                    'month_year' => date('Y-m', strtotime($validated['expense_date'])),
+                    'payment_method' => $validated['payment_method'],
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+                $validated['employee_transaction_id'] = $employeeTransaction->id;
+            }
+
+            // إنشاء معاملة شريك إذا تم اختيار شريك
+            if (!empty($validated['partner_id'])) {
+                $transactionType = $validated['transaction_type'] ?? 'withdrawal';
+                $partnerTransaction = PartnerTransaction::create([
+                    'partner_id' => $validated['partner_id'],
+                    'transaction_number' => PartnerTransaction::generateTransactionNumber(),
+                    'type' => $transactionType,
+                    'amount' => $validated['amount'],
+                    'transaction_date' => $validated['expense_date'],
+                    'payment_method' => $validated['payment_method'],
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+                $validated['partner_transaction_id'] = $partnerTransaction->id;
+            }
+
+            // إزالة الحقول غير الموجودة في جدول expenses
+            unset($validated['transaction_type']);
+
+            Expense::create($validated);
+
+            DB::commit();
+
+            return redirect()->route('expenses.index')->with('success', 'تم إضافة المصروف بنجاح');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'حدث خطأ: ' . $e->getMessage());
+        }
     }
 
     public function show(Expense $expense)
@@ -98,8 +150,10 @@ class ExpenseController extends Controller
             ->get();
 
         $categories = ExpenseCategory::active()->orderBy('name')->get();
+        $employees = Employee::where('is_active', true)->orderBy('name')->get();
+        $partners = Partner::where('is_active', true)->orderBy('name')->get();
 
-        return view('expenses.edit', compact('expense', 'paymentMethods', 'categories'));
+        return view('expenses.edit', compact('expense', 'paymentMethods', 'categories', 'employees', 'partners'));
     }
 
     public function update(Request $request, Expense $expense)
