@@ -27,6 +27,8 @@ class SalesRepDashboardController extends Controller
         $endOfMonth = Carbon::now()->endOfMonth();
 
         // إحصائيات المندوب
+        $commissionDetails = $salesRep->getMonthlyCommissionDetails();
+
         $stats = [
             'total_customers' => $salesRep->customers()->count(),
             'active_customers' => $salesRep->customers()->active()->count(),
@@ -46,6 +48,12 @@ class SalesRepDashboardController extends Controller
                 ->sum('remaining_amount'),
             'sales_target' => $salesRep->sales_target,
             'target_achievement' => $salesRep->target_achievement,
+            // معلومات العمولة
+            'commission_earned' => $commissionDetails['commission_earned'],
+            'has_met_target' => $commissionDetails['has_met_target'],
+            'remaining_to_target' => $commissionDetails['remaining_to_target'],
+            'commission_rate' => $salesRep->commission_rate,
+            'commission_type' => $salesRep->commission_type,
         ];
 
         // آخر الفواتير
@@ -165,11 +173,15 @@ class SalesRepDashboardController extends Controller
         $year = $request->get('year', Carbon::now()->year);
         $month = $request->get('month');
 
-        // تقرير المبيعات الشهرية
+        // تقرير المبيعات الشهرية مع العمولات
         $monthlySales = collect();
+        $totalCommission = 0;
         for ($i = 1; $i <= 12; $i++) {
             $start = Carbon::create($year, $i, 1)->startOfMonth();
             $end = Carbon::create($year, $i, 1)->endOfMonth();
+
+            $commissionDetails = $salesRep->getMonthlyCommissionDetails($year, $i);
+            $totalCommission += $commissionDetails['commission_earned'];
 
             $monthlySales->push([
                 'month' => $i,
@@ -183,6 +195,9 @@ class SalesRepDashboardController extends Controller
                 'invoices_count' => $salesRep->sales()
                     ->whereBetween('invoice_date', [$start, $end])
                     ->count(),
+                'target_achievement' => $commissionDetails['target_achievement'],
+                'has_met_target' => $commissionDetails['has_met_target'],
+                'commission' => $commissionDetails['commission_earned'],
             ]);
         }
 
@@ -198,7 +213,8 @@ class SalesRepDashboardController extends Controller
             'year',
             'month',
             'monthlySales',
-            'topCustomers'
+            'topCustomers',
+            'totalCommission'
         ));
     }
 

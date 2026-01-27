@@ -10,6 +10,7 @@ use App\Models\Branch;
 use App\Models\SalesRep;
 use App\Models\SaleItem;
 use App\Models\StockMovement;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -151,6 +152,30 @@ class SaleController extends Controller
             // Calculate totals
             $sale->calculateTotals();
             $sale->save();
+
+            // إنشاء تحصيل تلقائي للمبيعات النقدية
+            if ($validated['payment_type'] === 'cash' && $sale->total_amount > 0) {
+                $payment = Payment::create([
+                    'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
+                    'payable_type' => Sale::class,
+                    'payable_id' => $sale->id,
+                    'type' => Payment::TYPE_RECEIVED,
+                    'amount' => $sale->total_amount,
+                    'method' => Payment::METHOD_CASH,
+                    'payment_date' => $validated['invoice_date'],
+                    'branch_id' => $branchId,
+                    'user_id' => auth()->id(),
+                    'sales_rep_id' => $salesRepId,
+                    'status' => Payment::STATUS_COMPLETED,
+                    'notes' => 'تحصيل نقدي تلقائي - فاتورة رقم ' . $sale->invoice_number,
+                ]);
+
+                // تحديث المبلغ المدفوع في الفاتورة
+                $sale->paid_amount = $sale->total_amount;
+                $sale->remaining_amount = 0;
+                $sale->payment_status = Sale::PAYMENT_STATUS_PAID;
+                $sale->save();
+            }
 
             DB::commit();
 

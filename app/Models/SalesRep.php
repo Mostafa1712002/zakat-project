@@ -106,6 +106,85 @@ class SalesRep extends Model
     }
 
     /**
+     * حساب مبيعات الشهر
+     */
+    public function getMonthlySalesAmount(?int $year = null, ?int $month = null): float
+    {
+        $year = $year ?? now()->year;
+        $month = $month ?? now()->month;
+        $start = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+        $end = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+
+        return $this->sales()
+            ->whereBetween('invoice_date', [$start, $end])
+            ->sum('total_amount');
+    }
+
+    /**
+     * التحقق من تحقيق الهدف الشهري
+     */
+    public function hasMetMonthlyTarget(?int $year = null, ?int $month = null): bool
+    {
+        if ($this->sales_target <= 0) {
+            return false;
+        }
+        return $this->getMonthlySalesAmount($year, $month) >= $this->sales_target;
+    }
+
+    /**
+     * نسبة تحقيق الهدف الشهري
+     */
+    public function getMonthlyTargetAchievement(?int $year = null, ?int $month = null): float
+    {
+        if ($this->sales_target <= 0) {
+            return 0;
+        }
+        return ($this->getMonthlySalesAmount($year, $month) / $this->sales_target) * 100;
+    }
+
+    /**
+     * حساب عمولة الشهر (تُحسب فقط عند تحقيق الهدف)
+     */
+    public function calculateMonthlyCommission(?int $year = null, ?int $month = null): float
+    {
+        $monthlySales = $this->getMonthlySalesAmount($year, $month);
+
+        // العمولة تُحسب فقط إذا تم تحقيق الهدف
+        if ($this->sales_target > 0 && $monthlySales < $this->sales_target) {
+            return 0;
+        }
+
+        if ($this->commission_type === 'percentage') {
+            return $monthlySales * ($this->commission_rate / 100);
+        }
+
+        // عمولة ثابتة عند تحقيق الهدف
+        return $this->commission_rate;
+    }
+
+    /**
+     * الحصول على تفاصيل العمولة الشهرية
+     */
+    public function getMonthlyCommissionDetails(?int $year = null, ?int $month = null): array
+    {
+        $monthlySales = $this->getMonthlySalesAmount($year, $month);
+        $hasMetTarget = $this->hasMetMonthlyTarget($year, $month);
+        $targetAchievement = $this->getMonthlyTargetAchievement($year, $month);
+        $commission = $this->calculateMonthlyCommission($year, $month);
+
+        return [
+            'monthly_sales' => $monthlySales,
+            'sales_target' => $this->sales_target,
+            'target_achievement' => $targetAchievement,
+            'has_met_target' => $hasMetTarget,
+            'commission_rate' => $this->commission_rate,
+            'commission_type' => $this->commission_type,
+            'commission_earned' => $commission,
+            'remaining_to_target' => max(0, $this->sales_target - $monthlySales),
+        ];
+    }
+
+    /**
      * المخازن المرتبطة بالمندوب
      */
     public function warehouses(): BelongsToMany

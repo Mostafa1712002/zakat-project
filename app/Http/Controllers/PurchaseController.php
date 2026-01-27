@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
+use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\Warehouse;
-use App\Models\Product;
-use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
@@ -58,6 +61,8 @@ class PurchaseController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
+        DB::beginTransaction();
+
         try {
             // Get branch_id with fallback
             $branchId = $request->branch_id
@@ -65,18 +70,21 @@ class PurchaseController extends Controller
                 ?? Branch::where('is_main', true)->value('id')
                 ?? Branch::where('is_active', true)->value('id');
 
+            $paymentType = $request->payment_type ?? 'credit';
+            $isCash = $paymentType === 'cash';
+
             $purchase = Purchase::create([
                 'invoice_number' => Purchase::generateInvoiceNumber(),
                 'supplier_id' => $validated['supplier_id'],
                 'warehouse_id' => $validated['warehouse_id'],
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $request->due_date,
-                'payment_type' => $request->payment_type ?? 'credit',
+                'payment_type' => $paymentType,
                 'supplier_invoice_number' => $request->supplier_invoice_number,
                 'branch_id' => $branchId,
                 'user_id' => auth()->id(),
                 'status' => 'draft',
-                'payment_status' => 'unpaid',
+                'payment_status' => $isCash ? 'paid' : 'unpaid',
                 'discount_type' => $request->discount_type ?? 'fixed',
                 'discount_value' => $request->discount_value ?? 0,
                 'shipping_amount' => $request->shipping_amount ?? 0,
@@ -107,12 +115,40 @@ class PurchaseController extends Controller
                 : $purchase->discount_value;
             $purchase->discount_amount = $discount;
             $purchase->total_amount = $subtotal - $discount + ($purchase->shipping_amount ?? 0);
-            $purchase->remaining_amount = $purchase->total_amount;
+            $purchase->remaining_amount = $isCash ? 0 : $purchase->total_amount;
+            $purchase->paid_amount = $isCash ? $purchase->total_amount : 0;
             $purchase->save();
+
+            // إنشاء مصروف تلقائي للمشتريات النقدية
+            if ($isCash && $purchase->total_amount > 0) {
+                $supplier = Supplier::find($validated['supplier_id']);
+                $purchaseCategory = ExpenseCategory::where('code', 'PURCHASE')->first()
+                    ?? ExpenseCategory::where('name', 'like', '%مشتريات%')->first();
+
+                Expense::create([
+                    'expense_number' => Expense::generateExpenseNumber(),
+                    'expense_category_id' => $purchaseCategory?->id,
+                    'branch_id' => $branchId,
+                    'user_id' => auth()->id(),
+                    'expense_date' => $validated['invoice_date'],
+                    'title' => 'فاتورة مشتريات - ' . $purchase->invoice_number,
+                    'description' => 'مشتريات نقدية من المورد: ' . ($supplier->name ?? 'غير محدد'),
+                    'amount' => $purchase->total_amount,
+                    'total_amount' => $purchase->total_amount,
+                    'payment_method' => 'cash',
+                    'vendor_name' => $supplier->name ?? null,
+                    'reference_number' => $purchase->invoice_number,
+                    'status' => 'paid',
+                    'notes' => $request->notes,
+                ]);
+            }
+
+            DB::commit();
 
             return redirect()->route('purchases.index')->with('success', 'تم إنشاء فاتورة المشتريات بنجاح');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()->withInput()->with('error', 'حدث خطأ أثناء إنشاء الفاتورة: ' . $e->getMessage());
         }
     }

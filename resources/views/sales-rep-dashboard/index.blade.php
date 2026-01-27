@@ -38,22 +38,70 @@
     </div>
 </div>
 
-<!-- Target Progress -->
+<!-- Target Progress & Commission -->
 @if($stats['sales_target'] > 0)
-<div class="card mb-4">
-    <div class="card-header">
-        <h3 class="card-title">تحقيق الهدف البيعي</h3>
-        <span class="badge {{ $stats['target_achievement'] >= 100 ? 'badge-success' : ($stats['target_achievement'] >= 75 ? 'badge-warning' : 'badge-danger') }}">
-            {{ number_format($stats['target_achievement'], 1) }}%
-        </span>
-    </div>
-    <div class="card-body">
-        <div style="background: var(--bg); border-radius: 8px; height: 24px; overflow: hidden;">
-            <div style="background: linear-gradient(90deg, var(--primary), var(--primary-dark)); height: 100%; width: {{ min($stats['target_achievement'], 100) }}%; transition: width 0.5s;"></div>
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+    <!-- Target Progress -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">تحقيق الهدف البيعي</h3>
+            <span class="badge {{ $stats['target_achievement'] >= 100 ? 'badge-success' : ($stats['target_achievement'] >= 75 ? 'badge-warning' : 'badge-danger') }}">
+                {{ number_format($stats['target_achievement'], 1) }}%
+            </span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px; color: var(--text-muted);">
-            <span>المحقق: {{ number_format($stats['monthly_sales']) }} ج.م</span>
-            <span>الهدف: {{ number_format($stats['sales_target']) }} ج.م</span>
+        <div class="card-body">
+            <div style="background: var(--bg); border-radius: 8px; height: 24px; overflow: hidden;">
+                <div style="background: linear-gradient(90deg, var(--primary), var(--primary-dark)); height: 100%; width: {{ min($stats['target_achievement'], 100) }}%; transition: width 0.5s;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px; color: var(--text-muted);">
+                <span>المحقق: {{ number_format($stats['monthly_sales']) }} ج.م</span>
+                <span>الهدف: {{ number_format($stats['sales_target']) }} ج.م</span>
+            </div>
+            @if(!$stats['has_met_target'] && $stats['remaining_to_target'] > 0)
+            <div style="margin-top: 12px; padding: 10px; background: var(--warning-bg, #fff3cd); border-radius: 6px; color: var(--warning-text, #856404);">
+                متبقي لتحقيق الهدف: <strong>{{ number_format($stats['remaining_to_target']) }} ج.م</strong>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Commission Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">العمولة</h3>
+            @if($stats['has_met_target'])
+            <span class="badge badge-success">مستحقة</span>
+            @else
+            <span class="badge badge-secondary">غير مستحقة</span>
+            @endif
+        </div>
+        <div class="card-body" style="text-align: center;">
+            @if($stats['has_met_target'])
+            <div style="font-size: 32px; font-weight: bold; color: var(--success);">
+                {{ number_format($stats['commission_earned']) }} ج.م
+            </div>
+            <div style="font-size: 14px; color: var(--text-muted); margin-top: 8px;">
+                @if($stats['commission_type'] === 'percentage')
+                عمولة {{ $stats['commission_rate'] }}% من المبيعات
+                @else
+                عمولة ثابتة
+                @endif
+            </div>
+            @else
+            <div style="font-size: 24px; font-weight: bold; color: var(--text-muted);">
+                0 ج.م
+            </div>
+            <div style="font-size: 14px; color: var(--text-muted); margin-top: 8px;">
+                حقق الهدف لاستحقاق العمولة
+            </div>
+            <div style="font-size: 12px; color: var(--primary); margin-top: 4px;">
+                @if($stats['commission_type'] === 'percentage')
+                العمولة المحتملة: {{ number_format($stats['monthly_sales'] * $stats['commission_rate'] / 100) }} ج.م
+                @else
+                العمولة المحتملة: {{ number_format($stats['commission_rate']) }} ج.م
+                @endif
+            </div>
+            @endif
         </div>
     </div>
 </div>

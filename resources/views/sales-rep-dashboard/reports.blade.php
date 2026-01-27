@@ -30,6 +30,23 @@
     </div>
 </div>
 
+<!-- Total Commission Summary -->
+@if($salesRep->sales_target > 0)
+<div class="card mb-4" style="background: linear-gradient(135deg, var(--primary-light, #e3f2fd), var(--bg)); border-color: var(--primary);">
+    <div class="card-body" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 style="margin: 0; color: var(--primary);">إجمالي العمولات المستحقة لسنة {{ $year }}</h3>
+            <p style="margin: 4px 0 0; font-size: 14px; color: var(--text-muted);">
+                العمولة تُحسب عند تحقيق الهدف الشهري ({{ number_format($salesRep->sales_target) }} ج.م)
+            </p>
+        </div>
+        <div style="font-size: 28px; font-weight: bold; color: var(--success);">
+            {{ number_format($totalCommission) }} ج.م
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Monthly Performance -->
 <div class="card mb-4">
     <div class="card-header">
@@ -42,8 +59,10 @@
                     <th>الشهر</th>
                     <th>عدد الفواتير</th>
                     <th>إجمالي المبيعات</th>
+                    <th>تحقيق الهدف</th>
                     <th>إجمالي التحصيلات</th>
                     <th>نسبة التحصيل</th>
+                    <th>العمولة</th>
                 </tr>
             </thead>
             <tbody>
@@ -52,6 +71,15 @@
                     <td><strong>{{ $monthly['month_name'] }}</strong></td>
                     <td>{{ $monthly['invoices_count'] }}</td>
                     <td>{{ number_format($monthly['sales']) }} ج.م</td>
+                    <td>
+                        @if($salesRep->sales_target > 0)
+                        <span class="badge badge-{{ $monthly['has_met_target'] ? 'success' : ($monthly['target_achievement'] >= 75 ? 'warning' : 'secondary') }}">
+                            {{ number_format($monthly['target_achievement'], 0) }}%
+                        </span>
+                        @else
+                        -
+                        @endif
+                    </td>
                     <td>{{ number_format($monthly['collections']) }} ج.م</td>
                     <td>
                         @if($monthly['sales'] > 0)
@@ -63,6 +91,13 @@
                         -
                         @endif
                     </td>
+                    <td>
+                        @if($monthly['has_met_target'])
+                        <span style="color: var(--success); font-weight: bold;">{{ number_format($monthly['commission']) }} ج.م</span>
+                        @else
+                        <span class="text-muted">-</span>
+                        @endif
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -71,6 +106,7 @@
                     <td>الإجمالي</td>
                     <td>{{ $monthlySales->sum('invoices_count') }}</td>
                     <td>{{ number_format($monthlySales->sum('sales')) }} ج.م</td>
+                    <td>-</td>
                     <td>{{ number_format($monthlySales->sum('collections')) }} ج.م</td>
                     <td>
                         @if($monthlySales->sum('sales') > 0)
@@ -80,6 +116,7 @@
                         -
                         @endif
                     </td>
+                    <td style="color: var(--success);">{{ number_format($totalCommission) }} ج.م</td>
                 </tr>
             </tfoot>
         </table>
