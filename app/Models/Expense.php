@@ -170,7 +170,7 @@ class Expense extends Model
     {
         $prefix = 'EXP-' . date('Ym');
         $last = self::withTrashed()
-            ->where('expense_number', 'like', $prefix . '%')
+            ->where('expense_number', 'like', $prefix . '-%')
             ->orderBy('expense_number', 'desc')
             ->first();
 
