@@ -297,7 +297,8 @@
     }
     .user-type-selector {
         display: flex;
-        gap: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
         margin-bottom: 20px;
     }
     .radio-label {
@@ -310,6 +311,23 @@
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s;
+        flex: 1;
+        min-width: 200px;
+    }
+    @media (max-width: 768px) {
+        .user-type-selector {
+            flex-direction: column;
+        }
+        .radio-label {
+            width: 100%;
+            min-width: unset;
+        }
+        .form-row {
+            grid-template-columns: 1fr !important;
+        }
+        .checkbox-group {
+            grid-template-columns: 1fr !important;
+        }
     }
     .radio-label:hover {
         border-color: var(--primary);
