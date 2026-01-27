@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\EmployeeTransaction;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class EmployeeTransactionController extends Controller
 {
@@ -75,12 +78,56 @@ class EmployeeTransactionController extends Controller
             $validated['month_year'] = date('Y-m', strtotime($validated['transaction_date']));
         }
 
-        EmployeeTransaction::create($validated);
+        DB::beginTransaction();
+        try {
+            $transaction = EmployeeTransaction::create($validated);
+            $employee = Employee::find($validated['employee_id']);
 
-        $typeNames = EmployeeTransaction::TYPES;
-        $message = "تم تسجيل {$typeNames[$validated['type']]} بنجاح";
+            // إنشاء مصروف تلقائي للمرتبات والسلف والمكافآت
+            if (in_array($validated['type'], ['salary', 'advance', 'bonus'])) {
+                // تحديد تصنيف المصروف
+                $categoryCode = match($validated['type']) {
+                    'salary' => 'SAL',
+                    'advance' => 'ADV',
+                    'bonus' => 'SAL', // المكافآت تحت المرتبات
+                    default => 'GEN',
+                };
+                $category = ExpenseCategory::where('code', $categoryCode)->first();
 
-        return redirect()->route('employee-transactions.index')->with('success', $message);
+                // عنوان المصروف
+                $typeNames = EmployeeTransaction::TYPES;
+                $title = $typeNames[$validated['type']] . ' - ' . $employee->name;
+                if ($validated['type'] === 'salary' && !empty($validated['month_year'])) {
+                    $title .= ' (' . $validated['month_year'] . ')';
+                }
+
+                Expense::create([
+                    'expense_number' => Expense::generateExpenseNumber(),
+                    'title' => $title,
+                    'description' => $validated['description'] ?? null,
+                    'amount' => $validated['amount'],
+                    'expense_date' => $validated['transaction_date'],
+                    'category_id' => $category?->id,
+                    'payment_method' => $validated['payment_method'],
+                    'reference_number' => $validated['reference_number'],
+                    'status' => 'paid',
+                    'user_id' => auth()->id(),
+                    'employee_id' => $employee->id,
+                    'employee_transaction_id' => $transaction->id,
+                    'notes' => 'مصروف تلقائي من معاملات الموظفين - ' . $transaction->transaction_number,
+                ]);
+            }
+
+            DB::commit();
+
+            $typeNames = EmployeeTransaction::TYPES;
+            $message = "تم تسجيل {$typeNames[$validated['type']]} بنجاح";
+
+            return redirect()->route('employee-transactions.index')->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function show(EmployeeTransaction $employeeTransaction)
@@ -114,15 +161,87 @@ class EmployeeTransactionController extends Controller
             $validated['month_year'] = date('Y-m', strtotime($validated['transaction_date']));
         }
 
-        $employeeTransaction->update($validated);
+        DB::beginTransaction();
+        try {
+            $employeeTransaction->update($validated);
+            $employee = Employee::find($validated['employee_id']);
 
-        return redirect()->route('employee-transactions.index')->with('success', 'تم تحديث المعاملة بنجاح');
+            // تحديث المصروف المرتبط إن وجد
+            $expense = Expense::where('employee_transaction_id', $employeeTransaction->id)->first();
+
+            if (in_array($validated['type'], ['salary', 'advance', 'bonus'])) {
+                $categoryCode = match($validated['type']) {
+                    'salary' => 'SAL',
+                    'advance' => 'ADV',
+                    'bonus' => 'SAL',
+                    default => 'GEN',
+                };
+                $category = ExpenseCategory::where('code', $categoryCode)->first();
+
+                $typeNames = EmployeeTransaction::TYPES;
+                $title = $typeNames[$validated['type']] . ' - ' . $employee->name;
+                if ($validated['type'] === 'salary' && !empty($validated['month_year'])) {
+                    $title .= ' (' . $validated['month_year'] . ')';
+                }
+
+                if ($expense) {
+                    // تحديث المصروف الموجود
+                    $expense->update([
+                        'title' => $title,
+                        'description' => $validated['description'] ?? null,
+                        'amount' => $validated['amount'],
+                        'expense_date' => $validated['transaction_date'],
+                        'category_id' => $category?->id,
+                        'payment_method' => $validated['payment_method'],
+                        'reference_number' => $validated['reference_number'],
+                        'employee_id' => $employee->id,
+                    ]);
+                } else {
+                    // إنشاء مصروف جديد
+                    Expense::create([
+                        'expense_number' => Expense::generateExpenseNumber(),
+                        'title' => $title,
+                        'description' => $validated['description'] ?? null,
+                        'amount' => $validated['amount'],
+                        'expense_date' => $validated['transaction_date'],
+                        'category_id' => $category?->id,
+                        'payment_method' => $validated['payment_method'],
+                        'reference_number' => $validated['reference_number'],
+                        'status' => 'paid',
+                        'user_id' => auth()->id(),
+                        'employee_id' => $employee->id,
+                        'employee_transaction_id' => $employeeTransaction->id,
+                        'notes' => 'مصروف تلقائي من معاملات الموظفين - ' . $employeeTransaction->transaction_number,
+                    ]);
+                }
+            } elseif ($expense) {
+                // إذا تغير النوع لخصم، حذف المصروف
+                $expense->delete();
+            }
+
+            DB::commit();
+            return redirect()->route('employee-transactions.index')->with('success', 'تم تحديث المعاملة بنجاح');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function destroy(EmployeeTransaction $employeeTransaction)
     {
-        $employeeTransaction->delete();
-        return redirect()->route('employee-transactions.index')->with('success', 'تم حذف المعاملة بنجاح');
+        DB::beginTransaction();
+        try {
+            // حذف المصروف المرتبط إن وجد
+            Expense::where('employee_transaction_id', $employeeTransaction->id)->delete();
+
+            $employeeTransaction->delete();
+
+            DB::commit();
+            return redirect()->route('employee-transactions.index')->with('success', 'تم حذف المعاملة بنجاح');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'حدث خطأ: ' . $e->getMessage());
+        }
     }
 
     // Employee-specific transactions view
