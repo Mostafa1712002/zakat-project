@@ -55,7 +55,7 @@ class ExpenseController extends Controller
 
         // استبعاد فئات الموظفين والشركاء - يتم إنشاؤها تلقائياً من صفحات الموظفين والشركاء
         $categories = ExpenseCategory::active()
-            ->whereNotIn('code', ['SAL', 'ADV', 'EMP_ADVANCE', 'PARTNER_PROFIT'])
+            ->whereNotIn('code', ['SAL', 'ADV', 'EMP_ADVANCE', 'PARTNER_PROFIT', 'DIV'])
             ->orderBy('name')
             ->get();
 
