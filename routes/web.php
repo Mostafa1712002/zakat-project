@@ -28,6 +28,7 @@ use App\Http\Controllers\EmployeeTransactionController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerTransactionController;
 use App\Http\Controllers\ProfitDistributionController;
+use App\Http\Controllers\TreasuryController;
 
 // Authentication Routes
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('guest');
@@ -103,6 +104,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('expense-categories', ExpenseCategoryController::class)->except(['show']);
     Route::resource('expense-payment-methods', ExpensePaymentMethodController::class)
         ->except(['show']);
+
+    // Treasury (الخزنة)
+    Route::get('treasury', [TreasuryController::class, 'index'])->name('treasury.index');
 
     // Payments (التحصيلات والمدفوعات)
     Route::middleware(['feature:payments'])->group(function () {
