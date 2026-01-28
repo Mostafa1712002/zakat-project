@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Partner;
 use App\Models\PartnerTransaction;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PartnerTransactionController extends Controller
 {
@@ -71,12 +74,48 @@ class PartnerTransactionController extends Controller
         $validated['transaction_number'] = PartnerTransaction::generateTransactionNumber();
         $validated['created_by'] = auth()->id();
 
-        PartnerTransaction::create($validated);
+        DB::beginTransaction();
+        try {
+            $transaction = PartnerTransaction::create($validated);
+            $partner = Partner::find($validated['partner_id']);
 
-        $typeNames = PartnerTransaction::TYPES;
-        $message = "تم تسجيل {$typeNames[$validated['type']]} بنجاح";
+            // إنشاء مصروف تلقائي للسحب وحصة الأرباح
+            if (in_array($validated['type'], ['withdrawal', 'profit_share'])) {
+                $category = ExpenseCategory::where('code', 'PARTNER_PROFIT')->first();
 
-        return redirect()->route('partner-transactions.index')->with('success', $message);
+                $typeNames = PartnerTransaction::TYPES;
+                $typeName = $typeNames[$validated['type']] ?? $validated['type'];
+                $periodText = $validated['period'] ? " ({$validated['period']})" : '';
+                $title = "{$typeName} - {$partner->name}{$periodText}";
+
+                Expense::create([
+                    'expense_number' => Expense::generateExpenseNumber(),
+                    'title' => $title,
+                    'amount' => $validated['amount'],
+                    'tax_amount' => 0,
+                    'total_amount' => $validated['amount'],
+                    'expense_date' => $validated['transaction_date'],
+                    'expense_category_id' => $category?->id,
+                    'payment_method' => $validated['payment_method'],
+                    'status' => 'paid',
+                    'user_id' => auth()->id(),
+                    'partner_id' => $partner->id,
+                    'partner_transaction_id' => $transaction->id,
+                    'description' => $validated['description'],
+                    'notes' => $validated['notes'],
+                ]);
+            }
+
+            DB::commit();
+
+            $typeNames = PartnerTransaction::TYPES;
+            $message = "تم تسجيل {$typeNames[$validated['type']]} بنجاح";
+
+            return redirect()->route('partner-transactions.index')->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function show(PartnerTransaction $partnerTransaction)
@@ -105,15 +144,70 @@ class PartnerTransactionController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $partnerTransaction->update($validated);
+        DB::beginTransaction();
+        try {
+            $partnerTransaction->update($validated);
+            $partner = Partner::find($validated['partner_id']);
 
-        return redirect()->route('partner-transactions.index')->with('success', 'تم تحديث المعاملة بنجاح');
+            // تحديث أو إنشاء المصروف المرتبط
+            $linkedExpense = Expense::where('partner_transaction_id', $partnerTransaction->id)->first();
+
+            if (in_array($validated['type'], ['withdrawal', 'profit_share'])) {
+                $category = ExpenseCategory::where('code', 'PARTNER_PROFIT')->first();
+                $typeNames = PartnerTransaction::TYPES;
+                $typeName = $typeNames[$validated['type']] ?? $validated['type'];
+                $periodText = $validated['period'] ? " ({$validated['period']})" : '';
+                $title = "{$typeName} - {$partner->name}{$periodText}";
+
+                $expenseData = [
+                    'title' => $title,
+                    'amount' => $validated['amount'],
+                    'total_amount' => $validated['amount'],
+                    'expense_date' => $validated['transaction_date'],
+                    'expense_category_id' => $category?->id,
+                    'payment_method' => $validated['payment_method'],
+                    'partner_id' => $partner->id,
+                    'description' => $validated['description'],
+                    'notes' => $validated['notes'],
+                ];
+
+                if ($linkedExpense) {
+                    $linkedExpense->update($expenseData);
+                } else {
+                    $expenseData['expense_number'] = Expense::generateExpenseNumber();
+                    $expenseData['tax_amount'] = 0;
+                    $expenseData['status'] = 'paid';
+                    $expenseData['user_id'] = auth()->id();
+                    $expenseData['partner_transaction_id'] = $partnerTransaction->id;
+                    Expense::create($expenseData);
+                }
+            } elseif ($linkedExpense) {
+                // حذف المصروف إذا تم تغيير النوع لغير سحب/أرباح
+                $linkedExpense->delete();
+            }
+
+            DB::commit();
+            return redirect()->route('partner-transactions.index')->with('success', 'تم تحديث المعاملة بنجاح');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function destroy(PartnerTransaction $partnerTransaction)
     {
-        $partnerTransaction->delete();
-        return redirect()->route('partner-transactions.index')->with('success', 'تم حذف المعاملة بنجاح');
+        DB::beginTransaction();
+        try {
+            // حذف المصروف المرتبط إن وجد
+            Expense::where('partner_transaction_id', $partnerTransaction->id)->delete();
+            $partnerTransaction->delete();
+
+            DB::commit();
+            return redirect()->route('partner-transactions.index')->with('success', 'تم حذف المعاملة بنجاح');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
+        }
     }
 
     // Partner-specific transactions view
