@@ -56,16 +56,19 @@
         .btn {
             display: inline-block;
             padding: 14px 32px;
-            background: #dc2626;
+            background: #0891b2;
             color: white;
             text-decoration: none;
             border-radius: 10px;
             font-weight: 600;
             font-size: 14px;
             transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
         }
         .btn:hover {
-            background: #b91c1c;
+            background: #0e7490;
         }
         .user-info {
             margin-top: 24px;
@@ -90,9 +93,9 @@
             </p>
         </div>
 
-        <a href="{{ route('login') }}" class="btn" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">إعادة تسجيل الدخول</a>
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        <form action="{{ route('logout') }}" method="POST">
             @csrf
+            <button type="submit" class="btn">🔄 إعادة تسجيل الدخول</button>
         </form>
 
         <div class="user-info">
