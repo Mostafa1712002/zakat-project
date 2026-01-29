@@ -88,6 +88,32 @@
                 </div>
             </div>
 
+            <!-- ربط بمندوب -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sales_rep_id" class="form-label">المندوب (اختياري)</label>
+                    <select name="sales_rep_id" id="sales_rep_id" class="form-control" onchange="toggleTreasuryOption()">
+                        <option value="">-- بدون مندوب --</option>
+                        @foreach($salesReps as $rep)
+                            <option value="{{ $rep->id }}" data-balance="{{ $rep->treasury_balance }}" {{ old('sales_rep_id') == $rep->id ? 'selected' : '' }}>
+                                {{ $rep->name }} (الخزينة: {{ number_format($rep->treasury_balance) }} ج.م)
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('sales_rep_id')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group" id="treasuryOption" style="display: none;">
+                    <label class="form-label">&nbsp;</label>
+                    <label class="checkbox-item" style="margin-top: 8px;">
+                        <input type="checkbox" name="deduct_from_treasury" value="1" {{ old('deduct_from_treasury') ? 'checked' : '' }}>
+                        <span>خصم من خزينة المندوب</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="description" class="form-label">الوصف</label>
                 <textarea name="description" id="description" class="form-control" rows="3">{{ old('description') }}</textarea>
@@ -106,4 +132,23 @@
     </div>
 </div>
 
+<style>
+.checkbox-item { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+.checkbox-item input[type="checkbox"] { width: 18px; height: 18px; }
+</style>
+
+<script>
+function toggleTreasuryOption() {
+    const salesRepSelect = document.getElementById('sales_rep_id');
+    const treasuryOption = document.getElementById('treasuryOption');
+
+    if (salesRepSelect.value) {
+        treasuryOption.style.display = 'block';
+    } else {
+        treasuryOption.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', toggleTreasuryOption);
+</script>
 @endsection

@@ -56,6 +56,13 @@ Route::middleware(['auth'])->group(function () {
     // Sales Representatives (المندوبين)
     Route::resource('sales-reps', SalesRepController::class);
 
+    // خزينة المندوب
+    Route::get('sales-reps/{salesRep}/treasury', [SalesRepController::class, 'treasuryStatement'])->name('sales-reps.treasury');
+    Route::get('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'showDepositForm'])->name('sales-reps.deposit.form');
+    Route::post('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'deposit'])->name('sales-reps.deposit');
+    Route::get('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'showWithdrawForm'])->name('sales-reps.withdraw.form');
+    Route::post('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'withdraw'])->name('sales-reps.withdraw');
+
     // Warehouses (المخازن)
     Route::get('warehouses/transfer', [WarehouseController::class, 'showTransferForm'])->name('warehouses.transfer');
     Route::post('warehouses/transfer', [WarehouseController::class, 'transfer'])->name('warehouses.process-transfer');

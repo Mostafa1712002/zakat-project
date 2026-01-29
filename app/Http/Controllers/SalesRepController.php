@@ -165,7 +165,82 @@ class SalesRepController extends Controller
             'target_achievement' => $salesRep->target_achievement,
         ];
 
-        return view('sales-reps.show', compact('salesRep', 'stats'));
+        // معاملات الخزينة الأخيرة
+        $treasuryTransactions = $salesRep->treasuryTransactions()
+            ->with('creator')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        // مصروفات المندوب الأخيرة
+        $expenses = $salesRep->expenses()
+            ->with('category')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('sales-reps.show', compact('salesRep', 'stats', 'treasuryTransactions', 'expenses'));
+    }
+
+    /**
+     * عرض صفحة إيداع في الخزينة
+     */
+    public function showDepositForm(SalesRep $salesRep)
+    {
+        return view('sales-reps.treasury.deposit', compact('salesRep'));
+    }
+
+    /**
+     * إيداع مبلغ في خزينة المندوب
+     */
+    public function deposit(Request $request, SalesRep $salesRep)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $salesRep->deposit($validated['amount'], $validated['description']);
+
+        return redirect()->route('sales-reps.show', $salesRep)
+            ->with('success', 'تم إيداع المبلغ بنجاح');
+    }
+
+    /**
+     * عرض صفحة سحب من الخزينة
+     */
+    public function showWithdrawForm(SalesRep $salesRep)
+    {
+        return view('sales-reps.treasury.withdraw', compact('salesRep'));
+    }
+
+    /**
+     * سحب مبلغ من خزينة المندوب
+     */
+    public function withdraw(Request $request, SalesRep $salesRep)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:' . $salesRep->treasury_balance,
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $salesRep->withdraw($validated['amount'], $validated['description']);
+
+        return redirect()->route('sales-reps.show', $salesRep)
+            ->with('success', 'تم سحب المبلغ بنجاح');
+    }
+
+    /**
+     * عرض كشف حساب الخزينة
+     */
+    public function treasuryStatement(SalesRep $salesRep)
+    {
+        $transactions = $salesRep->treasuryTransactions()
+            ->with('creator')
+            ->latest()
+            ->paginate(20);
+
+        return view('sales-reps.treasury.statement', compact('salesRep', 'transactions'));
     }
 
     public function edit(SalesRep $salesRep)

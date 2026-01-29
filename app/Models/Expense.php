@@ -86,6 +86,11 @@ class Expense extends Model
         return $this->belongsTo(Partner::class);
     }
 
+    public function salesRep(): BelongsTo
+    {
+        return $this->belongsTo(SalesRep::class);
+    }
+
     public function employeeTransaction(): BelongsTo
     {
         return $this->belongsTo(EmployeeTransaction::class);

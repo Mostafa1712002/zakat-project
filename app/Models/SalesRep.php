@@ -35,6 +35,7 @@ class SalesRep extends Model
         'commission_rate',
         'commission_type',
         'sales_target',
+        'treasury_balance',
         'branch_id',
         'is_active',
         'notes',
@@ -44,6 +45,7 @@ class SalesRep extends Model
         'regions' => 'array',
         'commission_rate' => 'decimal:2',
         'sales_target' => 'decimal:2',
+        'treasury_balance' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
@@ -226,6 +228,110 @@ class SalesRep extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * معاملات خزينة المندوب
+     */
+    public function treasuryTransactions(): HasMany
+    {
+        return $this->hasMany(SalesRepTransaction::class);
+    }
+
+    /**
+     * مصروفات المندوب
+     */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
+    /**
+     * إيداع مبلغ في الخزينة
+     */
+    public function deposit(float $amount, ?string $description = null, ?string $referenceType = null, ?int $referenceId = null): SalesRepTransaction
+    {
+        $newBalance = $this->treasury_balance + $amount;
+
+        $transaction = $this->treasuryTransactions()->create([
+            'type' => SalesRepTransaction::TYPE_DEPOSIT,
+            'amount' => $amount,
+            'balance_after' => $newBalance,
+            'description' => $description ?? 'إيداع في الخزينة',
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->update(['treasury_balance' => $newBalance]);
+
+        return $transaction;
+    }
+
+    /**
+     * سحب مبلغ من الخزينة
+     */
+    public function withdraw(float $amount, ?string $description = null, ?string $referenceType = null, ?int $referenceId = null): SalesRepTransaction
+    {
+        $newBalance = $this->treasury_balance - $amount;
+
+        $transaction = $this->treasuryTransactions()->create([
+            'type' => SalesRepTransaction::TYPE_WITHDRAWAL,
+            'amount' => $amount,
+            'balance_after' => $newBalance,
+            'description' => $description ?? 'سحب من الخزينة',
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->update(['treasury_balance' => $newBalance]);
+
+        return $transaction;
+    }
+
+    /**
+     * تسجيل مصروف من الخزينة
+     */
+    public function recordExpense(float $amount, ?string $description = null, ?int $expenseId = null): SalesRepTransaction
+    {
+        $newBalance = $this->treasury_balance - $amount;
+
+        $transaction = $this->treasuryTransactions()->create([
+            'type' => SalesRepTransaction::TYPE_EXPENSE,
+            'amount' => $amount,
+            'balance_after' => $newBalance,
+            'description' => $description ?? 'مصروف',
+            'reference_type' => 'expense',
+            'reference_id' => $expenseId,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->update(['treasury_balance' => $newBalance]);
+
+        return $transaction;
+    }
+
+    /**
+     * تسجيل تحصيل في الخزينة
+     */
+    public function recordCollection(float $amount, ?string $description = null, ?int $paymentId = null): SalesRepTransaction
+    {
+        $newBalance = $this->treasury_balance + $amount;
+
+        $transaction = $this->treasuryTransactions()->create([
+            'type' => SalesRepTransaction::TYPE_COLLECTION,
+            'amount' => $amount,
+            'balance_after' => $newBalance,
+            'description' => $description ?? 'تحصيل من عميل',
+            'reference_type' => 'payment',
+            'reference_id' => $paymentId,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->update(['treasury_balance' => $newBalance]);
+
+        return $transaction;
     }
 
     /**
