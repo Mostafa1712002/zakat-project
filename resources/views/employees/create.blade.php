@@ -44,24 +44,6 @@
                         <small style="color: #64748b; font-size: 12px;">⚡ يتم توليده تلقائياً إذا تُرك فارغاً</small>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">الرقم القومي</label>
-                        <input type="text" name="national_id" class="form-control" value="{{ old('national_id') }}"
-                               pattern="[0-9]{14}" maxlength="14" inputmode="numeric"
-                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 14)"
-                               placeholder="أدخل 14 رقم">
-                        <small style="color: #64748b; font-size: 12px;">📝 يجب أن يكون 14 رقم فقط</small>
-                        @error('national_id')
-                            <div class="form-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">البريد الإلكتروني</label>
-                        <input type="email" name="email" class="form-control" value="{{ old('email') }}">
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">الهاتف</label>
                         <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
                     </div>

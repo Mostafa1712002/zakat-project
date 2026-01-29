@@ -21,8 +21,6 @@
             <table class="info-table">
                 <tr><td>الاسم</td><td><strong>{{ $employee->name }}</strong></td></tr>
                 <tr><td>كود الموظف</td><td><code>{{ $employee->employee_code }}</code></td></tr>
-                <tr><td>الرقم القومي</td><td>{{ $employee->national_id ?? '-' }}</td></tr>
-                <tr><td>البريد الإلكتروني</td><td>{{ $employee->email ?? '-' }}</td></tr>
                 <tr><td>الهاتف</td><td>{{ $employee->phone ?? '-' }}</td></tr>
                 <tr><td>العنوان</td><td>{{ $employee->address ?? '-' }}</td></tr>
             </table>

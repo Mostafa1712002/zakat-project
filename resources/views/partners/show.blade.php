@@ -70,16 +70,6 @@
                 </div>
 
                 <div class="info-item">
-                    <label>البريد الإلكتروني</label>
-                    <span>{{ $partner->email ?? '-' }}</span>
-                </div>
-
-                <div class="info-item">
-                    <label>الرقم القومي</label>
-                    <span>{{ $partner->national_id ?? '-' }}</span>
-                </div>
-
-                <div class="info-item">
                     <label>الحالة</label>
                     <span>
                         @if($partner->is_active)

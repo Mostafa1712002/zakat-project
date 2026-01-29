@@ -266,12 +266,20 @@
 @push('styles')
 <style>
     .mb-4 { margin-bottom: 20px; }
+
+    /* Form Row - Responsive Grid */
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
     .checkbox-group {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 12px;
         padding: 12px;
-        background: var(--bg-secondary);
+        background: var(--bg);
         border-radius: 8px;
     }
     .checkbox-label {
@@ -279,13 +287,13 @@
         align-items: center;
         gap: 8px;
         padding: 8px 12px;
-        background: var(--bg-primary);
+        background: white;
         border-radius: 6px;
         cursor: pointer;
         transition: background 0.2s;
     }
     .checkbox-label:hover {
-        background: var(--bg-hover);
+        background: var(--bg);
     }
     .checkbox-label input[type="checkbox"] {
         width: 18px;
@@ -313,21 +321,7 @@
         transition: all 0.2s;
         flex: 1;
         min-width: 200px;
-    }
-    @media (max-width: 768px) {
-        .user-type-selector {
-            flex-direction: column;
-        }
-        .radio-label {
-            width: 100%;
-            min-width: unset;
-        }
-        .form-row {
-            grid-template-columns: 1fr !important;
-        }
-        .checkbox-group {
-            grid-template-columns: 1fr !important;
-        }
+        max-width: 300px;
     }
     .radio-label:hover {
         border-color: var(--primary);
@@ -352,6 +346,24 @@
         border: 1px solid #7dd3fc;
         padding: 12px 16px;
         border-radius: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .user-type-selector {
+            flex-direction: column;
+        }
+        .radio-label {
+            width: 100%;
+            min-width: unset;
+            max-width: unset;
+        }
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        .checkbox-group {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 @endpush

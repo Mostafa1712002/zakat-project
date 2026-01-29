@@ -21,7 +21,6 @@
             <p><strong>القسم:</strong> {{ $product->category->name ?? '-' }}</p>
             <p><strong>الوحدة:</strong> {{ $product->unit->name ?? '-' }}</p>
             <p><strong>SKU:</strong> {{ $product->sku ?? '-' }}</p>
-            <p><strong>الباركود:</strong> {{ $product->barcode ?? '-' }}</p>
             <p><strong>الوصف:</strong> {{ $product->description ?? '-' }}</p>
             <p><strong>التتبع المخزني:</strong> {{ $product->track_inventory ? 'نعم' : 'لا' }}</p>
         </div>
