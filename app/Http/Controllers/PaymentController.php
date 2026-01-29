@@ -81,6 +81,8 @@ class PaymentController extends Controller
         try {
             $user = auth()->user();
 
+            $salesRep = $user->salesRep;
+
             $payment = Payment::create([
                 'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
                 'payable_type' => Customer::class,
@@ -96,13 +98,22 @@ class PaymentController extends Controller
                 'bank_account' => $validated['bank_account'],
                 'branch_id' => $user->branch_id,
                 'user_id' => $user->id,
-                'sales_rep_id' => $user->salesRep?->id,
+                'sales_rep_id' => $salesRep?->id,
                 'status' => Payment::STATUS_COMPLETED,
                 'notes' => $validated['notes'],
             ]);
 
             // تحديث رصيد العميل
             $customer->decrement('current_balance', $validated['amount']);
+
+            // إضافة التحصيل لخزينة المندوب تلقائياً
+            if ($salesRep) {
+                $salesRep->recordCollection(
+                    $validated['amount'],
+                    'تحصيل من العميل: ' . $customer->name,
+                    $payment->id
+                );
+            }
 
             DB::commit();
 
