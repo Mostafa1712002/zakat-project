@@ -13,6 +13,7 @@ use App\Models\StockMovement;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\InventoryLevel;
 
 class SaleController extends Controller
 {
@@ -27,6 +28,33 @@ class SaleController extends Controller
             ->paginate(15);
 
         return view('sales.index', compact('sales'));
+    }
+
+    /**
+     * Get available stock for a product in a warehouse.
+     */
+    public function getStock(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $warehouseId = $request->get('warehouse_id');
+
+        if (!$productId || !$warehouseId) {
+            return response()->json(['stock' => 0, 'available' => 0]);
+        }
+
+        $level = InventoryLevel::where('product_id', $productId)
+            ->where('warehouse_id', $warehouseId)
+            ->first();
+
+        if (!$level) {
+            return response()->json(['stock' => 0, 'available' => 0]);
+        }
+
+        return response()->json([
+            'stock' => (float) $level->quantity,
+            'available' => (float) $level->available_quantity,
+            'reserved' => (float) $level->reserved_quantity,
+        ]);
     }
 
     /**
@@ -84,6 +112,26 @@ class SaleController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.discount_amount' => 'nullable|numeric|min:0',
         ]);
+
+        // التحقق من توفر الكميات في المخزن
+        $stockErrors = [];
+        foreach ($validated['items'] as $index => $item) {
+            $product = Product::find($item['product_id']);
+            if ($product && $product->track_inventory) {
+                $warehouse = Warehouse::find($validated['warehouse_id']);
+                $availableStock = $warehouse ? $warehouse->getAvailableStock($product->id) : 0;
+
+                if ($item['quantity'] > $availableStock) {
+                    $stockErrors[] = "الصنف \"{$product->name}\" - الكمية المطلوبة ({$item['quantity']}) أكبر من المتاح ({$availableStock})";
+                }
+            }
+        }
+
+        if (!empty($stockErrors)) {
+            return back()
+                ->withInput()
+                ->with('error', 'الكميات غير متوفرة في المخزن: ' . implode(' | ', $stockErrors));
+        }
 
         DB::beginTransaction();
 
@@ -279,6 +327,26 @@ class SaleController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.discount_amount' => 'nullable|numeric|min:0',
         ]);
+
+        // التحقق من توفر الكميات في المخزن
+        $stockErrors = [];
+        foreach ($validated['items'] as $index => $item) {
+            $product = Product::find($item['product_id']);
+            if ($product && $product->track_inventory) {
+                $warehouse = Warehouse::find($validated['warehouse_id']);
+                $availableStock = $warehouse ? $warehouse->getAvailableStock($product->id) : 0;
+
+                if ($item['quantity'] > $availableStock) {
+                    $stockErrors[] = "الصنف \"{$product->name}\" - الكمية المطلوبة ({$item['quantity']}) أكبر من المتاح ({$availableStock})";
+                }
+            }
+        }
+
+        if (!empty($stockErrors)) {
+            return back()
+                ->withInput()
+                ->with('error', 'الكميات غير متوفرة في المخزن: ' . implode(' | ', $stockErrors));
+        }
 
         DB::beginTransaction();
 

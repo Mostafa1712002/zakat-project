@@ -62,6 +62,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('warehouses', WarehouseController::class);
 
     // Sales (المبيعات)
+    Route::get('sales/get-stock', [SaleController::class, 'getStock'])->name('sales.get-stock');
+    Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
+    Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
     Route::resource('sales', SaleController::class);
 
     // Invoices (الفواتير)
