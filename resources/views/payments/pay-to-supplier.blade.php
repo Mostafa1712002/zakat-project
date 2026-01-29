@@ -33,6 +33,10 @@
                 <strong>{{ $supplier->phone ?? $supplier->mobile ?? '-' }}</strong>
             </div>
             <div>
+                <span class="text-muted">الرصيد المستحق:</span>
+                <strong class="text-danger">{{ number_format($supplier->current_balance) }} ج.م</strong>
+            </div>
+            <div>
                 <span class="text-muted">البنك:</span>
                 <strong>{{ $supplier->bank_name ?? '-' }} - {{ $supplier->bank_account ?? '-' }}</strong>
             </div>
@@ -50,7 +54,7 @@
                 <div class="form-group">
                     <label for="amount" class="form-label">المبلغ *</label>
                     <input type="number" step="0.01" name="amount" id="amount" class="form-control"
-                           value="{{ old('amount') }}" min="0.01" required>
+                           value="{{ old('amount', $supplier->current_balance) }}" min="0.01" required>
                     @error('amount')
                         <div class="form-error">{{ $message }}</div>
                     @enderror

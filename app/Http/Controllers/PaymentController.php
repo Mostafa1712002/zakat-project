@@ -44,7 +44,7 @@ class PaymentController extends Controller
     /**
      * عرض نموذج تحصيل من عميل
      */
-    public function showCollectForm(Customer $customer)
+    public function showCollectFromCustomer(Customer $customer)
     {
         // التحقق من صلاحية الوصول للعميل
         if (!$customer->canCurrentUserAccess()) {
@@ -118,7 +118,7 @@ class PaymentController extends Controller
     /**
      * عرض نموذج دفع لمورد
      */
-    public function showPayForm(Supplier $supplier)
+    public function showPayToSupplier(Supplier $supplier)
     {
         // التحقق من الصلاحية - فقط للأدمن والمحاسب
         $user = auth()->user();
@@ -174,10 +174,8 @@ class PaymentController extends Controller
                 'notes' => $validated['notes'],
             ]);
 
-            // تحديث رصيد المورد (إذا كان هناك حقل current_balance)
-            if (method_exists($supplier, 'decrement')) {
-                // يمكن إضافة حقل current_balance للمورد لاحقاً
-            }
+            // تحديث رصيد المورد
+            $supplier->decrement('current_balance', $validated['amount']);
 
             DB::commit();
 
