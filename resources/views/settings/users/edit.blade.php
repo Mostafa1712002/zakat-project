@@ -88,16 +88,39 @@
                         @foreach($roles as $role)
                             @php
                                 $selectedRoles = old('roles', $user->roles->pluck('name')->toArray());
+                                $roleLabels = [
+                                    'admin' => 'مدير',
+                                    'branch_manager' => 'مدير فرع',
+                                    'accountant' => 'محاسب',
+                                    'sales_rep' => 'مندوب مبيعات',
+                                    'employee' => 'موظف',
+                                ];
                             @endphp
                             <label class="checkbox-item">
-                                <input type="checkbox" name="roles[]" value="{{ $role->name }}" {{ in_array($role->name, $selectedRoles) ? 'checked' : '' }}>
-                                <span>{{ $role->name }}</span>
+                                <input type="checkbox" name="roles[]" value="{{ $role->name }}"
+                                       {{ in_array($role->name, $selectedRoles) ? 'checked' : '' }}
+                                       onchange="toggleEmployeeSection()">
+                                <span>{{ $roleLabels[$role->name] ?? $role->name }}</span>
                             </label>
                         @endforeach
                     </div>
                     @error('roles')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
+                </div>
+
+                <!-- قسم ربط الموظف -->
+                <div class="form-group" id="employeeSection" style="display: none; margin-top: 1rem;">
+                    <label class="form-label">ربط بموظف</label>
+                    <select name="employee_id" class="form-control">
+                        <option value="">-- اختر موظف (اختياري) --</option>
+                        @foreach($availableEmployees as $employee)
+                            <option value="{{ $employee->id }}" {{ old('employee_id', $currentEmployee?->id) == $employee->id ? 'selected' : '' }}>
+                                {{ $employee->name }} - {{ $employee->job_title ?? 'بدون وظيفة' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">ربط المستخدم بسجل موظف موجود لتفعيل صلاحيات الموظف</small>
                 </div>
             </div>
         </div>
@@ -118,5 +141,21 @@
 .checkbox-item { display: flex; align-items: center; gap: 0.5rem; }
 .card-body h3 { margin-bottom: 1rem; font-size: 1rem; color: var(--primary); }
 .btn-lg { padding: 14px 32px; font-size: 1rem; }
+.text-muted { color: #6b7280; font-size: 12px; display: block; margin-top: 4px; }
 </style>
+
+<script>
+function toggleEmployeeSection() {
+    const employeeCheckbox = document.querySelector('input[name="roles[]"][value="employee"]');
+    const employeeSection = document.getElementById('employeeSection');
+
+    if (employeeCheckbox && employeeCheckbox.checked) {
+        employeeSection.style.display = 'block';
+    } else {
+        employeeSection.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', toggleEmployeeSection);
+</script>
 @endsection
