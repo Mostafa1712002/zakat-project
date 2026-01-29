@@ -19,6 +19,13 @@
         <div class="card-body">
             <h3>بيانات المندوب</h3>
             <p><strong>الكود:</strong> {{ $salesRep->code ?? '-' }}</p>
+            <p><strong>النوع:</strong>
+                @if($salesRep->type === 'fridge')
+                    <span class="badge badge-info">🧊 تلاجة</span>
+                @else
+                    <span class="badge badge-warning">⭐ خاص</span>
+                @endif
+            </p>
             <p><strong>البريد:</strong> {{ $salesRep->email ?? '-' }}</p>
             <p><strong>الهاتف:</strong> {{ $salesRep->phone ?? '-' }}</p>
             <p><strong>الفرع:</strong> {{ $salesRep->branch->name ?? '-' }}</p>

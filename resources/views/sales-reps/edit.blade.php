@@ -80,15 +80,26 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="phone" class="form-label">الهاتف</label>
-                    <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone', $salesRep->phone) }}">
-                    @error('phone')
+                    <label for="type" class="form-label">نوع المندوب *</label>
+                    <select name="type" id="type" class="form-control" required>
+                        <option value="fridge" {{ old('type', $salesRep->type) == 'fridge' ? 'selected' : '' }}>🧊 تلاجة</option>
+                        <option value="special" {{ old('type', $salesRep->type) == 'special' ? 'selected' : '' }}>⭐ خاص</option>
+                    </select>
+                    @error('type')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
 
             <div class="form-row">
+                <div class="form-group">
+                    <label for="phone" class="form-label">الهاتف</label>
+                    <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone', $salesRep->phone) }}">
+                    @error('phone')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 <div class="form-group">
                     <label for="branch_id" class="form-label">الفرع *</label>
                     <select name="branch_id" id="branch_id" class="form-control" required>

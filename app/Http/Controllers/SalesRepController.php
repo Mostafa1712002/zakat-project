@@ -46,6 +46,7 @@ class SalesRepController extends Controller
         // قواعد التحقق حسب النوع
         $rules = [
             'code' => 'nullable|string|max:50|unique:sales_reps,code',
+            'type' => 'required|in:fridge,special',
             'phone' => 'nullable|string|max:20',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'commission_type' => 'nullable|in:percentage,fixed',
@@ -113,6 +114,7 @@ class SalesRepController extends Controller
                 'user_id' => $user->id,
                 'name' => $name,
                 'code' => $validated['code'],
+                'type' => $validated['type'],
                 'phone' => $validated['phone'] ?? $user->phone,
                 'email' => $email,
                 'commission_rate' => $validated['commission_rate'] ?? 0,
@@ -180,6 +182,7 @@ class SalesRepController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50|unique:sales_reps,code,' . $salesRep->id,
+            'type' => 'required|in:fridge,special',
             'phone' => 'nullable|string|max:20',
             'email' => 'required|email|max:255|unique:users,email,' . $salesRep->user_id,
             'password' => 'nullable|string|min:8|confirmed',
@@ -217,6 +220,7 @@ class SalesRepController extends Controller
             $salesRep->update([
                 'name' => $validated['name'],
                 'code' => $validated['code'],
+                'type' => $validated['type'],
                 'phone' => $validated['phone'],
                 'email' => $validated['email'],
                 'commission_rate' => $validated['commission_rate'] ?? 0,

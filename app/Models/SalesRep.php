@@ -14,11 +14,21 @@ class SalesRep extends Model
 {
     use HasFactory, SoftDeletes, Auditable;
 
+    // أنواع المندوبين
+    const TYPE_FRIDGE = 'fridge';
+    const TYPE_SPECIAL = 'special';
+
+    const TYPES = [
+        self::TYPE_FRIDGE => 'تلاجة',
+        self::TYPE_SPECIAL => 'خاص',
+    ];
+
     protected $fillable = [
         'user_id',
         'employee_id',
         'name',
         'code',
+        'type',
         'phone',
         'email',
         'regions',
@@ -65,6 +75,14 @@ class SalesRep extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * الحصول على اسم نوع المندوب
+     */
+    public function getTypeNameAttribute(): string
+    {
+        return self::TYPES[$this->type] ?? $this->type;
     }
 
     public function scopeInBranch($query, int $branchId)

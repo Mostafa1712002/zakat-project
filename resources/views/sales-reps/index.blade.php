@@ -20,6 +20,7 @@
                 <tr>
                     <th>الاسم</th>
                     <th>الكود</th>
+                    <th>النوع</th>
                     <th>الهاتف</th>
                     <th>نسبة العمولة</th>
                     <th>الهدف</th>
@@ -32,6 +33,13 @@
                 <tr>
                     <td><strong>{{ $rep->name }}</strong></td>
                     <td>{{ $rep->code ?? '-' }}</td>
+                    <td>
+                        @if($rep->type === 'fridge')
+                            <span class="badge badge-info">🧊 تلاجة</span>
+                        @else
+                            <span class="badge badge-warning">⭐ خاص</span>
+                        @endif
+                    </td>
                     <td>{{ $rep->phone ?? '-' }}</td>
                     <td>{{ $rep->commission_rate }}%</td>
                     <td>{{ number_format($rep->sales_target, 2) }} ج.م</td>
@@ -55,7 +63,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center">لا يوجد مندوبين</td>
+                    <td colspan="8" class="text-center">لا يوجد مندوبين</td>
                 </tr>
                 @endforelse
             </tbody>
