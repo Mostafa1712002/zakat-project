@@ -268,6 +268,109 @@ class SettingController extends Controller
     }
 
     /**
+     * Display roles management.
+     */
+    public function roles()
+    {
+        $roles = \Spatie\Permission\Models\Role::withCount('users', 'permissions')->get();
+
+        return view('settings.roles.index', compact('roles'));
+    }
+
+    /**
+     * Show form to create a new role.
+     */
+    public function createRole()
+    {
+        $permissions = \Spatie\Permission\Models\Permission::all()->groupBy(function ($permission) {
+            return explode('_', $permission->name)[1] ?? 'other';
+        });
+
+        return view('settings.roles.create', compact('permissions'));
+    }
+
+    /**
+     * Store a new role.
+     */
+    public function storeRole(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'display_name' => 'nullable|string|max:255',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        $role = \Spatie\Permission\Models\Role::create([
+            'name' => $validated['name'],
+            'guard_name' => 'web',
+        ]);
+
+        if (!empty($validated['permissions'])) {
+            $role->syncPermissions($validated['permissions']);
+        }
+
+        return redirect()->route('settings.roles')
+            ->with('success', 'تم إضافة الدور بنجاح');
+    }
+
+    /**
+     * Show form to edit a role.
+     */
+    public function editRole($roleId)
+    {
+        $role = \Spatie\Permission\Models\Role::findOrFail($roleId);
+        $permissions = \Spatie\Permission\Models\Permission::all()->groupBy(function ($permission) {
+            return explode('_', $permission->name)[1] ?? 'other';
+        });
+        $rolePermissions = $role->permissions->pluck('name')->toArray();
+
+        return view('settings.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+    }
+
+    /**
+     * Update a role.
+     */
+    public function updateRole(Request $request, $roleId)
+    {
+        $role = \Spatie\Permission\Models\Role::findOrFail($roleId);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'display_name' => 'nullable|string|max:255',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        $role->update([
+            'name' => $validated['name'],
+        ]);
+
+        $role->syncPermissions($validated['permissions'] ?? []);
+
+        return redirect()->route('settings.roles')
+            ->with('success', 'تم تحديث الدور بنجاح');
+    }
+
+    /**
+     * Delete a role.
+     */
+    public function destroyRole($roleId)
+    {
+        $role = \Spatie\Permission\Models\Role::findOrFail($roleId);
+
+        // Check if role has users
+        if ($role->users()->count() > 0) {
+            return back()->with('error', 'لا يمكن حذف الدور لأنه مرتبط بمستخدمين');
+        }
+
+        $role->delete();
+
+        return redirect()->route('settings.roles')
+            ->with('success', 'تم حذف الدور بنجاح');
+    }
+
+    /**
      * Get company settings from database/cache.
      */
     protected function getCompanySettings(): array

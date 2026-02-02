@@ -35,6 +35,18 @@
         </div>
     </div>
 
+    <!-- Roles Settings -->
+    <div class="card settings-card">
+        <div class="settings-card-icon">🔐</div>
+        <div class="settings-card-content">
+            <h3>إدارة الأدوار</h3>
+            <p>إنشاء الأدوار وتحديد الصلاحيات</p>
+        </div>
+        <div class="settings-card-action">
+            <a href="{{ route('settings.roles') }}" class="btn btn-primary">إدارة</a>
+        </div>
+    </div>
+
     <!-- Invoice Settings -->
     <div class="card settings-card">
         <div class="settings-card-icon">🧾</div>

@@ -152,6 +152,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/users/{user}', [SettingController::class, 'destroyUser'])->name('users.destroy');
         Route::get('/invoices', [SettingController::class, 'invoices'])->name('invoices');
         Route::post('/invoices', [SettingController::class, 'updateInvoices'])->name('invoices.update');
+
+        // Roles Management
+        Route::get('/roles', [SettingController::class, 'roles'])->name('roles');
+        Route::get('/roles/create', [SettingController::class, 'createRole'])->name('roles.create');
+        Route::post('/roles', [SettingController::class, 'storeRole'])->name('roles.store');
+        Route::get('/roles/{role}/edit', [SettingController::class, 'editRole'])->name('roles.edit');
+        Route::put('/roles/{role}', [SettingController::class, 'updateRole'])->name('roles.update');
+        Route::delete('/roles/{role}', [SettingController::class, 'destroyRole'])->name('roles.destroy');
     });
 
     // Profile (الملف الشخصي)
