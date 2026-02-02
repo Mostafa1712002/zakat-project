@@ -50,6 +50,7 @@
                     <th>رقم الإيصال</th>
                     <th>النوع</th>
                     <th>العميل/المورد</th>
+                    <th>الفاتورة</th>
                     <th>التاريخ</th>
                     <th>طريقة الدفع</th>
                     <th>المبلغ</th>
@@ -68,6 +69,19 @@
                         </span>
                     </td>
                     <td>{{ $payment->payable?->name ?? '-' }}</td>
+                    <td>
+                        @if($payment->sale)
+                            <a href="{{ route('sales.show', $payment->sale) }}" class="text-primary">
+                                <code>{{ $payment->sale->invoice_number }}</code>
+                            </a>
+                        @elseif($payment->purchase)
+                            <a href="{{ route('purchases.show', $payment->purchase) }}" class="text-primary">
+                                <code>{{ $payment->purchase->invoice_number }}</code>
+                            </a>
+                        @else
+                            <span class="text-muted">على الحساب</span>
+                        @endif
+                    </td>
                     <td>{{ $payment->payment_date->format('Y-m-d') }}</td>
                     <td>
                         @switch($payment->method)
@@ -103,7 +117,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9">
+                    <td colspan="10">
                         <div class="empty-state">
                             <div class="empty-state-icon">💳</div>
                             <h3>لا توجد تحصيلات أو مدفوعات</h3>

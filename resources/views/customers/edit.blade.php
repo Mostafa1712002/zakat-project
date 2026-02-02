@@ -39,26 +39,16 @@
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="type" class="form-label">نوع العميل *</label>
-                    <select name="type" id="type" class="form-control" required>
-                        <option value="retail" {{ old('type', $customer->type) == 'retail' ? 'selected' : '' }}>قطاعي</option>
-                        <option value="wholesale" {{ old('type', $customer->type) == 'wholesale' ? 'selected' : '' }}>جملة</option>
-                        <option value="corporate" {{ old('type', $customer->type) == 'corporate' ? 'selected' : '' }}>شركة</option>
-                    </select>
-                    @error('type')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="tax_number" class="form-label">الرقم الضريبي</label>
-                    <input type="text" name="tax_number" id="tax_number" class="form-control" value="{{ old('tax_number', $customer->tax_number) }}">
-                    @error('tax_number')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
+            <div class="form-group">
+                <label for="type" class="form-label">نوع العميل *</label>
+                <select name="type" id="type" class="form-control" required>
+                    <option value="retail" {{ old('type', $customer->type) == 'retail' ? 'selected' : '' }}>قطاعي</option>
+                    <option value="wholesale" {{ old('type', $customer->type) == 'wholesale' ? 'selected' : '' }}>جملة</option>
+                    <option value="corporate" {{ old('type', $customer->type) == 'corporate' ? 'selected' : '' }}>شركة</option>
+                </select>
+                @error('type')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
             </div>
 
             <hr style="margin: 24px 0; border-color: var(--border-color);">
@@ -82,22 +72,12 @@
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="email" class="form-label">البريد الإلكتروني</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $customer->email) }}">
-                    @error('email')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="city" class="form-label">المدينة</label>
-                    <input type="text" name="city" id="city" class="form-control" value="{{ old('city', $customer->city) }}">
-                    @error('city')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
+            <div class="form-group">
+                <label for="city" class="form-label">المدينة</label>
+                <input type="text" name="city" id="city" class="form-control" value="{{ old('city', $customer->city) }}">
+                @error('city')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="form-group">

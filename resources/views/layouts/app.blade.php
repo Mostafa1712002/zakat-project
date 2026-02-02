@@ -471,9 +471,13 @@
     <div class="app">
         <aside class="sidebar" id="sidebar">
             @php
-                $homeRoute = (auth()->user()->isSalesRep() && !auth()->user()->isSuperAdmin())
-                    ? route('sales-rep.dashboard')
-                    : route('dashboard');
+                if (auth()->user()->isSalesRep() && !auth()->user()->isSuperAdmin()) {
+                    $homeRoute = route('sales-rep.dashboard');
+                } elseif (auth()->user()->isEmployee() && !auth()->user()->isSuperAdmin() && !auth()->user()->isSalesRep()) {
+                    $homeRoute = route('employee.dashboard');
+                } else {
+                    $homeRoute = route('dashboard');
+                }
             @endphp
             <a href="{{ $homeRoute }}" class="logo">
                 <img src="{{ asset('logo.png') }}" alt="Rogence System" class="logo-icon">
@@ -491,6 +495,7 @@
             <ul class="nav-menu">
                 @php
                     $isSalesRepOnly = auth()->user()->isSalesRep() && !auth()->user()->isSuperAdmin();
+                    $isEmployeeOnly = auth()->user()->isEmployee() && !auth()->user()->isSuperAdmin() && !auth()->user()->isSalesRep();
                 @endphp
 
                 @if($isSalesRepOnly)
@@ -500,6 +505,12 @@
                     <li><a href="{{ route('sales-rep.sales') }}" class="{{ request()->routeIs('sales-rep.sales') ? 'active' : '' }}"><span class="nav-icon">💰</span> مبيعاتي</a></li>
                     <li><a href="{{ route('sales-rep.collections') }}" class="{{ request()->routeIs('sales-rep.collections') ? 'active' : '' }}"><span class="nav-icon">💵</span> تحصيلاتي</a></li>
                     <li><a href="{{ route('sales-rep.reports') }}" class="{{ request()->routeIs('sales-rep.reports') ? 'active' : '' }}"><span class="nav-icon">📈</span> تقاريري</a></li>
+                @elseif($isEmployeeOnly)
+                    {{-- Employee Menu --}}
+                    <li><a href="{{ route('employee.dashboard') }}" class="{{ request()->routeIs('employee.dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
+                    <li><a href="{{ route('employee.statement') }}" class="{{ request()->routeIs('employee.statement') ? 'active' : '' }}"><span class="nav-icon">📄</span> كشف الحساب</a></li>
+                    <li><a href="{{ route('employee.reports') }}" class="{{ request()->routeIs('employee.reports') ? 'active' : '' }}"><span class="nav-icon">📈</span> التقارير</a></li>
+                    <li><a href="{{ route('employee.profile') }}" class="{{ request()->routeIs('employee.profile') ? 'active' : '' }}"><span class="nav-icon">👤</span> الملف الشخصي</a></li>
                 @else
                     {{-- Admin/Full Menu --}}
                     <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>

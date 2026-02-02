@@ -22,6 +22,7 @@ use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\SalesRepDashboardController;
+use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\EmployeeTransactionController;
@@ -167,6 +168,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/sales', [SalesRepDashboardController::class, 'sales'])->name('sales');
         Route::get('/collections', [SalesRepDashboardController::class, 'collections'])->name('collections');
         Route::get('/reports', [SalesRepDashboardController::class, 'reports'])->name('reports');
+    });
+
+    // Employee Dashboard (لوحة تحكم الموظف)
+    Route::middleware(['feature:employee_dashboard'])->prefix('employee-portal')->name('employee.')->group(function () {
+        Route::get('/', [EmployeeDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/statement', [EmployeeDashboardController::class, 'statement'])->name('statement');
+        Route::get('/reports', [EmployeeDashboardController::class, 'reports'])->name('reports');
+        Route::get('/profile', [EmployeeDashboardController::class, 'profile'])->name('profile');
     });
 
     // Portfolio (معرض الأعمال)

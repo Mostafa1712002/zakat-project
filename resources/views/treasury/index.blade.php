@@ -135,6 +135,86 @@
     </div>
 </div>
 
+<!-- الفواتير المتأخرة -->
+@if(isset($overdueInvoices) && $overdueInvoices->count() > 0)
+<div class="card mt-4">
+    <div class="card-header" style="background: #fef2f2; border-bottom: 2px solid #ef4444;">
+        <h3 class="card-title" style="color: #dc2626;">⚠️ فواتير متأخرة السداد ({{ number_format($totalOverdueAmount, 2) }} ج.م)</h3>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>العميل</th>
+                    <th>تاريخ الاستحقاق</th>
+                    <th>المتبقي</th>
+                    <th>أيام التأخير</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($overdueInvoices as $invoice)
+                <tr style="background: #fef2f2;">
+                    <td><code>{{ $invoice->invoice_number }}</code></td>
+                    <td>{{ $invoice->customer->name ?? '-' }}</td>
+                    <td>{{ $invoice->due_date?->format('Y-m-d') ?? '-' }}</td>
+                    <td><strong class="text-danger">{{ number_format($invoice->remaining_amount, 2) }} ج.م</strong></td>
+                    <td>
+                        @if($invoice->due_date)
+                            <span class="badge badge-danger">{{ $invoice->due_date->diffInDays(now()) }} يوم</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($invoice->customer)
+                            <a href="{{ route('customers.collect.form', $invoice->customer) }}" class="btn btn-sm btn-success">تحصيل</a>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
+<!-- فواتير مستحقة قريباً -->
+@if(isset($upcomingDueInvoices) && $upcomingDueInvoices->count() > 0)
+<div class="card mt-4">
+    <div class="card-header" style="background: #fefce8; border-bottom: 2px solid #f59e0b;">
+        <h3 class="card-title" style="color: #d97706;">📅 فواتير مستحقة خلال 7 أيام</h3>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>العميل</th>
+                    <th>تاريخ الاستحقاق</th>
+                    <th>المتبقي</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($upcomingDueInvoices as $invoice)
+                <tr style="background: #fefce8;">
+                    <td><code>{{ $invoice->invoice_number }}</code></td>
+                    <td>{{ $invoice->customer->name ?? '-' }}</td>
+                    <td>{{ $invoice->due_date?->format('Y-m-d') }}</td>
+                    <td><strong>{{ number_format($invoice->remaining_amount, 2) }} ج.م</strong></td>
+                    <td>
+                        @if($invoice->customer)
+                            <a href="{{ route('customers.collect.form', $invoice->customer) }}" class="btn btn-sm btn-success">تحصيل</a>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 <!-- روابط سريعة -->
 <div class="card mt-4">
     <div class="card-header">

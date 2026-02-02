@@ -3,12 +3,13 @@
 @section('title', 'عرض فاتورة البيع')
 
 @section('content')
-<div class="page-header">
+<div class="page-header no-print">
     <div>
         <h1>💰 {{ $sale->invoice_number }}</h1>
         <p>تفاصيل فاتورة البيع</p>
     </div>
     <div class="header-actions">
+        <button onclick="window.print()" class="btn btn-primary">🖨️ طباعة</button>
         @if($sale->status === 'draft')
             <a href="{{ route('sales.edit', $sale) }}" class="btn">تعديل</a>
         @endif
@@ -170,5 +171,112 @@
 <style>
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
 .card-body h3 { margin-bottom: 1rem; font-size: 1rem; color: var(--primary); }
+
+/* Print Styles */
+@media print {
+    body {
+        background: white !important;
+        font-size: 12pt;
+        color: #000 !important;
+    }
+
+    .no-print,
+    .page-header.no-print,
+    .sidebar,
+    .header-actions,
+    nav {
+        display: none !important;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        break-inside: avoid;
+        margin-bottom: 15px !important;
+    }
+
+    .print-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #000;
+    }
+
+    .print-header h1 {
+        font-size: 18pt;
+        margin: 0;
+    }
+
+    .print-header .invoice-number {
+        font-size: 14pt;
+        margin-top: 5px;
+    }
+
+    .print-contacts {
+        display: flex !important;
+        justify-content: space-between;
+        font-size: 10pt;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #ccc;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th, .table td {
+        border: 1px solid #000 !important;
+        padding: 8px !important;
+    }
+
+    .table th {
+        background: #f0f0f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .badge {
+        border: 1px solid #000;
+        padding: 2px 6px;
+    }
+
+    .print-footer {
+        display: block !important;
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 1px solid #000;
+        text-align: center;
+        font-size: 10pt;
+    }
+}
+
+.print-header,
+.print-contacts,
+.print-footer {
+    display: none;
+}
 </style>
+
+<!-- Print Header -->
+<div class="print-header">
+    <h1>فاتورة مبيعات</h1>
+    <div class="invoice-number">{{ $sale->invoice_number }}</div>
+    <div class="print-contacts">
+        @if($sale->salesRep)
+            <span>📞 المندوب: {{ $sale->salesRep->name }} {{ $sale->salesRep->phone ? '- ' . $sale->salesRep->phone : '' }}</span>
+        @endif
+        @if($sale->branch)
+            <span>🏢 الفرع: {{ $sale->branch->name }} {{ $sale->branch->phone ?? '' }}</span>
+        @endif
+    </div>
+</div>
 @endsection

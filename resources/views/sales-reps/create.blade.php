@@ -134,7 +134,7 @@
                 </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row-3">
                 <div class="form-group">
                     <label for="phone" class="form-label">الهاتف</label>
                     <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}">
@@ -281,8 +281,17 @@
     /* Form Row - Responsive Grid */
     .form-row {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 20px;
+        margin-bottom: 16px;
+    }
+
+    /* 3-column row for larger forms */
+    .form-row-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 16px;
     }
 
     .checkbox-group {
@@ -360,6 +369,12 @@
     }
 
     /* Responsive */
+    @media (max-width: 992px) {
+        .form-row-3 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
     @media (max-width: 768px) {
         .user-type-selector {
             flex-direction: column;
@@ -369,7 +384,8 @@
             min-width: unset;
             max-width: unset;
         }
-        .form-row {
+        .form-row,
+        .form-row-3 {
             grid-template-columns: 1fr;
         }
         .checkbox-group {

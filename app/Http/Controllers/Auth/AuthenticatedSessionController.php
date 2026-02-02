@@ -33,6 +33,11 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('sales-rep.dashboard');
         }
 
+        // Redirect employees to their dashboard
+        if (Auth::user()->isEmployee() && !Auth::user()->isSuperAdmin()) {
+            return redirect()->route('employee.dashboard');
+        }
+
         // Redirect others to main dashboard
         return redirect()->route('dashboard');
     }
