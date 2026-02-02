@@ -558,6 +558,9 @@
                     @if(feature_enabled('settings'))
                     <li><a href="{{ route('settings.index') }}" class="{{ request()->routeIs('settings.index') ? 'active' : '' }}"><span class="nav-icon">⚙️</span> الإعدادات</a></li>
                     <li><a href="{{ route('settings.users') }}" class="{{ request()->routeIs('settings.users*') ? 'active' : '' }}"><span class="nav-icon">👤</span> المستخدمين</a></li>
+                    @if(auth()->user() && auth()->user()->isSuperAdmin())
+                    <li><a href="{{ route('settings.roles') }}" class="{{ request()->routeIs('settings.roles*') ? 'active' : '' }}"><span class="nav-icon">🔐</span> الأدوار والصلاحيات</a></li>
+                    @endif
                     @endif
                     <li><a href="{{ route('portfolio.index') }}" class="{{ request()->routeIs('portfolio.*') ? 'active' : '' }}"><span class="nav-icon">📸</span> معرض الأعمال</a></li>
                     <li><a href="{{ route('ux-analysis.index') }}" class="{{ request()->routeIs('ux-analysis.*') ? 'active' : '' }}"><span class="nav-icon">🎨</span> تحليل تجربة المستخدم</a></li>
