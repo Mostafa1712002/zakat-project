@@ -11,6 +11,11 @@
 </div>
 
 <div class="reports-grid">
+    @php
+        $isEmployeeOnly = auth()->user()->isEmployee() && !auth()->user()->isSuperAdmin() && !auth()->user()->hasRole('admin');
+    @endphp
+
+    @if(!$isEmployeeOnly)
     <div class="card report-card">
         <div class="report-card-icon">💰</div>
         <div class="report-card-content">
@@ -21,6 +26,7 @@
             <a href="{{ route('reports.profits') }}" class="btn btn-primary">عرض التقرير</a>
         </div>
     </div>
+    @endif
 
     <div class="card report-card">
         <div class="report-card-icon">🧾</div>

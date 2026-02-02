@@ -473,8 +473,6 @@
             @php
                 if (auth()->user()->isSalesRep() && !auth()->user()->isSuperAdmin()) {
                     $homeRoute = route('sales-rep.dashboard');
-                } elseif (auth()->user()->isEmployee() && !auth()->user()->isSuperAdmin() && !auth()->user()->isSalesRep()) {
-                    $homeRoute = route('employee.dashboard');
                 } else {
                     $homeRoute = route('dashboard');
                 }
@@ -506,11 +504,32 @@
                     <li><a href="{{ route('sales-rep.collections') }}" class="{{ request()->routeIs('sales-rep.collections') ? 'active' : '' }}"><span class="nav-icon">💵</span> تحصيلاتي</a></li>
                     <li><a href="{{ route('sales-rep.reports') }}" class="{{ request()->routeIs('sales-rep.reports') ? 'active' : '' }}"><span class="nav-icon">📈</span> تقاريري</a></li>
                 @elseif($isEmployeeOnly)
-                    {{-- Employee Menu --}}
-                    <li><a href="{{ route('employee.dashboard') }}" class="{{ request()->routeIs('employee.dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
-                    <li><a href="{{ route('employee.statement') }}" class="{{ request()->routeIs('employee.statement') ? 'active' : '' }}"><span class="nav-icon">📄</span> كشف الحساب</a></li>
-                    <li><a href="{{ route('employee.reports') }}" class="{{ request()->routeIs('employee.reports') ? 'active' : '' }}"><span class="nav-icon">📈</span> التقارير</a></li>
-                    <li><a href="{{ route('employee.profile') }}" class="{{ request()->routeIs('employee.profile') ? 'active' : '' }}"><span class="nav-icon">👤</span> الملف الشخصي</a></li>
+                    {{-- Employee Menu - Operational Access --}}
+                    <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
+                    @if(feature_enabled('sales'))
+                    <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}"><span class="nav-icon">💰</span> المبيعات</a></li>
+                    @endif
+                    @if(feature_enabled('purchases'))
+                    <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"><span class="nav-icon">🛒</span> المشتريات</a></li>
+                    @endif
+                    @if(feature_enabled('products'))
+                    <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}"><span class="nav-icon">📦</span> الأصناف</a></li>
+                    @endif
+                    @if(feature_enabled('categories'))
+                    <li><a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}"><span class="nav-icon">🏷️</span> الأقسام</a></li>
+                    @endif
+                    @if(feature_enabled('warehouses'))
+                    <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}"><span class="nav-icon">🏭</span> المخازن</a></li>
+                    @endif
+                    @if(feature_enabled('customers'))
+                    <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}"><span class="nav-icon">👥</span> العملاء</a></li>
+                    @endif
+                    @if(feature_enabled('suppliers'))
+                    <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><span class="nav-icon">🏢</span> الموردين</a></li>
+                    @endif
+                    @if(feature_enabled('reports'))
+                    <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><span class="nav-icon">📈</span> التقارير</a></li>
+                    @endif
                 @else
                     {{-- Admin/Full Menu --}}
                     <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>

@@ -54,15 +54,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('customers/{customer}/collect', [PaymentController::class, 'collectFromCustomer'])->name('customers.collect');
     });
 
-    // Sales Representatives (المندوبين)
-    Route::resource('sales-reps', SalesRepController::class);
+    // Sales Representatives (المندوبين) - Admin Only
+    Route::middleware(['admin_only'])->group(function () {
+        Route::resource('sales-reps', SalesRepController::class);
 
-    // خزينة المندوب
-    Route::get('sales-reps/{salesRep}/treasury', [SalesRepController::class, 'treasuryStatement'])->name('sales-reps.treasury');
-    Route::get('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'showDepositForm'])->name('sales-reps.deposit.form');
-    Route::post('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'deposit'])->name('sales-reps.deposit');
-    Route::get('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'showWithdrawForm'])->name('sales-reps.withdraw.form');
-    Route::post('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'withdraw'])->name('sales-reps.withdraw');
+        // خزينة المندوب
+        Route::get('sales-reps/{salesRep}/treasury', [SalesRepController::class, 'treasuryStatement'])->name('sales-reps.treasury');
+        Route::get('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'showDepositForm'])->name('sales-reps.deposit.form');
+        Route::post('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'deposit'])->name('sales-reps.deposit');
+        Route::get('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'showWithdrawForm'])->name('sales-reps.withdraw.form');
+        Route::post('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'withdraw'])->name('sales-reps.withdraw');
+    });
 
     // Warehouses (المخازن)
     Route::get('warehouses/transfer', [WarehouseController::class, 'showTransferForm'])->name('warehouses.transfer');
@@ -89,26 +91,31 @@ Route::middleware(['auth'])->group(function () {
         Route::post('suppliers/{supplier}/pay', [PaymentController::class, 'payToSupplier'])->name('suppliers.pay');
     });
 
-    // Employees (الموظفين)
-    Route::resource('employees', EmployeeController::class);
+    // =====================================================
+    // Admin Only Routes - Restricted from Employee Access
+    // =====================================================
+    Route::middleware(['admin_only'])->group(function () {
+        // Employees Management (إدارة الموظفين)
+        Route::resource('employees', EmployeeController::class);
 
-    // Employee Transactions (مرتبات وسحوبات الموظفين)
-    Route::get('employee-transactions/employee/{employee}', [EmployeeTransactionController::class, 'employeeHistory'])->name('employee-transactions.employee-history');
-    Route::resource('employee-transactions', EmployeeTransactionController::class);
+        // Employee Transactions (مرتبات وسحوبات الموظفين)
+        Route::get('employee-transactions/employee/{employee}', [EmployeeTransactionController::class, 'employeeHistory'])->name('employee-transactions.employee-history');
+        Route::resource('employee-transactions', EmployeeTransactionController::class);
 
-    // Partners (الشركاء)
-    Route::resource('partners', PartnerController::class);
+        // Partners (الشركاء)
+        Route::resource('partners', PartnerController::class);
 
-    // Partner Transactions (معاملات الشركاء)
-    Route::get('partner-transactions/partner/{partner}', [PartnerTransactionController::class, 'partnerHistory'])->name('partner-transactions.partner-history');
-    Route::resource('partner-transactions', PartnerTransactionController::class);
+        // Partner Transactions (معاملات الشركاء)
+        Route::get('partner-transactions/partner/{partner}', [PartnerTransactionController::class, 'partnerHistory'])->name('partner-transactions.partner-history');
+        Route::resource('partner-transactions', PartnerTransactionController::class);
 
-    // Profit Distribution (توزيع الأرباح)
-    Route::get('profit-distribution', [ProfitDistributionController::class, 'index'])->name('profit-distribution.index');
-    Route::get('profit-distribution/create', [ProfitDistributionController::class, 'create'])->name('profit-distribution.create');
-    Route::post('profit-distribution', [ProfitDistributionController::class, 'store'])->name('profit-distribution.store');
-    Route::post('profit-distribution/preview', [ProfitDistributionController::class, 'preview'])->name('profit-distribution.preview');
-    Route::get('profit-distribution/{period}', [ProfitDistributionController::class, 'show'])->name('profit-distribution.show');
+        // Profit Distribution (توزيع الأرباح)
+        Route::get('profit-distribution', [ProfitDistributionController::class, 'index'])->name('profit-distribution.index');
+        Route::get('profit-distribution/create', [ProfitDistributionController::class, 'create'])->name('profit-distribution.create');
+        Route::post('profit-distribution', [ProfitDistributionController::class, 'store'])->name('profit-distribution.store');
+        Route::post('profit-distribution/preview', [ProfitDistributionController::class, 'preview'])->name('profit-distribution.preview');
+        Route::get('profit-distribution/{period}', [ProfitDistributionController::class, 'show'])->name('profit-distribution.show');
+    });
 
     // Expenses (المصروفات)
     Route::resource('expenses', ExpenseController::class);
@@ -116,8 +123,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('expense-payment-methods', ExpensePaymentMethodController::class)
         ->except(['show']);
 
-    // Treasury (الخزنة)
-    Route::get('treasury', [TreasuryController::class, 'index'])->name('treasury.index');
+    // Treasury (الخزنة) - Admin Only
+    Route::middleware(['admin_only'])->group(function () {
+        Route::get('treasury', [TreasuryController::class, 'index'])->name('treasury.index');
+    });
 
     // Payments (التحصيلات والمدفوعات)
     Route::middleware(['feature:payments'])->group(function () {
@@ -128,19 +137,24 @@ Route::middleware(['auth'])->group(function () {
     // Reports (التقارير)
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
-        Route::get('/profits', [ReportController::class, 'profits'])->name('profits');
         Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
         Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
         Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
         Route::get('/stock-movements', [ReportController::class, 'stockMovements'])->name('stock-movements');
+
+        // Profits Report - Admin Only
+        Route::middleware(['admin_only'])->group(function () {
+            Route::get('/profits', [ReportController::class, 'profits'])->name('profits');
+        });
+
         Route::middleware(['feature:report_sales_reps'])->group(function () {
             Route::get('/sales-reps', [ReportController::class, 'salesRepsPerformance'])->name('sales-reps');
             Route::get('/sales-reps/{salesRep}', [ReportController::class, 'salesRepDetail'])->name('sales-rep-detail');
         });
     });
 
-    // Settings (الإعدادات)
-    Route::prefix('settings')->name('settings.')->group(function () {
+    // Settings (الإعدادات) - Admin Only
+    Route::middleware(['admin_only'])->prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
         Route::get('/company', [SettingController::class, 'company'])->name('company');
         Route::post('/company', [SettingController::class, 'updateCompany'])->name('company.update');

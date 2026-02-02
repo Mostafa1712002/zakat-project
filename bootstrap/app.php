@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'feature' => \App\Http\Middleware\CheckFeatureMiddleware::class,
             'sales_rep_access' => \App\Http\Middleware\SalesRepAccessMiddleware::class,
+            'admin_only' => \App\Http\Middleware\AdminOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
