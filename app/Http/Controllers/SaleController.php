@@ -151,6 +151,9 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.discount_amount' => 'nullable|numeric|min:0',
+            // Advance payment for credit sales
+            'advance_payment' => 'nullable|numeric|min:0',
+            'advance_payment_method' => 'nullable|in:cash,bank_transfer,instapay,vodafone_cash,card',
         ]);
 
         // التحقق من توفر الكميات
@@ -260,6 +263,7 @@ class SaleController extends Controller
                     'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
                     'payable_type' => Sale::class,
                     'payable_id' => $sale->id,
+                    'sale_id' => $sale->id,
                     'type' => Payment::TYPE_RECEIVED,
                     'amount' => $sale->total_amount,
                     'method' => Payment::METHOD_CASH,
@@ -276,6 +280,64 @@ class SaleController extends Controller
                 $sale->remaining_amount = 0;
                 $sale->payment_status = Sale::PAYMENT_STATUS_PAID;
                 $sale->save();
+
+                // إضافة للخزينة إذا كان مندوب
+                if ($salesRepId) {
+                    $salesRep = SalesRep::find($salesRepId);
+                    if ($salesRep) {
+                        $salesRep->recordCollection($sale->total_amount, 'تحصيل نقدي - فاتورة ' . $sale->invoice_number, $payment->id);
+                    }
+                }
+            }
+
+            // إنشاء تحصيل للدفعة المقدمة في المبيعات الآجلة
+            $advancePayment = floatval($validated['advance_payment'] ?? 0);
+            if ($validated['payment_type'] === 'credit' && $advancePayment > 0 && $advancePayment <= $sale->total_amount) {
+                $paymentMethod = $validated['advance_payment_method'] ?? 'cash';
+
+                $payment = Payment::create([
+                    'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
+                    'payable_type' => Customer::class,
+                    'payable_id' => $validated['customer_id'],
+                    'sale_id' => $sale->id,
+                    'type' => Payment::TYPE_RECEIVED,
+                    'amount' => $advancePayment,
+                    'method' => $paymentMethod,
+                    'payment_date' => $validated['invoice_date'],
+                    'branch_id' => $branchId,
+                    'user_id' => auth()->id(),
+                    'sales_rep_id' => $salesRepId,
+                    'status' => Payment::STATUS_COMPLETED,
+                    'notes' => 'دفعة مقدمة - فاتورة رقم ' . $sale->invoice_number,
+                ]);
+
+                // تحديث المبلغ المدفوع في الفاتورة
+                $sale->paid_amount = $advancePayment;
+                $sale->remaining_amount = $sale->total_amount - $advancePayment;
+                $sale->payment_status = $advancePayment >= $sale->total_amount
+                    ? Sale::PAYMENT_STATUS_PAID
+                    : Sale::PAYMENT_STATUS_PARTIAL;
+                $sale->save();
+
+                // تحديث رصيد العميل (فقط المتبقي)
+                $customer = Customer::find($validated['customer_id']);
+                if ($customer) {
+                    $customer->increment('current_balance', $sale->remaining_amount);
+                }
+
+                // إضافة للخزينة إذا كان مندوب
+                if ($salesRepId) {
+                    $salesRep = SalesRep::find($salesRepId);
+                    if ($salesRep) {
+                        $salesRep->recordCollection($advancePayment, 'دفعة مقدمة - فاتورة ' . $sale->invoice_number, $payment->id);
+                    }
+                }
+            } elseif ($validated['payment_type'] === 'credit') {
+                // فاتورة آجلة بدون دفعة مقدمة - إضافة كامل المبلغ لرصيد العميل
+                $customer = Customer::find($validated['customer_id']);
+                if ($customer) {
+                    $customer->increment('current_balance', $sale->total_amount);
+                }
             }
 
             DB::commit();

@@ -73,6 +73,41 @@
                     </div>
                 </div>
 
+                <!-- Advance Payment Section - Only for Credit Sales -->
+                <div id="advancePaymentSection" class="advance-payment-section" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="advance_payment" class="form-label">💵 دفعة مقدمة</label>
+                            <input type="number" step="0.01" name="advance_payment" id="advance_payment" class="form-control" value="{{ old('advance_payment', 0) }}" min="0">
+                            <small class="text-muted">المبلغ المدفوع الآن (اتركه 0 إذا لم يدفع شيء)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="advance_payment_method" class="form-label">طريقة الدفع</label>
+                            <select name="advance_payment_method" id="advance_payment_method" class="form-control">
+                                <option value="cash">نقدي</option>
+                                <option value="bank_transfer">تحويل بنكي</option>
+                                <option value="instapay">انستا باي</option>
+                                <option value="vodafone_cash">فودافون كاش</option>
+                                <option value="card">بطاقة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="advance-payment-summary" id="advancePaymentSummary" style="display: none;">
+                        <div class="summary-item">
+                            <span>إجمالي الفاتورة:</span>
+                            <strong id="summaryTotal">0.00</strong> ج.م
+                        </div>
+                        <div class="summary-item">
+                            <span>الدفعة المقدمة:</span>
+                            <strong id="summaryAdvance" class="text-success">0.00</strong> ج.م
+                        </div>
+                        <div class="summary-item summary-remaining">
+                            <span>المتبقي (آجل):</span>
+                            <strong id="summaryRemaining" class="text-danger">0.00</strong> ج.م
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="branch_id" class="form-label">الفرع</label>
@@ -289,6 +324,35 @@
 @keyframes pulse-warning {
     0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
     50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
+
+.advance-payment-section {
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+    border-radius: 8px;
+}
+
+.advance-payment-summary {
+    margin-top: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+
+.summary-remaining {
+    border-top: 2px solid var(--primary);
+    padding-top: 10px;
+    margin-top: 6px;
+    font-size: 1.1em;
 }
 </style>
 
@@ -556,10 +620,60 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Toggle advance payment section based on payment type
+    const paymentTypeSelect = document.getElementById('payment_type');
+    const advancePaymentSection = document.getElementById('advancePaymentSection');
+    const advancePaymentInput = document.getElementById('advance_payment');
+    const advancePaymentSummary = document.getElementById('advancePaymentSummary');
+
+    function toggleAdvancePayment() {
+        if (paymentTypeSelect.value === 'credit') {
+            advancePaymentSection.style.display = 'block';
+        } else {
+            advancePaymentSection.style.display = 'none';
+            advancePaymentInput.value = 0;
+        }
+        updateAdvancePaymentSummary();
+    }
+
+    function updateAdvancePaymentSummary() {
+        const total = parseFloat(document.getElementById('grandTotal').textContent) || 0;
+        const advance = parseFloat(advancePaymentInput.value) || 0;
+        const remaining = Math.max(0, total - advance);
+
+        document.getElementById('summaryTotal').textContent = total.toFixed(2);
+        document.getElementById('summaryAdvance').textContent = advance.toFixed(2);
+        document.getElementById('summaryRemaining').textContent = remaining.toFixed(2);
+
+        if (advance > 0 && paymentTypeSelect.value === 'credit') {
+            advancePaymentSummary.style.display = 'block';
+        } else {
+            advancePaymentSummary.style.display = 'none';
+        }
+
+        // Validate advance payment doesn't exceed total
+        if (advance > total && total > 0) {
+            advancePaymentInput.classList.add('price-warning');
+        } else {
+            advancePaymentInput.classList.remove('price-warning');
+        }
+    }
+
+    paymentTypeSelect.addEventListener('change', toggleAdvancePayment);
+    advancePaymentInput.addEventListener('input', updateAdvancePaymentSummary);
+
+    // Update summary when totals change
+    const originalCalculateTotals = calculateTotals;
+    calculateTotals = function() {
+        originalCalculateTotals();
+        updateAdvancePaymentSummary();
+    };
+
     // Initial setup
     attachRowEvents(document.querySelector('.item-row'));
     document.getElementById('discount_type').addEventListener('change', calculateTotals);
     document.getElementById('discount_value').addEventListener('input', calculateTotals);
+    toggleAdvancePayment();
 
     // Form submit validation
     document.getElementById('saleForm').addEventListener('submit', function(e) {
