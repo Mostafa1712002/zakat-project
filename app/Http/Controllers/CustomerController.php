@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Branch;
 use App\Models\SalesRep;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -59,6 +62,8 @@ class CustomerController extends Controller
             'price_tier' => 'nullable|in:retail,wholesale,special',
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms_days' => 'nullable|integer|min:0',
+            'target_amount' => 'nullable|numeric|min:0',
+            'target_discount_percentage' => 'nullable|numeric|min:0|max:100',
             'branch_id' => 'nullable|exists:branches,id',
             'sales_rep_id' => 'nullable|exists:sales_reps,id',
             'is_active' => 'boolean',
@@ -67,6 +72,7 @@ class CustomerController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['current_balance'] = 0;
+        $validated['target_paid_amount'] = 0;
         if (empty($validated['price_tier'] ?? null)) {
             $validated['price_tier'] = 'retail';
         }
@@ -151,6 +157,8 @@ class CustomerController extends Controller
             'price_tier' => 'nullable|in:retail,wholesale,special',
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms_days' => 'nullable|integer|min:0',
+            'target_amount' => 'nullable|numeric|min:0',
+            'target_discount_percentage' => 'nullable|numeric|min:0|max:100',
             'branch_id' => 'nullable|exists:branches,id',
             'sales_rep_id' => 'nullable|exists:sales_reps,id',
             'is_active' => 'boolean',
@@ -192,5 +200,74 @@ class CustomerController extends Controller
 
         return redirect()->route('customers.index')
             ->with('success', 'تم حذف العميل بنجاح');
+    }
+
+    /**
+     * عرض صفحة سحب تارجت العميل
+     */
+    public function showWithdrawTarget(Customer $customer)
+    {
+        if (!$customer->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
+        }
+
+        if (!$customer->hasAchievedTarget()) {
+            return back()->with('error', 'العميل لم يحقق التارجت بعد');
+        }
+
+        if ($customer->withdrawable_target_amount <= 0) {
+            return back()->with('error', 'لا يوجد رصيد تارجت متاح للسحب');
+        }
+
+        return view('customers.withdraw-target', compact('customer'));
+    }
+
+    /**
+     * تنفيذ سحب تارجت العميل
+     */
+    public function withdrawTarget(Request $request, Customer $customer)
+    {
+        if (!$customer->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
+        }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:' . $customer->withdrawable_target_amount,
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        if (!$customer->hasAchievedTarget()) {
+            return back()->with('error', 'العميل لم يحقق التارجت بعد');
+        }
+
+        DB::transaction(function () use ($customer, $validated) {
+            // البحث عن أو إنشاء فئة مصروفات تارجت العملاء
+            $category = ExpenseCategory::firstOrCreate(
+                ['code' => 'customer-target'],
+                ['name' => 'تارجت عميل', 'is_active' => true]
+            );
+
+            // إنشاء المصروف
+            $expense = Expense::create([
+                'expense_number' => Expense::generateExpenseNumber(),
+                'expense_category_id' => $category->id,
+                'title' => 'تارجت عميل: ' . $customer->name,
+                'description' => 'صرف خصم تارجت للعميل ' . $customer->name . ' - نسبة ' . $customer->target_discount_percentage . '%',
+                'amount' => $validated['amount'],
+                'tax_amount' => 0,
+                'total_amount' => $validated['amount'],
+                'expense_date' => now(),
+                'payment_method' => 'cash',
+                'status' => Expense::STATUS_PAID,
+                'user_id' => auth()->id(),
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            // تحديث رصيد التارجت المصروف للعميل
+            $customer->recordTargetWithdrawal($validated['amount']);
+        });
+
+        return redirect()->route('customers.index')
+            ->with('success', 'تم صرف تارجت العميل بنجاح: ' . number_format($validated['amount'], 2) . ' ج.م');
     }
 }

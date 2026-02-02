@@ -20,9 +20,9 @@
                 <tr>
                     <th>#</th>
                     <th>الاسم</th>
-                    <th>البريد</th>
                     <th>الهاتف</th>
                     <th>النوع</th>
+                    <th>التارجت</th>
                     <th>الإجراءات</th>
                 </tr>
             </thead>
@@ -31,7 +31,6 @@
                 <tr>
                     <td>{{ $customer->id }}</td>
                     <td><strong>{{ $customer->name }}</strong></td>
-                    <td class="text-muted">{{ $customer->email ?? '-' }}</td>
                     <td>{{ $customer->phone ?? '-' }}</td>
                     <td>
                         @php
@@ -49,9 +48,34 @@
                         <span class="badge {{ $typeClass }}">{{ $typeLabel }}</span>
                     </td>
                     <td>
+                        @if($customer->target_amount > 0)
+                            @php
+                                $percentage = $customer->target_achievement_percentage;
+                                $progressColor = $percentage >= 100 ? '#16a34a' : ($percentage >= 50 ? '#f59e0b' : '#ef4444');
+                            @endphp
+                            <div style="min-width: 120px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+                                    <span>{{ number_format($percentage, 0) }}%</span>
+                                    <span>{{ number_format($customer->target_amount, 0) }} ج.م</span>
+                                </div>
+                                <div style="background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden;">
+                                    <div style="background: {{ $progressColor }}; width: {{ min(100, $percentage) }}%; height: 100%;"></div>
+                                </div>
+                                @if($customer->hasAchievedTarget() && $customer->withdrawable_target_amount > 0)
+                                    <div style="font-size: 10px; color: #16a34a; margin-top: 2px;">✅ متاح: {{ number_format($customer->withdrawable_target_amount, 0) }} ج.م</div>
+                                @endif
+                            </div>
+                        @else
+                            <span class="text-muted">-</span>
+                        @endif
+                    </td>
+                    <td>
                         <div class="table-actions">
                             <a href="{{ route('customers.show', $customer) }}" class="btn btn-sm">عرض</a>
                             <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm">تعديل</a>
+                            @if($customer->hasAchievedTarget() && $customer->withdrawable_target_amount > 0)
+                                <a href="{{ route('customers.withdraw-target.form', $customer) }}" class="btn btn-sm btn-success" title="سحب التارجت">🎯 سحب</a>
+                            @endif
                             <form action="{{ route('customers.destroy', $customer) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
                                 @csrf
                                 @method('DELETE')

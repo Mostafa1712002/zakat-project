@@ -125,6 +125,29 @@
             </div>
 
             <hr style="margin: 24px 0; border-color: var(--border-color);">
+            <h3 style="margin-bottom: 16px;">🎯 التارجت والخصم</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target_amount" class="form-label">مبلغ التارجت (ج.م)</label>
+                    <input type="number" step="0.01" name="target_amount" id="target_amount" class="form-control" value="{{ old('target_amount', 0) }}" min="0" placeholder="المبلغ المطلوب للحصول على الخصم">
+                    <small style="color: #64748b; font-size: 12px;">💡 عند وصول مشتريات العميل لهذا المبلغ يحصل على الخصم</small>
+                    @error('target_amount')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="target_discount_percentage" class="form-label">نسبة خصم التارجت (%)</label>
+                    <input type="number" step="0.01" name="target_discount_percentage" id="target_discount_percentage" class="form-control" value="{{ old('target_discount_percentage', 0) }}" min="0" max="100" placeholder="نسبة الخصم عند تحقيق التارجت">
+                    <small style="color: #64748b; font-size: 12px;">📊 نسبة الخصم من إجمالي المشتريات عند تحقيق التارجت</small>
+                    @error('target_discount_percentage')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">🏢 التخصيص</h3>
 
             <div class="form-row">

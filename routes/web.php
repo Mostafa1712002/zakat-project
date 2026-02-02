@@ -49,6 +49,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Customers (العملاء)
     Route::resource('customers', CustomerController::class);
+    Route::get('customers/{customer}/withdraw-target', [CustomerController::class, 'showWithdrawTarget'])->name('customers.withdraw-target.form');
+    Route::post('customers/{customer}/withdraw-target', [CustomerController::class, 'withdrawTarget'])->name('customers.withdraw-target.store');
     Route::middleware(['feature:payments'])->group(function () {
         Route::get('customers/{customer}/collect', [PaymentController::class, 'showCollectFromCustomer'])->name('customers.collect.form');
         Route::post('customers/{customer}/collect', [PaymentController::class, 'collectFromCustomer'])->name('customers.collect');
@@ -64,6 +66,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'deposit'])->name('sales-reps.deposit');
         Route::get('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'showWithdrawForm'])->name('sales-reps.withdraw.form');
         Route::post('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'withdraw'])->name('sales-reps.withdraw');
+
+        // سحب عمولة المندوب
+        Route::get('sales-reps/{salesRep}/withdraw-commission', [SalesRepController::class, 'showWithdrawCommission'])->name('sales-reps.withdraw-commission.form');
+        Route::post('sales-reps/{salesRep}/withdraw-commission', [SalesRepController::class, 'withdrawCommission'])->name('sales-reps.withdraw-commission.store');
     });
 
     // Warehouses (المخازن)
