@@ -501,10 +501,13 @@
 
                 @if($isSalesRepOnly)
                     {{-- Sales Rep Menu --}}
-                    <li><a href="{{ route('sales-rep.dashboard') }}" class="{{ request()->routeIs('sales-rep.*') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
+                    <li><a href="{{ route('sales-rep.dashboard') }}" class="{{ request()->routeIs('sales-rep.dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
                     <li><a href="{{ route('sales-rep.customers') }}" class="{{ request()->routeIs('sales-rep.customers') ? 'active' : '' }}"><span class="nav-icon">👥</span> عملائي</a></li>
                     <li><a href="{{ route('sales-rep.sales') }}" class="{{ request()->routeIs('sales-rep.sales') ? 'active' : '' }}"><span class="nav-icon">💰</span> مبيعاتي</a></li>
                     <li><a href="{{ route('sales-rep.collections') }}" class="{{ request()->routeIs('sales-rep.collections') ? 'active' : '' }}"><span class="nav-icon">💵</span> تحصيلاتي</a></li>
+                    <li><a href="{{ route('sales-rep.treasury') }}" class="{{ request()->routeIs('sales-rep.treasury') ? 'active' : '' }}"><span class="nav-icon">🏦</span> خزينتي</a></li>
+                    <li><a href="{{ route('sales-rep.expenses') }}" class="{{ request()->routeIs('sales-rep.expenses*') ? 'active' : '' }}"><span class="nav-icon">🧾</span> مصروفاتي</a></li>
+                    <li><a href="{{ route('sales-rep.inventory') }}" class="{{ request()->routeIs('sales-rep.inventory') ? 'active' : '' }}"><span class="nav-icon">📦</span> مخزني</a></li>
                     <li><a href="{{ route('sales-rep.reports') }}" class="{{ request()->routeIs('sales-rep.reports') ? 'active' : '' }}"><span class="nav-icon">📈</span> تقاريري</a></li>
                 @elseif($isEmployeeOnly)
                     {{-- Employee Menu - Operational Access --}}
@@ -562,6 +565,8 @@
                     @endif
                     @if(feature_enabled('sales_reps'))
                     <li><a href="{{ route('sales-reps.index') }}" class="{{ request()->routeIs('sales-reps.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('sales_reps', '👔') }}</span> {{ feature_name('sales_reps', 'المندوبين') }}</a></li>
+                    <li><a href="{{ route('admin.sales-rep-treasury.index') }}" class="{{ request()->routeIs('admin.sales-rep-treasury.*') ? 'active' : '' }}"><span class="nav-icon">💰</span> خزينات المندوبين</a></li>
+                    <li><a href="{{ route('admin.sales-rep-inventory.index') }}" class="{{ request()->routeIs('admin.sales-rep-inventory.*') ? 'active' : '' }}"><span class="nav-icon">📦</span> مخازن المندوبين</a></li>
                     @endif
                     @if(feature_enabled('employees'))
                     <li><a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('employees', '👨‍💻') }}</span> {{ feature_name('employees', 'الموظفين') }}</a></li>
