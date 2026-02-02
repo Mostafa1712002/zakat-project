@@ -466,11 +466,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const minPrice = product.min_price || 0;
         priceInput.min = minPrice;
 
+        // Always show the min price value
+        minPriceDisplay.textContent = minPrice.toFixed(2);
         if (minPrice > 0) {
-            minPriceDisplay.textContent = minPrice.toFixed(2);
             minPriceDisplay.className = 'min-price-display badge badge-warning';
         } else {
-            minPriceDisplay.textContent = '-';
             minPriceDisplay.className = 'min-price-display badge badge-secondary';
         }
 
