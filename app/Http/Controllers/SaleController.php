@@ -14,6 +14,8 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\InventoryLevel;
+use App\Models\SalesRepInventory;
+use App\Models\SalesRepStockMovement;
 
 class SaleController extends Controller
 {
@@ -38,7 +40,32 @@ class SaleController extends Controller
         $productId = $request->get('product_id');
         $warehouseId = $request->get('warehouse_id');
 
-        if (!$productId || !$warehouseId) {
+        if (!$productId) {
+            return response()->json(['stock' => 0, 'available' => 0]);
+        }
+
+        $user = auth()->user();
+
+        // إذا كان المستخدم مندوب - أرجع مخزون المندوب
+        if ($user->isSalesRep() && $user->salesRep) {
+            $repInventory = SalesRepInventory::where('sales_rep_id', $user->salesRep->id)
+                ->where('product_id', $productId)
+                ->first();
+
+            if (!$repInventory) {
+                return response()->json(['stock' => 0, 'available' => 0, 'source' => 'rep']);
+            }
+
+            return response()->json([
+                'stock' => (float) $repInventory->quantity,
+                'available' => (float) $repInventory->available_quantity,
+                'reserved' => (float) $repInventory->reserved_quantity,
+                'source' => 'rep',
+            ]);
+        }
+
+        // للأدمن - أرجع مخزون المخزن
+        if (!$warehouseId) {
             return response()->json(['stock' => 0, 'available' => 0]);
         }
 
@@ -54,6 +81,7 @@ class SaleController extends Controller
             'stock' => (float) $level->quantity,
             'available' => (float) $level->available_quantity,
             'reserved' => (float) $level->reserved_quantity,
+            'source' => 'warehouse',
         ]);
     }
 
@@ -63,7 +91,6 @@ class SaleController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $products = Product::active()->with('unit')->get();
         $branches = Branch::where('is_active', true)->get();
 
         // إذا كان المستخدم مندوب مبيعات
@@ -74,14 +101,27 @@ class SaleController extends Controller
             $warehouses = $salesRep->warehouses()->where('is_active', true)->get();
             $salesReps = collect(); // لا يرى قائمة المندوبين
             $currentSalesRep = $salesRep;
+
+            // المندوب يرى فقط المنتجات المخصصة له
+            $repInventory = $salesRep->inventory()->with('product.unit')->get();
+            $products = $repInventory->map(function ($item) {
+                $product = $item->product;
+                $product->rep_stock = $item->available_quantity;
+                return $product;
+            })->filter(function ($product) {
+                return $product->is_active && $product->rep_stock > 0;
+            });
+            $useSalesRepInventory = true;
         } else {
             $customers = Customer::active()->get();
             $warehouses = Warehouse::active()->get();
             $salesReps = SalesRep::where('is_active', true)->get();
             $currentSalesRep = null;
+            $products = Product::active()->with('unit')->get();
+            $useSalesRepInventory = false;
         }
 
-        return view('sales.create', compact('customers', 'products', 'warehouses', 'branches', 'salesReps', 'currentSalesRep'));
+        return view('sales.create', compact('customers', 'products', 'warehouses', 'branches', 'salesReps', 'currentSalesRep', 'useSalesRepInventory'));
     }
 
     /**
@@ -113,16 +153,30 @@ class SaleController extends Controller
             'items.*.discount_amount' => 'nullable|numeric|min:0',
         ]);
 
-        // التحقق من توفر الكميات في المخزن
+        // التحقق من توفر الكميات
         $stockErrors = [];
+        $user = auth()->user();
+        $isSalesRep = $user->isSalesRep() && $user->salesRep;
+
         foreach ($validated['items'] as $index => $item) {
             $product = Product::find($item['product_id']);
             if ($product && $product->track_inventory) {
-                $warehouse = Warehouse::find($validated['warehouse_id']);
-                $availableStock = $warehouse ? $warehouse->getAvailableStock($product->id) : 0;
+                if ($isSalesRep) {
+                    // المندوب: التحقق من مخزون المندوب
+                    $repInventory = SalesRepInventory::where('sales_rep_id', $user->salesRep->id)
+                        ->where('product_id', $item['product_id'])
+                        ->first();
+                    $availableStock = $repInventory ? $repInventory->available_quantity : 0;
+                    $source = 'مخزنك';
+                } else {
+                    // الأدمن: التحقق من مخزون المخزن
+                    $warehouse = Warehouse::find($validated['warehouse_id']);
+                    $availableStock = $warehouse ? $warehouse->getAvailableStock($product->id) : 0;
+                    $source = 'المخزن';
+                }
 
                 if ($item['quantity'] > $availableStock) {
-                    $stockErrors[] = "الصنف \"{$product->name}\" - الكمية المطلوبة ({$item['quantity']}) أكبر من المتاح ({$availableStock})";
+                    $stockErrors[] = "الصنف \"{$product->name}\" - الكمية المطلوبة ({$item['quantity']}) أكبر من المتاح في {$source} ({$availableStock})";
                 }
             }
         }
@@ -130,14 +184,13 @@ class SaleController extends Controller
         if (!empty($stockErrors)) {
             return back()
                 ->withInput()
-                ->with('error', 'الكميات غير متوفرة في المخزن: ' . implode(' | ', $stockErrors));
+                ->with('error', 'الكميات غير متوفرة: ' . implode(' | ', $stockErrors));
         }
 
         DB::beginTransaction();
 
         try {
             // تعيين المندوب تلقائياً إذا كان المستخدم مندوب
-            $user = auth()->user();
             $salesRepId = $validated['sales_rep_id'] ?? null;
             if ($user->isSalesRep() && $user->salesRep) {
                 $salesRepId = $user->salesRep->id;
@@ -479,20 +532,35 @@ class SaleController extends Controller
         DB::beginTransaction();
 
         try {
-            // Deduct inventory for each item
-            foreach ($sale->items as $item) {
-                StockMovement::recordMovement([
-                    'product_id' => $item->product_id,
-                    'warehouse_id' => $sale->warehouse_id,
-                    'type' => StockMovement::TYPE_OUT,
-                    'quantity' => $item->quantity,
-                    'unit_cost' => $item->cost_price,
-                    'reference_type' => Sale::class,
-                    'reference_id' => $sale->id,
-                    'reference_number' => $sale->invoice_number,
-                    'user_id' => auth()->id(),
-                    'reason' => 'بيع',
-                ]);
+            // إذا كانت الفاتورة لمندوب - خصم من مخزون المندوب
+            if ($sale->sales_rep_id) {
+                foreach ($sale->items as $item) {
+                    SalesRepStockMovement::record(
+                        $sale->sales_rep_id,
+                        $item->product_id,
+                        SalesRepStockMovement::TYPE_SALE,
+                        $item->quantity,
+                        $sale->warehouse_id,
+                        $sale->id,
+                        'بيع - فاتورة ' . $sale->invoice_number
+                    );
+                }
+            } else {
+                // خصم من مخزون المخزن للفواتير بدون مندوب
+                foreach ($sale->items as $item) {
+                    StockMovement::recordMovement([
+                        'product_id' => $item->product_id,
+                        'warehouse_id' => $sale->warehouse_id,
+                        'type' => StockMovement::TYPE_OUT,
+                        'quantity' => $item->quantity,
+                        'unit_cost' => $item->cost_price,
+                        'reference_type' => Sale::class,
+                        'reference_id' => $sale->id,
+                        'reference_number' => $sale->invoice_number,
+                        'user_id' => auth()->id(),
+                        'reason' => 'بيع',
+                    ]);
+                }
             }
 
             // Update sale status
@@ -538,19 +606,34 @@ class SaleController extends Controller
         try {
             // If sale was confirmed, return inventory
             if ($sale->status === Sale::STATUS_CONFIRMED) {
-                foreach ($sale->items as $item) {
-                    StockMovement::recordMovement([
-                        'product_id' => $item->product_id,
-                        'warehouse_id' => $sale->warehouse_id,
-                        'type' => StockMovement::TYPE_RETURN,
-                        'quantity' => $item->quantity,
-                        'unit_cost' => $item->cost_price,
-                        'reference_type' => Sale::class,
-                        'reference_id' => $sale->id,
-                        'reference_number' => $sale->invoice_number,
-                        'user_id' => auth()->id(),
-                        'reason' => 'إلغاء فاتورة',
-                    ]);
+                // إذا كانت الفاتورة لمندوب - إرجاع لمخزون المندوب
+                if ($sale->sales_rep_id) {
+                    foreach ($sale->items as $item) {
+                        SalesRepStockMovement::record(
+                            $sale->sales_rep_id,
+                            $item->product_id,
+                            SalesRepStockMovement::TYPE_RETURN,
+                            $item->quantity,
+                            $sale->warehouse_id,
+                            $sale->id,
+                            'إلغاء فاتورة ' . $sale->invoice_number
+                        );
+                    }
+                } else {
+                    foreach ($sale->items as $item) {
+                        StockMovement::recordMovement([
+                            'product_id' => $item->product_id,
+                            'warehouse_id' => $sale->warehouse_id,
+                            'type' => StockMovement::TYPE_RETURN,
+                            'quantity' => $item->quantity,
+                            'unit_cost' => $item->cost_price,
+                            'reference_type' => Sale::class,
+                            'reference_id' => $sale->id,
+                            'reference_number' => $sale->invoice_number,
+                            'user_id' => auth()->id(),
+                            'reason' => 'إلغاء فاتورة',
+                        ]);
+                    }
                 }
 
                 // Reverse customer balance if credit sale

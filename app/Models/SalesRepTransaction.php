@@ -48,6 +48,11 @@ class SalesRepTransaction extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function createdByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     /**
      * الحصول على اسم النوع
      */

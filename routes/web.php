@@ -30,6 +30,7 @@ use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerTransactionController;
 use App\Http\Controllers\ProfitDistributionController;
 use App\Http\Controllers\TreasuryController;
+use App\Http\Controllers\SalesRepAccountController;
 
 // Authentication Routes
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('guest');
@@ -196,6 +197,26 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/sales', [SalesRepDashboardController::class, 'sales'])->name('sales');
         Route::get('/collections', [SalesRepDashboardController::class, 'collections'])->name('collections');
         Route::get('/reports', [SalesRepDashboardController::class, 'reports'])->name('reports');
+
+        // حساب المندوب - خزينتي، مصروفاتي، مخزني
+        Route::get('/treasury', [SalesRepAccountController::class, 'myTreasury'])->name('treasury');
+        Route::get('/expenses', [SalesRepAccountController::class, 'myExpenses'])->name('expenses');
+        Route::post('/expenses', [SalesRepAccountController::class, 'storeExpense'])->name('expenses.store');
+        Route::get('/inventory', [SalesRepAccountController::class, 'myInventory'])->name('inventory');
+    });
+
+    // Admin - إدارة خزينات ومخازن المندوبين
+    Route::middleware(['admin_only'])->prefix('admin')->name('admin.')->group(function () {
+        // خزينات المندوبين
+        Route::get('sales-rep-treasury', [SalesRepAccountController::class, 'treasuryIndex'])->name('sales-rep-treasury.index');
+        Route::get('sales-rep-treasury/{salesRep}', [SalesRepAccountController::class, 'treasuryShow'])->name('sales-rep-treasury.show');
+        Route::post('sales-rep-treasury/{salesRep}/withdraw', [SalesRepAccountController::class, 'withdrawToMain'])->name('sales-rep-treasury.withdraw');
+
+        // مخازن المندوبين
+        Route::get('sales-rep-inventory', [SalesRepAccountController::class, 'inventoryIndex'])->name('sales-rep-inventory.index');
+        Route::get('sales-rep-inventory/{salesRep}', [SalesRepAccountController::class, 'inventoryShow'])->name('sales-rep-inventory.show');
+        Route::post('sales-rep-inventory/{salesRep}/allocate', [SalesRepAccountController::class, 'allocateStock'])->name('sales-rep-inventory.allocate');
+        Route::post('sales-rep-inventory/{salesRep}/return', [SalesRepAccountController::class, 'returnStock'])->name('sales-rep-inventory.return');
     });
 
     // Employee Dashboard (لوحة تحكم الموظف)

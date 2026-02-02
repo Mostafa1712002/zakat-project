@@ -247,6 +247,68 @@ class SalesRep extends Model
     }
 
     /**
+     * مخزون المندوب
+     */
+    public function inventory(): HasMany
+    {
+        return $this->hasMany(SalesRepInventory::class);
+    }
+
+    /**
+     * حركات مخزون المندوب
+     */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(SalesRepStockMovement::class);
+    }
+
+    /**
+     * الحصول على كمية صنف في مخزون المندوب
+     */
+    public function getProductStock(int $productId): float
+    {
+        $inventory = $this->inventory()->where('product_id', $productId)->first();
+        return $inventory ? $inventory->available_quantity : 0;
+    }
+
+    /**
+     * التحقق من توفر صنف في مخزون المندوب
+     */
+    public function hasProductStock(int $productId, float $quantity): bool
+    {
+        return $this->getProductStock($productId) >= $quantity;
+    }
+
+    /**
+     * تخصيص أصناف للمندوب من المخزن
+     */
+    public function allocateStock(int $productId, float $quantity, int $warehouseId, ?string $notes = null): ?SalesRepStockMovement
+    {
+        return SalesRepStockMovement::record(
+            $this->id,
+            $productId,
+            SalesRepStockMovement::TYPE_IN,
+            $quantity,
+            $warehouseId,
+            null,
+            $notes ?? 'تخصيص من المخزن'
+        );
+    }
+
+    /**
+     * سحب كامل رصيد الخزينة (للأدمن)
+     */
+    public function withdrawAllToMainTreasury(?string $notes = null): ?SalesRepTransaction
+    {
+        if ($this->treasury_balance <= 0) {
+            return null;
+        }
+
+        $amount = $this->treasury_balance;
+        return $this->withdraw($amount, $notes ?? 'سحب للخزينة الرئيسية');
+    }
+
+    /**
      * إيداع مبلغ في الخزينة
      */
     public function deposit(float $amount, ?string $description = null, ?string $referenceType = null, ?int $referenceId = null): SalesRepTransaction
