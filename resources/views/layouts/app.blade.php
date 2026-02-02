@@ -63,6 +63,9 @@
             margin-right: 260px;
             padding: 20px;
             min-height: 100vh;
+            width: calc(100% - 260px);
+            max-width: calc(100% - 260px);
+            overflow-x: hidden;
         }
 
         .logo {
@@ -401,7 +404,7 @@
             .sidebar { transform: translateX(100%); transition: transform 0.3s ease; }
             .sidebar.open { transform: translateX(0); }
             .sidebar-overlay.open { display: block; }
-            .main { margin-right: 0; padding: 70px 16px 16px; }
+            .main { margin-right: 0; padding: 70px 16px 16px; width: 100%; max-width: 100%; }
             .page-header { flex-direction: column; align-items: flex-start; }
             .stats-grid { grid-template-columns: 1fr; }
 

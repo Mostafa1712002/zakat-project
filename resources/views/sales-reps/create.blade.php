@@ -281,7 +281,7 @@
     /* Form Row - Responsive Grid */
     .form-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 20px;
         margin-bottom: 16px;
     }
@@ -292,6 +292,16 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 20px;
         margin-bottom: 16px;
+    }
+
+    /* Ensure cards don't overflow */
+    .card {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .card-body {
+        max-width: 100%;
     }
 
     .checkbox-group {
