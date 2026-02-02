@@ -133,9 +133,10 @@
                 <table class="table" id="itemsTable">
                     <thead>
                         <tr>
-                            <th style="width: 30%;">الصنف</th>
-                            <th style="width: 15%;">الكمية</th>
-                            <th style="width: 15%;">سعر الوحدة</th>
+                            <th style="width: 25%;">الصنف</th>
+                            <th style="width: 10%;">المتاح</th>
+                            <th style="width: 12%;">الكمية</th>
+                            <th style="width: 13%;">سعر الوحدة</th>
                             <th style="width: 10%;">أقل سعر</th>
                             <th style="width: 10%;">الخصم</th>
                             <th style="width: 12%;">الإجمالي</th>
@@ -154,6 +155,9 @@
                                     @endforeach
                                 </select>
                                 <input type="hidden" name="items[0][price_type]" value="retail">
+                            </td>
+                            <td>
+                                <span class="stock-display badge badge-secondary">-</span>
                             </td>
                             <td>
                                 <input type="number" name="items[0][quantity]" class="form-control quantity-input" value="1" min="0.001" step="0.001" required>
@@ -245,14 +249,17 @@
     font-size: 1rem;
 }
 
-.min-price-display {
+.min-price-display,
+.stock-display {
     display: inline-block;
-    min-width: 60px;
+    min-width: 50px;
     text-align: center;
-    font-size: 12px;
+    font-size: 11px;
+    padding: 4px 8px;
 }
 
-.price-warning {
+.price-warning,
+.stock-warning {
     border-color: #ef4444 !important;
     background-color: #fef2f2 !important;
 }
@@ -260,14 +267,127 @@
 .price-ok {
     border-color: #22c55e !important;
 }
+
+.stock-ok {
+    background: #dcfce7 !important;
+    color: #166534 !important;
+}
+
+.stock-low {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+}
+
+.stock-out {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+.quantity-warning {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+    animation: pulse-warning 1s infinite;
+}
+
+@keyframes pulse-warning {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let rowIndex = 1;
+    const stockCache = {}; // Cache for stock data
 
     // Products data with prices and min selling price
-    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'min_price' => $p->min_selling_price ?? 0]]));
+    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'min_price' => $p->min_selling_price ?? 0, 'track' => $p->track_inventory]]));
+
+    // Get stock API URL
+    const getStockUrl = '{{ route("sales.get-stock") }}';
+
+    // Fetch stock for a product
+    async function fetchStock(productId, warehouseId) {
+        const cacheKey = `${productId}_${warehouseId}`;
+
+        if (stockCache[cacheKey] !== undefined) {
+            return stockCache[cacheKey];
+        }
+
+        try {
+            const response = await fetch(`${getStockUrl}?product_id=${productId}&warehouse_id=${warehouseId}`);
+            const data = await response.json();
+            stockCache[cacheKey] = data.available || 0;
+            return stockCache[cacheKey];
+        } catch (error) {
+            console.error('Error fetching stock:', error);
+            return 0;
+        }
+    }
+
+    // Update stock display for a row
+    async function updateStockDisplay(row) {
+        const productId = row.querySelector('.product-select').value;
+        const warehouseId = document.getElementById('warehouse_id').value;
+        const stockDisplay = row.querySelector('.stock-display');
+        const product = productsData[productId];
+
+        if (!productId || !warehouseId) {
+            stockDisplay.textContent = '-';
+            stockDisplay.className = 'stock-display badge badge-secondary';
+            stockDisplay.dataset.stock = '0';
+            return;
+        }
+
+        // If product doesn't track inventory, show unlimited
+        if (product && !product.track) {
+            stockDisplay.textContent = '∞';
+            stockDisplay.className = 'stock-display badge badge-success';
+            stockDisplay.dataset.stock = '999999';
+            return;
+        }
+
+        stockDisplay.textContent = '...';
+        stockDisplay.className = 'stock-display badge badge-secondary';
+
+        const stock = await fetchStock(productId, warehouseId);
+        stockDisplay.dataset.stock = stock;
+        stockDisplay.textContent = stock.toFixed(0);
+
+        if (stock <= 0) {
+            stockDisplay.className = 'stock-display badge stock-out';
+        } else if (stock < 10) {
+            stockDisplay.className = 'stock-display badge stock-low';
+        } else {
+            stockDisplay.className = 'stock-display badge stock-ok';
+        }
+
+        validateQuantity(row);
+    }
+
+    // Validate quantity against stock
+    function validateQuantity(row) {
+        const quantityInput = row.querySelector('.quantity-input');
+        const stockDisplay = row.querySelector('.stock-display');
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const stock = parseFloat(stockDisplay.dataset.stock) || 0;
+        const productId = row.querySelector('.product-select').value;
+        const product = productsData[productId];
+
+        // Skip validation if product doesn't track inventory
+        if (product && !product.track) {
+            quantityInput.classList.remove('quantity-warning');
+            return true;
+        }
+
+        if (productId && quantity > stock) {
+            quantityInput.classList.add('quantity-warning');
+            return false;
+        } else {
+            quantityInput.classList.remove('quantity-warning');
+            return true;
+        }
+    }
 
     // Add new row
     document.getElementById('addRowBtn').addEventListener('click', function() {
@@ -287,10 +407,19 @@ document.addEventListener('DOMContentLoaded', function() {
         newRow.querySelector('.row-total').textContent = '0.00';
         newRow.querySelector('.remove-row').style.display = 'inline-block';
 
-        // Reset min price display
+        // Reset displays
         const minPriceDisplay = newRow.querySelector('.min-price-display');
         minPriceDisplay.textContent = '-';
         minPriceDisplay.className = 'min-price-display badge badge-secondary';
+
+        const stockDisplay = newRow.querySelector('.stock-display');
+        stockDisplay.textContent = '-';
+        stockDisplay.className = 'stock-display badge badge-secondary';
+        stockDisplay.dataset.stock = '0';
+
+        // Reset warnings
+        newRow.querySelector('.quantity-input').classList.remove('quantity-warning');
+        newRow.querySelector('.price-input').classList.remove('price-warning', 'price-ok');
 
         tbody.appendChild(newRow);
         rowIndex++;
@@ -403,10 +532,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Product selection change
         row.querySelector('.product-select').addEventListener('change', function() {
             updateRowPrice(row);
+            updateStockDisplay(row);
         });
 
         row.querySelectorAll('.quantity-input, .price-input, .discount-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
+        });
+
+        // Quantity change validation
+        row.querySelector('.quantity-input').addEventListener('input', function() {
+            validateQuantity(row);
         });
 
         // Price change validation
@@ -414,6 +549,16 @@ document.addEventListener('DOMContentLoaded', function() {
             validatePrice(row);
         });
     }
+
+    // Warehouse change - update all stock displays
+    document.getElementById('warehouse_id').addEventListener('change', function() {
+        // Clear cache when warehouse changes
+        Object.keys(stockCache).forEach(key => delete stockCache[key]);
+
+        document.querySelectorAll('.item-row').forEach(row => {
+            updateStockDisplay(row);
+        });
+    });
 
     // Initial setup
     attachRowEvents(document.querySelector('.item-row'));
@@ -430,23 +575,32 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!productId) return;
 
             const product = productsData[productId];
-            if (!product || !product.min_price) return;
-
             const priceInput = row.querySelector('.price-input');
+            const quantityInput = row.querySelector('.quantity-input');
+            const stockDisplay = row.querySelector('.stock-display');
             const currentPrice = parseFloat(priceInput.value) || 0;
-            const minPrice = product.min_price;
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const stock = parseFloat(stockDisplay.dataset.stock) || 0;
+            const productName = row.querySelector('.product-select option:checked').text;
 
-            if (currentPrice < minPrice) {
+            // Check minimum price
+            if (product && product.min_price && currentPrice < product.min_price) {
                 hasErrors = true;
                 priceInput.classList.add('price-warning');
-                const productName = row.querySelector('.product-select option:checked').text;
-                errorMessages.push(`${productName}: السعر ${currentPrice} أقل من أقل سعر بيع ${minPrice}`);
+                errorMessages.push(`${productName}: السعر ${currentPrice} أقل من أقل سعر بيع ${product.min_price}`);
+            }
+
+            // Check stock availability (only for tracked products)
+            if (product && product.track && quantity > stock) {
+                hasErrors = true;
+                quantityInput.classList.add('quantity-warning');
+                errorMessages.push(`${productName}: الكمية المطلوبة (${quantity}) أكبر من المتاح في المخزون (${stock})`);
             }
         });
 
         if (hasErrors) {
             e.preventDefault();
-            alert('⚠️ لا يمكن البيع بسعر أقل من الحد الأدنى:\n\n' + errorMessages.join('\n'));
+            alert('⚠️ لا يمكن إنشاء الفاتورة:\n\n' + errorMessages.join('\n'));
         }
     });
 });
