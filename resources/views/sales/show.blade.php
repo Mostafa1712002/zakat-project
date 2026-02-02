@@ -19,7 +19,7 @@
     <div class="print-contacts-bar">
         <div class="contact-item">
             <span class="contact-label">مشرف الخط:</span>
-            <span class="contact-value">01000000000</span>
+            <span class="contact-value">01xxxxxxxxx</span>
         </div>
         @if($sale->salesRep && $sale->salesRep->phone)
         <div class="contact-item">
