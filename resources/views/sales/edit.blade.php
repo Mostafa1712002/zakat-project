@@ -153,12 +153,11 @@
                 <table class="table" id="itemsTable">
                     <thead>
                         <tr>
-                            <th style="width: 25%;">الصنف</th>
-                            <th style="width: 10%;">المتاح</th>
+                            <th style="width: 28%;">الصنف</th>
+                            <th style="width: 12%;">المتاح</th>
                             <th style="width: 12%;">الكمية</th>
-                            <th style="width: 13%;">سعر الوحدة</th>
-                            <th style="width: 10%;">أقل سعر</th>
-                            <th style="width: 10%;">الخصم</th>
+                            <th style="width: 15%;">سعر الوحدة</th>
+                            <th style="width: 13%;">أقل سعر</th>
                             <th style="width: 12%;">الإجمالي</th>
                             <th style="width: 8%;"></th>
                         </tr>
@@ -176,6 +175,7 @@
                                     @endforeach
                                 </select>
                                 <input type="hidden" name="items[{{ $index }}][price_type]" value="retail">
+                                <input type="hidden" name="items[{{ $index }}][discount_amount]" class="discount-input" value="{{ $item['discount_amount'] ?? 0 }}">
                             </td>
                             <td>
                                 <span class="stock-display badge badge-secondary">-</span>
@@ -190,9 +190,6 @@
                                 <span class="min-price-display badge badge-secondary">-</span>
                             </td>
                             <td>
-                                <input type="number" name="items[{{ $index }}][discount_amount]" class="form-control discount-input" value="{{ $item['discount_amount'] ?? 0 }}" min="0" step="0.01">
-                            </td>
-                            <td>
                                 <span class="row-total">0.00</span> ج.م
                             </td>
                             <td>
@@ -203,7 +200,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="8">
+                            <td colspan="7">
                                 <button type="button" class="btn btn-sm" id="addRowBtn">+ إضافة صنف</button>
                             </td>
                         </tr>
@@ -501,8 +498,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function calculateRowTotal(row) {
         const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
         const price = parseFloat(row.querySelector('.price-input').value) || 0;
-        const discount = parseFloat(row.querySelector('.discount-input').value) || 0;
-        const total = (qty * price) - discount;
+        const total = qty * price;
         row.querySelector('.row-total').textContent = total.toFixed(2);
         return total;
     }
@@ -528,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateStockDisplay(row);
         });
 
-        row.querySelectorAll('.quantity-input, .price-input, .discount-input').forEach(input => {
+        row.querySelectorAll('.quantity-input, .price-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
         });
 

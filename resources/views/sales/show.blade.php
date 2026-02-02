@@ -132,12 +132,11 @@
                 <thead>
                     <tr>
                         <th style="width: 5%;">#</th>
-                        <th style="width: 32%;">الصنف</th>
-                        <th style="width: 10%;">الكمية</th>
-                        <th style="width: 13%;">السعر</th>
-                        <th style="width: 12%;">أقل سعر</th>
-                        <th style="width: 12%;">الخصم</th>
-                        <th style="width: 16%;">الإجمالي</th>
+                        <th style="width: 35%;">الصنف</th>
+                        <th style="width: 12%;">الكمية</th>
+                        <th style="width: 15%;">السعر</th>
+                        <th style="width: 15%;">أقل سعر</th>
+                        <th style="width: 18%;">الإجمالي</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -148,7 +147,6 @@
                         <td>{{ number_format($item->quantity, 2) }}</td>
                         <td>{{ number_format($item->unit_price, 2) }}</td>
                         <td class="min-price">{{ number_format($item->product->min_selling_price ?? 0, 2) }}</td>
-                        <td>{{ number_format($item->discount_amount, 2) }}</td>
                         <td class="item-total">{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
                     </tr>
                     @endforeach
