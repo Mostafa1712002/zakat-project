@@ -51,11 +51,27 @@ class User extends Authenticatable
     }
 
     /**
+     * الموظف المرتبط بالمستخدم
+     */
+    public function employee(): HasOne
+    {
+        return $this->hasOne(Employee::class);
+    }
+
+    /**
      * التحقق من كون المستخدم مندوب مبيعات
      */
     public function isSalesRep(): bool
     {
         return $this->salesRep()->exists() || $this->hasRole('sales_rep');
+    }
+
+    /**
+     * التحقق من كون المستخدم موظف
+     */
+    public function isEmployee(): bool
+    {
+        return $this->employee()->exists() || $this->hasRole('employee');
     }
 
     /**

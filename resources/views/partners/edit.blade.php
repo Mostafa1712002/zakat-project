@@ -39,24 +39,6 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="email" class="form-label">البريد الإلكتروني</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $partner->email) }}">
-                    @error('email')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="national_id" class="form-label">الرقم القومي</label>
-                    <input type="text" name="national_id" id="national_id" class="form-control" value="{{ old('national_id', $partner->national_id) }}">
-                    @error('national_id')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
                     <label for="ownership_percentage" class="form-label">نسبة الملكية (%) *</label>
                     <input type="number" step="0.01" name="ownership_percentage" id="ownership_percentage" class="form-control" value="{{ old('ownership_percentage', $partner->ownership_percentage) }}" required min="0" max="100">
                     @error('ownership_percentage')

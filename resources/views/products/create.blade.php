@@ -43,15 +43,6 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="barcode" class="form-label">الباركود</label>
-                    <input type="text" name="barcode" id="barcode" class="form-control" value="{{ old('barcode') }}" placeholder="سيتم توليده تلقائياً" style="background: rgba(0,0,0,0.05);">
-                    <small style="color: #64748b; font-size: 12px;">⚡ يتم توليده تلقائياً إذا تُرك فارغاً</small>
-                    @error('barcode')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
                     <label for="category_id" class="form-label">القسم *</label>
                     <select name="category_id" id="category_id" class="form-control" required>
                         <option value="">اختر القسم</option>

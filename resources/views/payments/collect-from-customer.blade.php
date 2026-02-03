@@ -40,11 +40,75 @@
     </div>
 </div>
 
+<!-- Unpaid Invoices -->
+@if(isset($unpaidSales) && $unpaidSales->count() > 0)
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">🧾 الفواتير المستحقة</h3>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>التاريخ</th>
+                    <th>تاريخ الاستحقاق</th>
+                    <th>الإجمالي</th>
+                    <th>المدفوع</th>
+                    <th>المتبقي</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($unpaidSales as $sale)
+                <tr class="invoice-row {{ $sale->isOverdue() ? 'overdue-row' : '' }}"
+                    data-id="{{ $sale->id }}"
+                    data-remaining="{{ $sale->remaining_amount }}"
+                    style="cursor: pointer;">
+                    <td><code>{{ $sale->invoice_number }}</code></td>
+                    <td>{{ $sale->invoice_date?->format('Y-m-d') }}</td>
+                    <td>
+                        {{ $sale->due_date?->format('Y-m-d') ?? '-' }}
+                        @if($sale->isOverdue())
+                            <span class="badge badge-danger">متأخرة</span>
+                        @endif
+                    </td>
+                    <td>{{ number_format($sale->total_amount, 2) }} ج.م</td>
+                    <td>{{ number_format($sale->paid_amount, 2) }} ج.م</td>
+                    <td><strong class="text-danger">{{ number_format($sale->remaining_amount, 2) }} ج.م</strong></td>
+                    <td>
+                        @if($sale->payment_status === 'unpaid')
+                            <span class="badge badge-danger">غير مدفوعة</span>
+                        @elseif($sale->payment_status === 'partial')
+                            <span class="badge badge-warning">جزئي</span>
+                        @elseif($sale->payment_status === 'overdue')
+                            <span class="badge badge-danger">متأخرة</span>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    <div class="card-body" style="background: #f8f9fa; border-top: 1px solid var(--border);">
+        <small class="text-muted">💡 اضغط على فاتورة لتحديدها للتحصيل، أو اترك بدون تحديد للتحصيل على الحساب العام</small>
+    </div>
+</div>
+@endif
+
 <!-- Payment Form -->
 <div class="card">
     <div class="card-body">
         <form action="{{ route('customers.collect', $customer) }}" method="POST">
             @csrf
+            <input type="hidden" name="sale_id" id="sale_id" value="{{ old('sale_id') }}">
+
+            <!-- Selected Invoice Info -->
+            <div id="selectedInvoiceInfo" class="alert alert-info mb-4" style="display: none;">
+                <strong>📋 الفاتورة المحددة:</strong>
+                <span id="selectedInvoiceNumber"></span>
+                <button type="button" class="btn btn-sm" onclick="clearSelectedInvoice()" style="float: left;">✕ إلغاء التحديد</button>
+            </div>
 
             <div class="form-row">
                 <div class="form-group">
@@ -159,6 +223,30 @@
 @push('styles')
 <style>
     .mb-4 { margin-bottom: 20px; }
+
+    .invoice-row {
+        transition: all 0.2s;
+    }
+    .invoice-row:hover {
+        background-color: #f0f9ff;
+    }
+    .invoice-row.selected {
+        background-color: #dbeafe !important;
+        border-right: 4px solid var(--primary);
+    }
+    .overdue-row {
+        background-color: #fef2f2;
+    }
+    .overdue-row:hover {
+        background-color: #fee2e2;
+    }
+    .alert-info {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #7dd3fc;
+        padding: 12px 16px;
+        border-radius: 8px;
+    }
 </style>
 @endpush
 
@@ -173,6 +261,42 @@ function toggleCheckFields() {
     bankFields.style.display = (method === 'check' || method === 'bank_transfer' || method === 'instapay') ? 'block' : 'none';
 }
 
-document.addEventListener('DOMContentLoaded', toggleCheckFields);
+// تحديد فاتورة
+function selectInvoice(row) {
+    // إزالة التحديد السابق
+    document.querySelectorAll('.invoice-row').forEach(r => r.classList.remove('selected'));
+
+    // تحديد الصف الجديد
+    row.classList.add('selected');
+
+    // تحديث الحقول
+    const saleId = row.dataset.id;
+    const remaining = parseFloat(row.dataset.remaining);
+    const invoiceNumber = row.querySelector('code').textContent;
+
+    document.getElementById('sale_id').value = saleId;
+    document.getElementById('amount').value = remaining.toFixed(2);
+    document.getElementById('selectedInvoiceNumber').textContent = invoiceNumber;
+    document.getElementById('selectedInvoiceInfo').style.display = 'block';
+}
+
+// إلغاء تحديد الفاتورة
+function clearSelectedInvoice() {
+    document.querySelectorAll('.invoice-row').forEach(r => r.classList.remove('selected'));
+    document.getElementById('sale_id').value = '';
+    document.getElementById('amount').value = '{{ $customer->current_balance }}';
+    document.getElementById('selectedInvoiceInfo').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    toggleCheckFields();
+
+    // إضافة حدث النقر لصفوف الفواتير
+    document.querySelectorAll('.invoice-row').forEach(row => {
+        row.addEventListener('click', function() {
+            selectInvoice(this);
+        });
+    });
+});
 </script>
 @endpush

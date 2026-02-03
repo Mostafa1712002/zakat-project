@@ -39,26 +39,16 @@
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="type" class="form-label">نوع العميل *</label>
-                    <select name="type" id="type" class="form-control" required>
-                        <option value="retail" {{ old('type', 'retail') == 'retail' ? 'selected' : '' }}>قطاعي</option>
-                        <option value="wholesale" {{ old('type') == 'wholesale' ? 'selected' : '' }}>جملة</option>
-                        <option value="corporate" {{ old('type') == 'corporate' ? 'selected' : '' }}>شركة</option>
-                    </select>
-                    @error('type')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="tax_number" class="form-label">الرقم الضريبي</label>
-                    <input type="text" name="tax_number" id="tax_number" class="form-control" value="{{ old('tax_number') }}" placeholder="الرقم الضريبي">
-                    @error('tax_number')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
+            <div class="form-group">
+                <label for="type" class="form-label">نوع العميل *</label>
+                <select name="type" id="type" class="form-control" required>
+                    <option value="retail" {{ old('type', 'retail') == 'retail' ? 'selected' : '' }}>قطاعي</option>
+                    <option value="wholesale" {{ old('type') == 'wholesale' ? 'selected' : '' }}>جملة</option>
+                    <option value="corporate" {{ old('type') == 'corporate' ? 'selected' : '' }}>شركة</option>
+                </select>
+                @error('type')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
             </div>
 
             <hr style="margin: 24px 0; border-color: var(--border-color);">
@@ -82,22 +72,12 @@
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="email" class="form-label">البريد الإلكتروني</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" placeholder="email@example.com">
-                    @error('email')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="city" class="form-label">المدينة</label>
-                    <input type="text" name="city" id="city" class="form-control" value="{{ old('city') }}" placeholder="المدينة">
-                    @error('city')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
+            <div class="form-group">
+                <label for="city" class="form-label">المدينة</label>
+                <input type="text" name="city" id="city" class="form-control" value="{{ old('city') }}" placeholder="المدينة">
+                @error('city')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="form-group">
@@ -139,6 +119,29 @@
                     <label for="payment_terms_days" class="form-label">فترة السداد (بالأيام)</label>
                     <input type="number" name="payment_terms_days" id="payment_terms_days" class="form-control" value="{{ old('payment_terms_days', 0) }}" min="0">
                     @error('payment_terms_days')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <hr style="margin: 24px 0; border-color: var(--border-color);">
+            <h3 style="margin-bottom: 16px;">🎯 التارجت والخصم</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target_amount" class="form-label">مبلغ التارجت (ج.م)</label>
+                    <input type="number" step="0.01" name="target_amount" id="target_amount" class="form-control" value="{{ old('target_amount', 0) }}" min="0" placeholder="المبلغ المطلوب للحصول على الخصم">
+                    <small style="color: #64748b; font-size: 12px;">💡 عند وصول مشتريات العميل لهذا المبلغ يحصل على الخصم</small>
+                    @error('target_amount')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="target_discount_percentage" class="form-label">نسبة خصم التارجت (%)</label>
+                    <input type="number" step="0.01" name="target_discount_percentage" id="target_discount_percentage" class="form-control" value="{{ old('target_discount_percentage', 0) }}" min="0" max="100" placeholder="نسبة الخصم عند تحقيق التارجت">
+                    <small style="color: #64748b; font-size: 12px;">📊 نسبة الخصم من إجمالي المشتريات عند تحقيق التارجت</small>
+                    @error('target_discount_percentage')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>

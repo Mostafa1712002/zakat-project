@@ -32,6 +32,8 @@ class Payment extends Model
         'payment_number',
         'payable_type',
         'payable_id',
+        'sale_id',
+        'purchase_id',
         'type',
         'amount',
         'method',
@@ -75,6 +77,22 @@ class Payment extends Model
     public function salesRep(): BelongsTo
     {
         return $this->belongsTo(SalesRep::class);
+    }
+
+    /**
+     * فاتورة البيع المرتبطة
+     */
+    public function sale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class);
+    }
+
+    /**
+     * فاتورة الشراء المرتبطة
+     */
+    public function purchase(): BelongsTo
+    {
+        return $this->belongsTo(Purchase::class);
     }
 
     public function scopeReceived($query)

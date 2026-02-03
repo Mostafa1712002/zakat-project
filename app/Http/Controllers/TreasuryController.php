@@ -133,6 +133,35 @@ class TreasuryController extends Controller
 
         $overallBalance = ($totalCollectionsAll + $totalCashSalesAll) - ($totalExpensesAll + $totalSupplierPaymentsAll);
 
+        // === الفواتير المستحقة والمتأخرة ===
+        $overdueInvoices = Sale::with('customer')
+            ->where('status', '!=', Sale::STATUS_CANCELLED)
+            ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
+            ->where(function($q) {
+                $q->where('due_date', '<', now())
+                  ->orWhere('payment_status', 'overdue');
+            })
+            ->orderBy('due_date')
+            ->take(10)
+            ->get();
+
+        $totalOverdueAmount = Sale::where('status', '!=', Sale::STATUS_CANCELLED)
+            ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
+            ->where(function($q) {
+                $q->where('due_date', '<', now())
+                  ->orWhere('payment_status', 'overdue');
+            })
+            ->sum('remaining_amount');
+
+        // فواتير مستحقة قريباً (خلال 7 أيام)
+        $upcomingDueInvoices = Sale::with('customer')
+            ->where('status', '!=', Sale::STATUS_CANCELLED)
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->whereBetween('due_date', [now(), now()->addDays(7)])
+            ->orderBy('due_date')
+            ->take(10)
+            ->get();
+
         return view('treasury.index', compact(
             'startDate',
             'endDate',
@@ -145,7 +174,10 @@ class TreasuryController extends Controller
             'balance',
             'expensesByCategory',
             'recentTransactions',
-            'overallBalance'
+            'overallBalance',
+            'overdueInvoices',
+            'totalOverdueAmount',
+            'upcomingDueInvoices'
         ));
     }
 }

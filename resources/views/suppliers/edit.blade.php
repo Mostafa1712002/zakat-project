@@ -48,13 +48,13 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="email" class="form-label">البريد الإلكتروني</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $supplier->email) }}">
+                    <label for="contact_person" class="form-label">جهة الاتصال</label>
+                    <input type="text" name="contact_person" id="contact_person" class="form-control" value="{{ old('contact_person', $supplier->contact_person) }}">
                 </div>
 
                 <div class="form-group">
-                    <label for="contact_person" class="form-label">جهة الاتصال</label>
-                    <input type="text" name="contact_person" id="contact_person" class="form-control" value="{{ old('contact_person', $supplier->contact_person) }}">
+                    <label for="payment_terms_days" class="form-label">شروط الدفع (أيام)</label>
+                    <input type="number" name="payment_terms_days" id="payment_terms_days" class="form-control" value="{{ old('payment_terms_days', $supplier->payment_terms_days) }}" min="0">
                 </div>
             </div>
 
@@ -67,30 +67,6 @@
                 <div class="form-group">
                     <label for="city" class="form-label">المدينة</label>
                     <input type="text" name="city" id="city" class="form-control" value="{{ old('city', $supplier->city) }}">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="tax_number" class="form-label">الرقم الضريبي</label>
-                    <input type="text" name="tax_number" id="tax_number" class="form-control" value="{{ old('tax_number', $supplier->tax_number) }}">
-                </div>
-
-                <div class="form-group">
-                    <label for="payment_terms_days" class="form-label">شروط الدفع (أيام)</label>
-                    <input type="number" name="payment_terms_days" id="payment_terms_days" class="form-control" value="{{ old('payment_terms_days', $supplier->payment_terms_days) }}" min="0">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="bank_name" class="form-label">اسم البنك</label>
-                    <input type="text" name="bank_name" id="bank_name" class="form-control" value="{{ old('bank_name', $supplier->bank_name) }}">
-                </div>
-
-                <div class="form-group">
-                    <label for="bank_account" class="form-label">رقم الحساب</label>
-                    <input type="text" name="bank_account" id="bank_account" class="form-control" value="{{ old('bank_account', $supplier->bank_account) }}">
                 </div>
             </div>
 

@@ -93,7 +93,12 @@ class SettingController extends Controller
         $branches = \App\Models\Branch::where('is_active', true)->get();
         $roles = \Spatie\Permission\Models\Role::all();
 
-        return view('settings.users.create', compact('branches', 'roles'));
+        // الموظفين الذين لم يتم ربطهم بمستخدم بعد
+        $availableEmployees = \App\Models\Employee::whereNull('user_id')
+            ->where('is_active', true)
+            ->get();
+
+        return view('settings.users.create', compact('branches', 'roles', 'availableEmployees'));
     }
 
     /**
@@ -110,6 +115,7 @@ class SettingController extends Controller
             'is_active' => 'boolean',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,name',
+            'employee_id' => 'nullable|exists:employees,id',
         ]);
 
         $user = User::create([
@@ -125,6 +131,12 @@ class SettingController extends Controller
             $user->syncRoles($validated['roles']);
         }
 
+        // ربط المستخدم بالموظف إذا تم اختياره
+        if (!empty($validated['employee_id'])) {
+            \App\Models\Employee::where('id', $validated['employee_id'])
+                ->update(['user_id' => $user->id]);
+        }
+
         return redirect()->route('settings.users')
             ->with('success', 'تم إضافة المستخدم بنجاح');
     }
@@ -137,7 +149,16 @@ class SettingController extends Controller
         $branches = \App\Models\Branch::where('is_active', true)->get();
         $roles = \Spatie\Permission\Models\Role::all();
 
-        return view('settings.users.edit', compact('user', 'branches', 'roles'));
+        // الموظفين الذين لم يتم ربطهم بمستخدم بعد + الموظف الحالي للمستخدم
+        $availableEmployees = \App\Models\Employee::where(function ($query) use ($user) {
+            $query->whereNull('user_id')
+                  ->orWhere('user_id', $user->id);
+        })->where('is_active', true)->get();
+
+        // الموظف الحالي للمستخدم
+        $currentEmployee = \App\Models\Employee::where('user_id', $user->id)->first();
+
+        return view('settings.users.edit', compact('user', 'branches', 'roles', 'availableEmployees', 'currentEmployee'));
     }
 
     /**
@@ -154,6 +175,7 @@ class SettingController extends Controller
             'is_active' => 'boolean',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,name',
+            'employee_id' => 'nullable|exists:employees,id',
         ]);
 
         $userData = [
@@ -172,6 +194,15 @@ class SettingController extends Controller
 
         if (isset($validated['roles'])) {
             $user->syncRoles($validated['roles']);
+        }
+
+        // إلغاء ربط الموظف القديم إن وجد
+        \App\Models\Employee::where('user_id', $user->id)->update(['user_id' => null]);
+
+        // ربط الموظف الجديد إن تم اختياره
+        if (!empty($validated['employee_id'])) {
+            \App\Models\Employee::where('id', $validated['employee_id'])
+                ->update(['user_id' => $user->id]);
         }
 
         return redirect()->route('settings.users')
@@ -234,6 +265,109 @@ class SettingController extends Controller
 
         return redirect()->route('settings.invoices')
             ->with('success', 'تم تحديث إعدادات الفواتير بنجاح');
+    }
+
+    /**
+     * Display roles management.
+     */
+    public function roles()
+    {
+        $roles = \Spatie\Permission\Models\Role::withCount('users', 'permissions')->get();
+
+        return view('settings.roles.index', compact('roles'));
+    }
+
+    /**
+     * Show form to create a new role.
+     */
+    public function createRole()
+    {
+        $permissions = \Spatie\Permission\Models\Permission::all()->groupBy(function ($permission) {
+            return explode('_', $permission->name)[1] ?? 'other';
+        });
+
+        return view('settings.roles.create', compact('permissions'));
+    }
+
+    /**
+     * Store a new role.
+     */
+    public function storeRole(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'display_name' => 'nullable|string|max:255',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        $role = \Spatie\Permission\Models\Role::create([
+            'name' => $validated['name'],
+            'guard_name' => 'web',
+        ]);
+
+        if (!empty($validated['permissions'])) {
+            $role->syncPermissions($validated['permissions']);
+        }
+
+        return redirect()->route('settings.roles')
+            ->with('success', 'تم إضافة الدور بنجاح');
+    }
+
+    /**
+     * Show form to edit a role.
+     */
+    public function editRole($roleId)
+    {
+        $role = \Spatie\Permission\Models\Role::findOrFail($roleId);
+        $permissions = \Spatie\Permission\Models\Permission::all()->groupBy(function ($permission) {
+            return explode('_', $permission->name)[1] ?? 'other';
+        });
+        $rolePermissions = $role->permissions->pluck('name')->toArray();
+
+        return view('settings.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+    }
+
+    /**
+     * Update a role.
+     */
+    public function updateRole(Request $request, $roleId)
+    {
+        $role = \Spatie\Permission\Models\Role::findOrFail($roleId);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'display_name' => 'nullable|string|max:255',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        $role->update([
+            'name' => $validated['name'],
+        ]);
+
+        $role->syncPermissions($validated['permissions'] ?? []);
+
+        return redirect()->route('settings.roles')
+            ->with('success', 'تم تحديث الدور بنجاح');
+    }
+
+    /**
+     * Delete a role.
+     */
+    public function destroyRole($roleId)
+    {
+        $role = \Spatie\Permission\Models\Role::findOrFail($roleId);
+
+        // Check if role has users
+        if ($role->users()->count() > 0) {
+            return back()->with('error', 'لا يمكن حذف الدور لأنه مرتبط بمستخدمين');
+        }
+
+        $role->delete();
+
+        return redirect()->route('settings.roles')
+            ->with('success', 'تم حذف الدور بنجاح');
     }
 
     /**

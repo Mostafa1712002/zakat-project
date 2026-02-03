@@ -6,6 +6,8 @@ use App\Models\Branch;
 use App\Models\SalesRep;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -46,6 +48,7 @@ class SalesRepController extends Controller
         // قواعد التحقق حسب النوع
         $rules = [
             'code' => 'nullable|string|max:50|unique:sales_reps,code',
+            'type' => 'required|in:fridge,special',
             'phone' => 'nullable|string|max:20',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'commission_type' => 'nullable|in:percentage,fixed',
@@ -113,6 +116,7 @@ class SalesRepController extends Controller
                 'user_id' => $user->id,
                 'name' => $name,
                 'code' => $validated['code'],
+                'type' => $validated['type'],
                 'phone' => $validated['phone'] ?? $user->phone,
                 'email' => $email,
                 'commission_rate' => $validated['commission_rate'] ?? 0,
@@ -163,7 +167,82 @@ class SalesRepController extends Controller
             'target_achievement' => $salesRep->target_achievement,
         ];
 
-        return view('sales-reps.show', compact('salesRep', 'stats'));
+        // معاملات الخزينة الأخيرة
+        $treasuryTransactions = $salesRep->treasuryTransactions()
+            ->with('creator')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        // مصروفات المندوب الأخيرة
+        $expenses = $salesRep->expenses()
+            ->with('category')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('sales-reps.show', compact('salesRep', 'stats', 'treasuryTransactions', 'expenses'));
+    }
+
+    /**
+     * عرض صفحة إيداع في الخزينة
+     */
+    public function showDepositForm(SalesRep $salesRep)
+    {
+        return view('sales-reps.treasury.deposit', compact('salesRep'));
+    }
+
+    /**
+     * إيداع مبلغ في خزينة المندوب
+     */
+    public function deposit(Request $request, SalesRep $salesRep)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $salesRep->deposit($validated['amount'], $validated['description']);
+
+        return redirect()->route('sales-reps.show', $salesRep)
+            ->with('success', 'تم إيداع المبلغ بنجاح');
+    }
+
+    /**
+     * عرض صفحة سحب من الخزينة
+     */
+    public function showWithdrawForm(SalesRep $salesRep)
+    {
+        return view('sales-reps.treasury.withdraw', compact('salesRep'));
+    }
+
+    /**
+     * سحب مبلغ من خزينة المندوب
+     */
+    public function withdraw(Request $request, SalesRep $salesRep)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:' . $salesRep->treasury_balance,
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $salesRep->withdraw($validated['amount'], $validated['description']);
+
+        return redirect()->route('sales-reps.show', $salesRep)
+            ->with('success', 'تم سحب المبلغ بنجاح');
+    }
+
+    /**
+     * عرض كشف حساب الخزينة
+     */
+    public function treasuryStatement(SalesRep $salesRep)
+    {
+        $transactions = $salesRep->treasuryTransactions()
+            ->with('creator')
+            ->latest()
+            ->paginate(20);
+
+        return view('sales-reps.treasury.statement', compact('salesRep', 'transactions'));
     }
 
     public function edit(SalesRep $salesRep)
@@ -180,6 +259,7 @@ class SalesRepController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50|unique:sales_reps,code,' . $salesRep->id,
+            'type' => 'required|in:fridge,special',
             'phone' => 'nullable|string|max:20',
             'email' => 'required|email|max:255|unique:users,email,' . $salesRep->user_id,
             'password' => 'nullable|string|min:8|confirmed',
@@ -217,6 +297,7 @@ class SalesRepController extends Controller
             $salesRep->update([
                 'name' => $validated['name'],
                 'code' => $validated['code'],
+                'type' => $validated['type'],
                 'phone' => $validated['phone'],
                 'email' => $validated['email'],
                 'commission_rate' => $validated['commission_rate'] ?? 0,
@@ -285,5 +366,79 @@ class SalesRepController extends Controller
             DB::rollBack();
             return back()->with('error', 'حدث خطأ أثناء حذف المندوب: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * عرض صفحة سحب عمولة المندوب
+     */
+    public function showWithdrawCommission(SalesRep $salesRep)
+    {
+        $year = request('year', now()->year);
+        $month = request('month', now()->month);
+
+        $commissionDetails = $salesRep->getMonthlyCommissionDetails($year, $month);
+
+        if (!$commissionDetails['has_met_target']) {
+            return back()->with('error', 'المندوب لم يحقق التارجت لهذا الشهر بعد');
+        }
+
+        if ($commissionDetails['commission_earned'] <= 0) {
+            return back()->with('error', 'لا توجد عمولة مستحقة للسحب');
+        }
+
+        return view('sales-reps.withdraw-commission', compact('salesRep', 'commissionDetails', 'year', 'month'));
+    }
+
+    /**
+     * تنفيذ سحب عمولة المندوب
+     */
+    public function withdrawCommission(Request $request, SalesRep $salesRep)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'year' => 'required|integer|min:2020|max:' . (now()->year + 1),
+            'month' => 'required|integer|min:1|max:12',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $commissionDetails = $salesRep->getMonthlyCommissionDetails($validated['year'], $validated['month']);
+
+        if (!$commissionDetails['has_met_target']) {
+            return back()->with('error', 'المندوب لم يحقق التارجت لهذا الشهر');
+        }
+
+        if ($validated['amount'] > $commissionDetails['commission_earned']) {
+            return back()->with('error', 'المبلغ المطلوب أكبر من العمولة المستحقة');
+        }
+
+        DB::transaction(function () use ($salesRep, $validated) {
+            // البحث عن أو إنشاء فئة مصروفات تارجت المندوبين
+            $category = ExpenseCategory::firstOrCreate(
+                ['code' => 'sales-rep-commission'],
+                ['name' => 'تارجت مندوب', 'is_active' => true]
+            );
+
+            $monthName = \Carbon\Carbon::create($validated['year'], $validated['month'], 1)->translatedFormat('F Y');
+
+            // إنشاء المصروف
+            $expense = Expense::create([
+                'expense_number' => Expense::generateExpenseNumber(),
+                'expense_category_id' => $category->id,
+                'title' => 'عمولة مندوب: ' . $salesRep->name,
+                'description' => 'صرف عمولة للمندوب ' . $salesRep->name . ' عن شهر ' . $monthName,
+                'amount' => $validated['amount'],
+                'tax_amount' => 0,
+                'total_amount' => $validated['amount'],
+                'expense_date' => now(),
+                'payment_method' => 'cash',
+                'status' => Expense::STATUS_PAID,
+                'user_id' => auth()->id(),
+                'sales_rep_id' => $salesRep->id,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+        });
+
+        return redirect()->route('sales-reps.index')
+            ->with('success', 'تم صرف عمولة المندوب بنجاح: ' . number_format($validated['amount'], 2) . ' ج.م');
     }
 }

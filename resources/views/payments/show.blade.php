@@ -41,6 +41,22 @@
                 <strong>{{ $payment->payable?->name ?? '-' }}</strong>
             </div>
             <div>
+                <span class="text-muted">الفاتورة:</span>
+                <strong>
+                    @if($payment->sale)
+                        <a href="{{ route('sales.show', $payment->sale) }}" class="text-primary">
+                            {{ $payment->sale->invoice_number }}
+                        </a>
+                    @elseif($payment->purchase)
+                        <a href="{{ route('purchases.show', $payment->purchase) }}" class="text-primary">
+                            {{ $payment->purchase->invoice_number }}
+                        </a>
+                    @else
+                        <span class="text-muted">على الحساب</span>
+                    @endif
+                </strong>
+            </div>
+            <div>
                 <span class="text-muted">المبلغ:</span>
                 <strong class="{{ $payment->type === 'received' ? 'text-success' : 'text-danger' }}" style="font-size: 18px;">
                     {{ number_format($payment->amount) }} ج.م

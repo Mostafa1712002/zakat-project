@@ -139,6 +139,17 @@ class FeatureSeeder extends Seeder
                 'is_enabled' => true,
                 'sort_order' => 5,
             ],
+            [
+                'name' => 'employee_dashboard',
+                'name_ar' => 'لوحة تحكم الموظف',
+                'description' => 'Personal dashboard for employees',
+                'description_ar' => 'لوحة تحكم شخصية للموظف تعرض معاملاته المالية ومرتباته',
+                'icon' => '👨‍💻',
+                'route_name' => 'employee.dashboard',
+                'group' => 'general',
+                'is_enabled' => true,
+                'sort_order' => 6,
+            ],
 
             // المالية
             [

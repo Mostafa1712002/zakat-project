@@ -15,7 +15,7 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Payment::with(['payable', 'user', 'salesRep', 'branch']);
+        $query = Payment::with(['payable', 'user', 'salesRep', 'branch', 'sale', 'purchase']);
 
         // تصفية المندوب
         $user = auth()->user();
@@ -44,14 +44,22 @@ class PaymentController extends Controller
     /**
      * عرض نموذج تحصيل من عميل
      */
-    public function showCollectForm(Customer $customer)
+    public function showCollectFromCustomer(Customer $customer)
     {
         // التحقق من صلاحية الوصول للعميل
         if (!$customer->canCurrentUserAccess()) {
             abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
         }
 
-        return view('payments.collect-from-customer', compact('customer'));
+        // الفواتير غير المدفوعة بالكامل
+        $unpaidSales = $customer->sales()
+            ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('due_date')
+            ->orderBy('invoice_date')
+            ->get();
+
+        return view('payments.collect-from-customer', compact('customer', 'unpaidSales'));
     }
 
     /**
@@ -66,6 +74,7 @@ class PaymentController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            'sale_id' => 'nullable|exists:sales,id',
             'method' => 'required|in:cash,bank_transfer,instapay,vodafone_cash,check,card,other',
             'payment_date' => 'required|date',
             'reference_number' => 'nullable|string|max:100',
@@ -80,11 +89,13 @@ class PaymentController extends Controller
 
         try {
             $user = auth()->user();
+            $salesRep = $user->salesRep;
 
             $payment = Payment::create([
                 'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
                 'payable_type' => Customer::class,
                 'payable_id' => $customer->id,
+                'sale_id' => $validated['sale_id'],
                 'type' => Payment::TYPE_RECEIVED,
                 'amount' => $validated['amount'],
                 'method' => $validated['method'],
@@ -96,13 +107,30 @@ class PaymentController extends Controller
                 'bank_account' => $validated['bank_account'],
                 'branch_id' => $user->branch_id,
                 'user_id' => $user->id,
-                'sales_rep_id' => $user->salesRep?->id,
+                'sales_rep_id' => $salesRep?->id,
                 'status' => Payment::STATUS_COMPLETED,
                 'notes' => $validated['notes'],
             ]);
 
             // تحديث رصيد العميل
             $customer->decrement('current_balance', $validated['amount']);
+
+            // تحديث حالة الدفع للفاتورة إذا تم تحديدها
+            if ($validated['sale_id']) {
+                $sale = \App\Models\Sale::find($validated['sale_id']);
+                if ($sale) {
+                    $sale->addPayment($validated['amount']);
+                }
+            }
+
+            // إضافة التحصيل لخزينة المندوب تلقائياً
+            if ($salesRep) {
+                $salesRep->recordCollection(
+                    $validated['amount'],
+                    'تحصيل من العميل: ' . $customer->name,
+                    $payment->id
+                );
+            }
 
             DB::commit();
 
@@ -118,7 +146,7 @@ class PaymentController extends Controller
     /**
      * عرض نموذج دفع لمورد
      */
-    public function showPayForm(Supplier $supplier)
+    public function showPayToSupplier(Supplier $supplier)
     {
         // التحقق من الصلاحية - فقط للأدمن والمحاسب
         $user = auth()->user();
@@ -126,7 +154,15 @@ class PaymentController extends Controller
             abort(403, 'ليس لديك صلاحية للدفع للموردين');
         }
 
-        return view('payments.pay-to-supplier', compact('supplier'));
+        // الفواتير غير المدفوعة بالكامل
+        $unpaidPurchases = $supplier->purchases()
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('due_date')
+            ->orderBy('invoice_date')
+            ->get();
+
+        return view('payments.pay-to-supplier', compact('supplier', 'unpaidPurchases'));
     }
 
     /**
@@ -142,6 +178,7 @@ class PaymentController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            'purchase_id' => 'nullable|exists:purchases,id',
             'method' => 'required|in:cash,bank_transfer,instapay,vodafone_cash,check,card,other',
             'payment_date' => 'required|date',
             'reference_number' => 'nullable|string|max:100',
@@ -159,6 +196,7 @@ class PaymentController extends Controller
                 'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_PAID),
                 'payable_type' => Supplier::class,
                 'payable_id' => $supplier->id,
+                'purchase_id' => $validated['purchase_id'],
                 'type' => Payment::TYPE_PAID,
                 'amount' => $validated['amount'],
                 'method' => $validated['method'],
@@ -174,9 +212,15 @@ class PaymentController extends Controller
                 'notes' => $validated['notes'],
             ]);
 
-            // تحديث رصيد المورد (إذا كان هناك حقل current_balance)
-            if (method_exists($supplier, 'decrement')) {
-                // يمكن إضافة حقل current_balance للمورد لاحقاً
+            // تحديث رصيد المورد
+            $supplier->decrement('current_balance', $validated['amount']);
+
+            // تحديث حالة الدفع لفاتورة الشراء إذا تم تحديدها
+            if ($validated['purchase_id']) {
+                $purchase = \App\Models\Purchase::find($validated['purchase_id']);
+                if ($purchase && method_exists($purchase, 'addPayment')) {
+                    $purchase->addPayment($validated['amount']);
+                }
             }
 
             DB::commit();
@@ -203,7 +247,7 @@ class PaymentController extends Controller
             }
         }
 
-        $payment->load(['payable', 'user', 'salesRep', 'branch']);
+        $payment->load(['payable', 'user', 'salesRep', 'branch', 'sale', 'purchase']);
 
         return view('payments.show', compact('payment'));
     }

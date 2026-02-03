@@ -123,15 +123,26 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="type" class="form-label">نوع المندوب *</label>
+                    <select name="type" id="type" class="form-control" required>
+                        <option value="fridge" {{ old('type', 'fridge') == 'fridge' ? 'selected' : '' }}>🧊 تلاجة</option>
+                        <option value="special" {{ old('type') == 'special' ? 'selected' : '' }}>⭐ خاص</option>
+                    </select>
+                    @error('type')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="form-row-3">
+                <div class="form-group">
                     <label for="phone" class="form-label">الهاتف</label>
                     <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}">
                     @error('phone')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
-            </div>
 
-            <div class="form-row">
                 <div class="form-group">
                     <label for="branch_id" class="form-label">الفرع *</label>
                     <select name="branch_id" id="branch_id" class="form-control" required>
@@ -266,12 +277,39 @@
 @push('styles')
 <style>
     .mb-4 { margin-bottom: 20px; }
+
+    /* Form Row - Responsive Grid */
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 16px;
+    }
+
+    /* 3-column row for larger forms */
+    .form-row-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 16px;
+    }
+
+    /* Ensure cards don't overflow */
+    .card {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .card-body {
+        max-width: 100%;
+    }
+
     .checkbox-group {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 12px;
         padding: 12px;
-        background: var(--bg-secondary);
+        background: var(--bg);
         border-radius: 8px;
     }
     .checkbox-label {
@@ -279,13 +317,13 @@
         align-items: center;
         gap: 8px;
         padding: 8px 12px;
-        background: var(--bg-primary);
+        background: white;
         border-radius: 6px;
         cursor: pointer;
         transition: background 0.2s;
     }
     .checkbox-label:hover {
-        background: var(--bg-hover);
+        background: var(--bg);
     }
     .checkbox-label input[type="checkbox"] {
         width: 18px;
@@ -313,21 +351,7 @@
         transition: all 0.2s;
         flex: 1;
         min-width: 200px;
-    }
-    @media (max-width: 768px) {
-        .user-type-selector {
-            flex-direction: column;
-        }
-        .radio-label {
-            width: 100%;
-            min-width: unset;
-        }
-        .form-row {
-            grid-template-columns: 1fr !important;
-        }
-        .checkbox-group {
-            grid-template-columns: 1fr !important;
-        }
+        max-width: 300px;
     }
     .radio-label:hover {
         border-color: var(--primary);
@@ -352,6 +376,31 @@
         border: 1px solid #7dd3fc;
         padding: 12px 16px;
         border-radius: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .form-row-3 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .user-type-selector {
+            flex-direction: column;
+        }
+        .radio-label {
+            width: 100%;
+            min-width: unset;
+            max-width: unset;
+        }
+        .form-row,
+        .form-row-3 {
+            grid-template-columns: 1fr;
+        }
+        .checkbox-group {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 @endpush

@@ -28,6 +28,9 @@ class Customer extends Model
         'credit_limit',
         'current_balance',
         'payment_terms_days',
+        'target_amount',
+        'target_discount_percentage',
+        'target_paid_amount',
         'branch_id',
         'sales_rep_id',
         'is_active',
@@ -37,6 +40,9 @@ class Customer extends Model
     protected $casts = [
         'credit_limit' => 'decimal:2',
         'current_balance' => 'decimal:2',
+        'target_amount' => 'decimal:2',
+        'target_discount_percentage' => 'decimal:2',
+        'target_paid_amount' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
@@ -112,5 +118,75 @@ class Customer extends Model
     public function updateBalance(float $amount): void
     {
         $this->increment('current_balance', $amount);
+    }
+
+    /**
+     * إجمالي مشتريات العميل (الفواتير المؤكدة فقط)
+     */
+    public function getTotalPurchasesAttribute(): float
+    {
+        return $this->sales()
+            ->where('status', 'confirmed')
+            ->sum('total_amount');
+    }
+
+    /**
+     * هل حقق العميل التارجت؟
+     */
+    public function hasAchievedTarget(): bool
+    {
+        if ($this->target_amount <= 0) {
+            return false;
+        }
+        return $this->total_purchases >= $this->target_amount;
+    }
+
+    /**
+     * نسبة تحقيق التارجت
+     */
+    public function getTargetAchievementPercentageAttribute(): float
+    {
+        if ($this->target_amount <= 0) {
+            return 0;
+        }
+        return min(100, ($this->total_purchases / $this->target_amount) * 100);
+    }
+
+    /**
+     * المبلغ المتبقي لتحقيق التارجت
+     */
+    public function getRemainingToTargetAttribute(): float
+    {
+        if ($this->target_amount <= 0) {
+            return 0;
+        }
+        return max(0, $this->target_amount - $this->total_purchases);
+    }
+
+    /**
+     * قيمة خصم التارجت المستحقة
+     */
+    public function getTargetDiscountAmountAttribute(): float
+    {
+        if (!$this->hasAchievedTarget()) {
+            return 0;
+        }
+        return ($this->total_purchases * $this->target_discount_percentage) / 100;
+    }
+
+    /**
+     * قيمة خصم التارجت القابلة للسحب (بعد خصم ما تم صرفه)
+     */
+    public function getWithdrawableTargetAmountAttribute(): float
+    {
+        return max(0, $this->target_discount_amount - $this->target_paid_amount);
+    }
+
+    /**
+     * تسجيل سحب تارجت
+     */
+    public function recordTargetWithdrawal(float $amount): void
+    {
+        $this->increment('target_paid_amount', $amount);
     }
 }

@@ -87,6 +87,7 @@ class Feature extends Model
         $features = self::all();
         foreach ($features as $feature) {
             Cache::forget("feature_{$feature->name}");
+            Cache::forget("feature_data_{$feature->name}");
         }
     }
 }

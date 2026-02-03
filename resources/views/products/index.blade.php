@@ -33,7 +33,7 @@
                     <td>{{ $product->id }}</td>
                     <td><strong>{{ $product->name }}</strong></td>
                     <td>{{ $product->category->name ?? '-' }}</td>
-                    <td><code>{{ $product->sku ?? $product->barcode ?? '-' }}</code></td>
+                    <td><code>{{ $product->sku ?? '-' }}</code></td>
                     <td>{{ number_format($product->selling_price, 2) }} ج.م</td>
                     <td>
                         @php $stock = $product->stock_quantity ?? 0; @endphp
