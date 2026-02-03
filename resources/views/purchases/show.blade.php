@@ -51,7 +51,7 @@
 
 <div class="card overflow-auto" style="margin-top: 1.5rem;">
     <div class="table-container text-nowrap">
-        <table class="table">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>#</th>

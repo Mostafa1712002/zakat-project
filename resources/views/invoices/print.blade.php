@@ -164,7 +164,7 @@
     <button class="print-btn no-print" onclick="window.print()">🖨️ طباعة</button>
 
     <div class="invoice-container">
-        <div class="invoice-header">
+        <div class="invoice-header overflow-auto">
             <div class="company-info">
                 <h1>Rogence System</h1>
                 <p>نظام إدارة شامل</p>
@@ -202,7 +202,7 @@
             </div>
         </div>
 
-        <table>
+        <table class="text-nowrap">
             <thead>
                 <tr>
                     <th>#</th>

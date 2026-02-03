@@ -73,8 +73,8 @@
         <h3 class="card-title">التقرير الشهري لعام {{ $year }}</h3>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
+        <div class="table-responsive overflow-auto">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>الشهر</th>

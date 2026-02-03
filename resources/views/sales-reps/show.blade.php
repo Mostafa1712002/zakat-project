@@ -91,9 +91,9 @@
             <a href="{{ route('sales-reps.treasury', $salesRep) }}" class="btn btn-sm">كشف الحساب</a>
         </div>
     </div>
-    <div class="card-body">
+    <div class="card-body overflow-auto">
         @if($treasuryTransactions->count() > 0)
-        <table class="table table-sm">
+        <table class="table table-sm text-nowrap">
             <thead>
                 <tr>
                     <th>التاريخ</th>
@@ -157,9 +157,9 @@
     <div class="card-header">
         <h3 class="card-title">المصروفات الأخيرة</h3>
     </div>
-    <div class="card-body">
+    <div class="card-body overflow-auto">
         @if($expenses->count() > 0)
-        <table class="table table-sm">
+        <table class="table table-sm text-nowrap">
             <thead>
                 <tr>
                     <th>التاريخ</th>

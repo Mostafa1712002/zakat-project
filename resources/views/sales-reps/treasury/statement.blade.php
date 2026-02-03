@@ -27,9 +27,9 @@
 
 <!-- جدول المعاملات -->
 <div class="card">
-    <div class="card-body">
+    <div class="card-body overflow-auto">
         @if($transactions->count() > 0)
-        <table class="table">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>التاريخ</th>

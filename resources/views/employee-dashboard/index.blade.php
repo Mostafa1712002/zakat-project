@@ -132,9 +132,9 @@
         <h3 class="card-title">آخر المعاملات</h3>
         <a href="{{ route('employee.statement') }}" class="btn btn-sm">عرض الكل</a>
     </div>
-    <div class="card-body">
+    <div class="card-body overflow-auto">
         @if($recentTransactions->count() > 0)
-        <table class="table">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>رقم المعاملة</th>

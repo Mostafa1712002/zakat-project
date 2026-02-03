@@ -61,8 +61,8 @@
                     <span class="info-icon">👤</span>
                     <h4>بيانات العميل</h4>
                 </div>
-                <div class="info-box-body">
-                    <table class="info-table">
+                <div class="info-box-body overflow-auto">
+                    <table class="info-table text-nowrap">
                         <tr>
                             <td class="info-label">الاسم:</td>
                             <td class="info-value"><strong>{{ $sale->customer->name ?? '-' }}</strong></td>
@@ -88,8 +88,8 @@
                     <span class="info-icon">📋</span>
                     <h4>بيانات الفاتورة</h4>
                 </div>
-                <div class="info-box-body">
-                    <table class="info-table">
+                <div class="info-box-body overflow-auto">
+                    <table class="info-table text-nowrap">
                         <tr>
                             <td class="info-label">التاريخ:</td>
                             <td class="info-value"><strong>{{ $sale->invoice_date?->format('Y-m-d') ?? '-' }}</strong></td>

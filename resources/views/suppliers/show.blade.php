@@ -69,8 +69,8 @@
     <div class="card-header">
         <h2>🧾 آخر المشتريات</h2>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>#</th>
@@ -121,8 +121,8 @@
             <a href="{{ route('suppliers.pay.form', $supplier) }}" class="btn btn-sm btn-primary">+ دفعة جديدة</a>
         @endif
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>رقم الإيصال</th>

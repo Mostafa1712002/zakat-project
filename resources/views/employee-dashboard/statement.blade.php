@@ -84,8 +84,8 @@
     </div>
     <div class="card-body">
         @if($transactions->count() > 0)
-        <div class="table-responsive">
-            <table class="table">
+        <div class="table-responsive overflow-auto">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>رقم المعاملة</th>

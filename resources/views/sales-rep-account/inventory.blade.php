@@ -40,8 +40,8 @@
     <div class="card-header">
         <h3 class="card-title">📋 الأصناف المتاحة</h3>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>الصنف</th>
@@ -106,8 +106,8 @@
     <div class="card-header">
         <h3 class="card-title">🔄 آخر الحركات</h3>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>التاريخ</th>

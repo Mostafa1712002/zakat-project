@@ -141,8 +141,8 @@
     <div class="card-header" style="background: #fef2f2; border-bottom: 2px solid #ef4444;">
         <h3 class="card-title" style="color: #dc2626;">⚠️ فواتير متأخرة السداد ({{ number_format($totalOverdueAmount, 2) }} ج.م)</h3>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>رقم الفاتورة</th>
@@ -184,8 +184,8 @@
     <div class="card-header" style="background: #fefce8; border-bottom: 2px solid #f59e0b;">
         <h3 class="card-title" style="color: #d97706;">📅 فواتير مستحقة خلال 7 أيام</h3>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>رقم الفاتورة</th>
