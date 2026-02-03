@@ -16,9 +16,9 @@
 
 <div class="grid-2">
     <div class="card">
-        <div class="card-body">
+        <div class="card-body  overflow-auto">
             <h3>👤 البيانات الشخصية</h3>
-            <table class="info-table">
+            <table class="info-table text-nowrap">
                 <tr><td>الاسم</td><td><strong>{{ $employee->name }}</strong></td></tr>
                 <tr><td>كود الموظف</td><td><code>{{ $employee->employee_code }}</code></td></tr>
                 <tr><td>الرقم القومي</td><td>{{ $employee->national_id ?? '-' }}</td></tr>
@@ -30,7 +30,7 @@
     </div>
 
     <div class="card">
-        <div class="card-body">
+        <div class="card-body  overflow-auto">
             <h3>💼 البيانات الوظيفية</h3>
             <table class="info-table">
                 <tr><td>المسمى الوظيفي</td><td>{{ $employee->job_title ?? '-' }}</td></tr>

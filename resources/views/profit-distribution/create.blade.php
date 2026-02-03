@@ -97,8 +97,8 @@
             </div>
 
             <div id="partnersPreview" style="display: none;">
-                <div class="preview-table">
-                    <table class="table">
+                <div class="preview-table overflow-auto">
+                    <table class="table text-nowrap">
                         <thead>
                             <tr>
                                 <th>الشريك</th>

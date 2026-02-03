@@ -112,9 +112,9 @@
             <h3 class="card-title">🏆 أفضل العملاء</h3>
             <a href="{{ route('customers.index') }}" class="btn btn-sm">عرض الكل</a>
         </div>
-        <div class="card-body">
+        <div class="card-body overflow-auto">
             @if(isset($top_customers) && $top_customers->count() > 0)
-            <table class="table">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>العميل</th>

@@ -60,8 +60,8 @@
             <input type="text" id="productSearch" class="form-control" placeholder="🔍 بحث بإسم الصنف..." style="width: 250px;">
         </div>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>#</th>

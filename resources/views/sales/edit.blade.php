@@ -159,8 +159,8 @@
         <div class="card-body">
             <h3 style="margin-bottom: 16px;">🛒 أصناف الفاتورة</h3>
 
-            <div class="table-container">
-                <table class="table" id="itemsTable">
+            <div class="table-container overflow-auto">
+                <table class="table text-nowrap" id="itemsTable">
                     <thead>
                         <tr>
                             <th style="width: 30%;">الصنف</th>

@@ -42,8 +42,8 @@
     <div class="card-body">
         <h3 style="margin-bottom: 16px;">💰 تفاصيل التوزيع على الشركاء</h3>
 
-        <div class="table-container">
-            <table class="table">
+        <div class="table-container overflow-auto">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>رقم المعاملة</th>

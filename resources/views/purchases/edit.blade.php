@@ -55,9 +55,9 @@
         </div>
 
         <div class="card">
-            <div class="card-body">
+            <div class="card-body  overflow-auto">
                 <h3>💰 ملخص الفاتورة</h3>
-                <table class="table">
+                <table class="table text-nowrap">
                     <tr><td>الإجمالي الفرعي</td><td>{{ number_format($purchase->subtotal, 2) }} ج.م</td></tr>
                     <tr><td>الخصم</td><td>{{ number_format($purchase->discount_amount, 2) }} ج.م</td></tr>
                     <tr><td>الشحن</td><td>{{ number_format($purchase->shipping_amount, 2) }} ج.م</td></tr>

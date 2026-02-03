@@ -56,8 +56,8 @@
             <span style="font-size: 14px; color: #64748b; font-weight: normal;">({{ $groupFeatures->count() }} ميزة)</span>
         </h3>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container  overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th style="width: 50px;">الأيقونة</th>

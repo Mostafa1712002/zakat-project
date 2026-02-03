@@ -58,8 +58,8 @@
 </div>
 
 <div class="card" style="margin-top: 1.5rem;">
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>#</th>
@@ -130,8 +130,8 @@
 <div class="card" style="margin-top: 1.5rem;">
     <div class="card-body">
         <h3>الدفعات</h3>
-        <div class="table-container">
-            <table class="table">
+        <div class="table-container overflow-auto">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>#</th>

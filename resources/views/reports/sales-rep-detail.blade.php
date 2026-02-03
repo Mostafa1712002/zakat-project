@@ -107,8 +107,8 @@
     <div class="card-header">
         <h3 class="card-title">الأداء الشهري لسنة {{ $year }}</h3>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>الشهر</th>
@@ -161,8 +161,8 @@
         <div class="card-header">
             <h3 class="card-title">أفضل العملاء</h3>
         </div>
-        <div class="table-container">
-            <table class="table">
+        <div class="table-container overflow-auto">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -198,8 +198,8 @@
         <div class="card-header">
             <h3 class="card-title">آخر الفواتير</h3>
         </div>
-        <div class="table-container">
-            <table class="table">
+        <div class="table-container overflow-auto">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>الفاتورة</th>

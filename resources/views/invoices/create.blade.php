@@ -95,10 +95,10 @@
 
     <!-- Items -->
     <div class="card" style="margin-top: 1.5rem;">
-        <div class="card-body">
+        <div class="card-body  overflow-auto">
             <h3>🛒 الأصناف</h3>
 
-            <table class="table" id="itemsTable">
+            <table class="table text-nowrap" id="itemsTable">
                 <thead>
                     <tr>
                         <th style="width: 30%;">الصنف</th>

@@ -92,8 +92,8 @@
     <div class="card-header">
         <h3>📋 تفاصيل المخزون</h3>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>الصنف</th>
@@ -135,8 +135,8 @@
         <div class="card-header">
             <h3>🏭 المخزون حسب المخزن</h3>
         </div>
-        <div class="table-container">
-            <table class="table">
+        <div class="table-container overflow-auto">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>المخزن</th>
@@ -164,8 +164,8 @@
         <div class="card-header">
             <h3>🏷️ المخزون حسب القسم</h3>
         </div>
-        <div class="table-container">
-            <table class="table">
+        <div class="table-container overflow-auto">
+            <table class="table text-nowrap">
                 <thead>
                     <tr>
                         <th>القسم</th>

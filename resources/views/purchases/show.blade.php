@@ -49,8 +49,8 @@
     </div>
 </div>
 
-<div class="card" style="margin-top: 1.5rem;">
-    <div class="table-container">
+<div class="card overflow-auto" style="margin-top: 1.5rem;">
+    <div class="table-container text-nowrap">
         <table class="table">
             <thead>
                 <tr>

@@ -14,8 +14,8 @@
 </div>
 
 <div class="card">
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container  overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>#</th>

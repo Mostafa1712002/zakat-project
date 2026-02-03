@@ -191,8 +191,8 @@
         <h3 class="card-title">العملاء المستحق عليهم</h3>
         <a href="{{ route('sales-rep.customers') }}" class="btn btn-sm">عرض الكل</a>
     </div>
-    <div class="table-container">
-        <table class="table">
+    <div class="table-container overflow-auto">
+        <table class="table text-nowrap">
             <thead>
                 <tr>
                     <th>العميل</th>
