@@ -362,7 +362,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const stockCache = {}; // Cache for stock data
 
     // Products data with prices and min selling price
-    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'min_price' => $p->min_selling_price ?? 0, 'track' => $p->track_inventory, 'rep_stock' => $p->rep_stock ?? null]]));
+    const productsData = {!! json_encode($products->mapWithKeys(function($p) {
+        return [$p->id => [
+            'retail' => $p->selling_price,
+            'min_price' => $p->min_selling_price ?? 0,
+            'track' => $p->track_inventory,
+            'rep_stock' => $p->rep_stock ?? null
+        ]];
+    })) !!};
 
     // Whether current user is a sales rep (stock comes from SalesRepInventory)
     const useSalesRepInventory = @json($useSalesRepInventory ?? false);
