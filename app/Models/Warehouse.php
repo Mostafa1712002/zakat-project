@@ -101,8 +101,14 @@ class Warehouse extends Model
 
     /**
      * تعديل المخزون (إضافة أو خصم)
+     *
+     * @param int $productId
+     * @param float $quantity موجب للإضافة، سالب للخصم
+     * @param string $referenceType نوع المرجع (purchase, sale, etc.)
+     * @param string|null $notes
+     * @param string|null $referenceNumber رقم المرجع
      */
-    public function adjustStock(int $productId, float $quantity, string $type, string $notes = null): void
+    public function adjustStock(int $productId, float $quantity, string $referenceType = 'manual', string $notes = null, string $referenceNumber = null): void
     {
         // البحث عن أو إنشاء مستوى المخزون
         $inventoryLevel = $this->inventoryLevels()->firstOrCreate(
@@ -110,18 +116,28 @@ class Warehouse extends Model
             ['quantity' => 0, 'reserved_quantity' => 0]
         );
 
+        $quantityBefore = $inventoryLevel->quantity;
+
         // تحديث الكمية
         $inventoryLevel->quantity += $quantity;
         $inventoryLevel->save();
+
+        $quantityAfter = $inventoryLevel->quantity;
+
+        // تحديد نوع الحركة بناءً على الكمية
+        $movementType = $quantity > 0 ? 'in' : 'out';
 
         // تسجيل حركة المخزون
         StockMovement::create([
             'warehouse_id' => $this->id,
             'product_id' => $productId,
-            'type' => $type,
-            'quantity' => $quantity,
-            'cost_price' => Product::find($productId)->cost_price ?? 0,
-            'reference_type' => 'manual',
+            'type' => $movementType,
+            'quantity' => abs($quantity), // دائماً موجب في الجدول
+            'quantity_before' => $quantityBefore,
+            'quantity_after' => $quantityAfter,
+            'unit_cost' => Product::find($productId)->cost_price ?? 0,
+            'reference_type' => $referenceType,
+            'reference_number' => $referenceNumber,
             'notes' => $notes,
             'user_id' => auth()->id(),
         ]);

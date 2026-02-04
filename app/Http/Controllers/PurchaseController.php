@@ -119,8 +119,9 @@ class PurchaseController extends Controller
                     $warehouse->adjustStock(
                         $item['product_id'],
                         $item['quantity'],
-                        'purchase_received',
-                        "استلام فاتورة شراء {$purchase->invoice_number}"
+                        'purchase',
+                        "استلام فاتورة شراء {$purchase->invoice_number}",
+                        $purchase->invoice_number
                     );
                 }
             }
@@ -213,8 +214,9 @@ class PurchaseController extends Controller
                         $purchase->warehouse->adjustStock(
                             $item->product_id,
                             $item->quantity,
-                            'purchase_received',
-                            "استلام فاتورة شراء {$purchase->invoice_number}"
+                            'purchase',
+                            "استلام فاتورة شراء {$purchase->invoice_number}",
+                            $purchase->invoice_number
                         );
                     }
                 }
@@ -234,8 +236,9 @@ class PurchaseController extends Controller
                         $purchase->warehouse->adjustStock(
                             $item->product_id,
                             -$item->quantity,
-                            'purchase_cancelled',
-                            "إلغاء فاتورة شراء {$purchase->invoice_number}"
+                            'purchase',
+                            "إلغاء فاتورة شراء {$purchase->invoice_number}",
+                            $purchase->invoice_number
                         );
                     }
                 }
