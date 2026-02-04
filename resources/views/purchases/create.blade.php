@@ -64,6 +64,16 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">حالة الفاتورة *</label>
+                    <select name="status" class="form-control" required>
+                        <option value="draft">مسودة (لم يتم الطلب بعد)</option>
+                        <option value="ordered">تم الطلب (في الطريق)</option>
+                        <option value="received" selected>مستلم (إضافة للمخزن فوراً)</option>
+                    </select>
+                    <small class="text-muted">⚠️ اختر "مستلم" إذا كانت البضاعة موجودة الآن لإضافتها للمخزن مباشرة</small>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">ملاحظات</label>
                     <textarea name="notes" class="form-control" rows="2"></textarea>
                 </div>

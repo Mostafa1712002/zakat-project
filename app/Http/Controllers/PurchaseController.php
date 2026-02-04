@@ -55,6 +55,7 @@ class PurchaseController extends Controller
             'supplier_id' => 'required|exists:suppliers,id',
             'warehouse_id' => 'required|exists:warehouses,id',
             'invoice_date' => 'required|date',
+            'status' => 'required|in:draft,ordered,received',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
@@ -72,6 +73,8 @@ class PurchaseController extends Controller
 
             $paymentType = $request->payment_type ?? 'credit';
             $isCash = $paymentType === 'cash';
+            $status = $validated['status'];
+            $isReceived = $status === 'received';
 
             $purchase = Purchase::create([
                 'invoice_number' => Purchase::generateInvoiceNumber(),
@@ -79,11 +82,12 @@ class PurchaseController extends Controller
                 'warehouse_id' => $validated['warehouse_id'],
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $request->due_date,
+                'received_date' => $isReceived ? now() : null,
                 'payment_type' => $paymentType,
                 'supplier_invoice_number' => $request->supplier_invoice_number,
                 'branch_id' => $branchId,
                 'user_id' => auth()->id(),
-                'status' => 'draft',
+                'status' => $status,
                 'payment_status' => $isCash ? 'paid' : 'unpaid',
                 'discount_type' => $request->discount_type ?? 'fixed',
                 'discount_value' => $request->discount_value ?? 0,
@@ -92,6 +96,8 @@ class PurchaseController extends Controller
             ]);
 
             $subtotal = 0;
+            $warehouse = Warehouse::find($validated['warehouse_id']);
+
             foreach ($validated['items'] as $item) {
                 $product = Product::find($item['product_id']);
                 $itemSubtotal = $item['quantity'] * $item['unit_price'];
@@ -107,6 +113,16 @@ class PurchaseController extends Controller
                 ]);
 
                 $subtotal += $itemSubtotal;
+
+                // إضافة للمخزن إذا كانت الحالة "مستلم"
+                if ($isReceived && $product->track_inventory) {
+                    $warehouse->adjustStock(
+                        $item['product_id'],
+                        $item['quantity'],
+                        'purchase_received',
+                        "استلام فاتورة شراء {$purchase->invoice_number}"
+                    );
+                }
             }
 
             $purchase->subtotal = $subtotal;
@@ -175,12 +191,64 @@ class PurchaseController extends Controller
         $validated = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'invoice_date' => 'required|date',
-            'status' => 'required|in:draft,confirmed,received,cancelled',
+            'status' => 'required|in:draft,ordered,received,cancelled',
         ]);
 
-        $purchase->update($validated + ['notes' => $request->notes]);
+        DB::beginTransaction();
 
-        return redirect()->route('purchases.index')->with('success', 'تم تحديث فاتورة المشتريات بنجاح');
+        try {
+            $oldStatus = $purchase->status;
+            $newStatus = $validated['status'];
+
+            // Update purchase
+            $purchase->update($validated + ['notes' => $request->notes]);
+
+            // إذا تم تغيير الحالة من أي حالة إلى "مستلم" - إضافة للمخزن
+            if ($oldStatus !== 'received' && $newStatus === 'received') {
+                $purchase->load('items.product', 'warehouse');
+
+                foreach ($purchase->items as $item) {
+                    if ($item->product && $item->product->track_inventory) {
+                        // إضافة الكمية للمخزن
+                        $purchase->warehouse->adjustStock(
+                            $item->product_id,
+                            $item->quantity,
+                            'purchase_received',
+                            "استلام فاتورة شراء {$purchase->invoice_number}"
+                        );
+                    }
+                }
+
+                // تسجيل تاريخ الاستلام
+                $purchase->received_date = now();
+                $purchase->save();
+            }
+
+            // إذا تم إلغاء فاتورة كانت مستلمة - خصم من المخزن
+            if ($oldStatus === 'received' && $newStatus === 'cancelled') {
+                $purchase->load('items.product', 'warehouse');
+
+                foreach ($purchase->items as $item) {
+                    if ($item->product && $item->product->track_inventory) {
+                        // خصم الكمية من المخزن (إلغاء الاستلام)
+                        $purchase->warehouse->adjustStock(
+                            $item->product_id,
+                            -$item->quantity,
+                            'purchase_cancelled',
+                            "إلغاء فاتورة شراء {$purchase->invoice_number}"
+                        );
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('purchases.index')->with('success', 'تم تحديث فاتورة المشتريات بنجاح');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'حدث خطأ: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Purchase $purchase)

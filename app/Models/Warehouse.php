@@ -98,4 +98,32 @@ class Warehouse extends Model
             ->withPivot('is_default')
             ->withTimestamps();
     }
+
+    /**
+     * تعديل المخزون (إضافة أو خصم)
+     */
+    public function adjustStock(int $productId, float $quantity, string $type, string $notes = null): void
+    {
+        // البحث عن أو إنشاء مستوى المخزون
+        $inventoryLevel = $this->inventoryLevels()->firstOrCreate(
+            ['product_id' => $productId],
+            ['quantity' => 0, 'reserved_quantity' => 0]
+        );
+
+        // تحديث الكمية
+        $inventoryLevel->quantity += $quantity;
+        $inventoryLevel->save();
+
+        // تسجيل حركة المخزون
+        StockMovement::create([
+            'warehouse_id' => $this->id,
+            'product_id' => $productId,
+            'type' => $type,
+            'quantity' => $quantity,
+            'cost_price' => Product::find($productId)->cost_price ?? 0,
+            'reference_type' => 'manual',
+            'notes' => $notes,
+            'user_id' => auth()->id(),
+        ]);
+    }
 }
