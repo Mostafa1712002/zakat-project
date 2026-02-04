@@ -362,21 +362,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const stockCache = {}; // Cache for stock data
 
     // Products data with prices and min selling price
-    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'min_price' => $p->min_selling_price ?? 0, 'track' => $p->track_inventory]]));
+    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'min_price' => $p->min_selling_price ?? 0, 'track' => $p->track_inventory, 'rep_stock' => $p->rep_stock ?? null]]));
+
+    // Whether current user is a sales rep (stock comes from SalesRepInventory)
+    const useSalesRepInventory = @json($useSalesRepInventory ?? false);
 
     // Get stock API URL
     const getStockUrl = '{{ route("sales.get-stock") }}';
 
     // Fetch stock for a product
     async function fetchStock(productId, warehouseId) {
-        const cacheKey = `${productId}_${warehouseId}`;
+        // For sales rep, cache by product only (warehouse not relevant)
+        const cacheKey = useSalesRepInventory ? `rep_${productId}` : `${productId}_${warehouseId}`;
 
         if (stockCache[cacheKey] !== undefined) {
             return stockCache[cacheKey];
         }
 
         try {
-            const response = await fetch(`${getStockUrl}?product_id=${productId}&warehouse_id=${warehouseId}`);
+            let url = `${getStockUrl}?product_id=${productId}`;
+            if (warehouseId) {
+                url += `&warehouse_id=${warehouseId}`;
+            }
+            const response = await fetch(url);
             const data = await response.json();
             stockCache[cacheKey] = data.available || 0;
             return stockCache[cacheKey];
@@ -393,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const stockDisplay = row.querySelector('.stock-display');
         const product = productsData[productId];
 
-        if (!productId || !warehouseId) {
+        if (!productId) {
             stockDisplay.textContent = '-';
             stockDisplay.className = 'stock-display badge badge-secondary';
             stockDisplay.dataset.stock = '0';
@@ -405,6 +413,31 @@ document.addEventListener('DOMContentLoaded', function() {
             stockDisplay.textContent = '∞';
             stockDisplay.className = 'stock-display badge badge-success';
             stockDisplay.dataset.stock = '999999';
+            return;
+        }
+
+        // For sales rep: use rep_stock directly (no warehouse needed)
+        if (useSalesRepInventory && product && product.rep_stock !== null && product.rep_stock !== undefined) {
+            const stock = parseFloat(product.rep_stock);
+            stockDisplay.dataset.stock = stock;
+            stockDisplay.textContent = Math.floor(stock);
+
+            if (stock <= 0) {
+                stockDisplay.className = 'stock-display badge stock-out';
+            } else if (stock < 10) {
+                stockDisplay.className = 'stock-display badge stock-low';
+            } else {
+                stockDisplay.className = 'stock-display badge stock-ok';
+            }
+            validateQuantity(row);
+            return;
+        }
+
+        // For admin: warehouse is required
+        if (!warehouseId) {
+            stockDisplay.textContent = '-';
+            stockDisplay.className = 'stock-display badge badge-secondary';
+            stockDisplay.dataset.stock = '0';
             return;
         }
 

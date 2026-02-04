@@ -46,7 +46,7 @@ class SaleController extends Controller
 
         $user = auth()->user();
 
-        // إذا كان المستخدم مندوب - أرجع مخزون المندوب
+        // إذا كان المستخدم مندوب - أرجع مخزون المندوب (لا يحتاج warehouse_id)
         if ($user->isSalesRep() && $user->salesRep) {
             $repInventory = SalesRepInventory::where('sales_rep_id', $user->salesRep->id)
                 ->where('product_id', $productId)
@@ -64,9 +64,17 @@ class SaleController extends Controller
             ]);
         }
 
-        // للأدمن - أرجع مخزون المخزن
+        // للأدمن - أرجع مخزون المخزن (يحتاج warehouse_id)
         if (!$warehouseId) {
-            return response()->json(['stock' => 0, 'available' => 0]);
+            // إذا لم يتم تحديد مخزن، حاول جلب المخزون من كل المخازن
+            $totalStock = InventoryLevel::where('product_id', $productId)->sum('quantity');
+            $totalReserved = InventoryLevel::where('product_id', $productId)->sum('reserved_quantity');
+            return response()->json([
+                'stock' => (float) $totalStock,
+                'available' => (float) max(0, $totalStock - $totalReserved),
+                'reserved' => (float) $totalReserved,
+                'source' => 'all_warehouses',
+            ]);
         }
 
         $level = InventoryLevel::where('product_id', $productId)
