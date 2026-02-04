@@ -265,9 +265,8 @@ class SalesRepAccountController extends Controller
             ->with('product.category')
             ->get();
 
-        $products = Product::where('is_active', true)
-            ->whereNotIn('id', $inventory->pluck('product_id'))
-            ->get();
+        // عرض جميع الأصناف النشطة (السماح بإعادة تخصيص صنف موجود)
+        $products = Product::where('is_active', true)->get();
 
         $warehouses = Warehouse::where('is_active', true)->get();
 

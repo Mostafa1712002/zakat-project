@@ -54,7 +54,7 @@ class InventoryLevel extends Model
 
     public function getAvailableQuantityAttribute(): float
     {
-        return $this->quantity - $this->reserved_quantity;
+        return max(0, $this->quantity - $this->reserved_quantity);
     }
 
     public function isLowStock(): bool

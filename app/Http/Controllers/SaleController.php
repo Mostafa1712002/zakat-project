@@ -102,14 +102,15 @@ class SaleController extends Controller
             $salesReps = collect(); // لا يرى قائمة المندوبين
             $currentSalesRep = $salesRep;
 
-            // المندوب يرى فقط المنتجات المخصصة له
+            // المندوب يرى فقط المنتجات المخصصة له (حتى لو الكمية صفر)
             $repInventory = $salesRep->inventory()->with('product.unit')->get();
             $products = $repInventory->map(function ($item) {
                 $product = $item->product;
                 $product->rep_stock = $item->available_quantity;
                 return $product;
             })->filter(function ($product) {
-                return $product->is_active && $product->rep_stock > 0;
+                // عرض كل الأصناف النشطة - الـ JavaScript سيتحكم في عرض المخزون
+                return $product->is_active;
             });
             $useSalesRepInventory = true;
         } else {
