@@ -228,6 +228,7 @@
         <p>{{ $sale->notes }}</p>
     </div>
 </div>
+@endif
 @endsection
 
 @push('styles')
