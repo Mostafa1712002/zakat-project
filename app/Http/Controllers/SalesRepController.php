@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\CommissionWithdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -378,6 +379,13 @@ class SalesRepController extends Controller
 
         $commissionDetails = $salesRep->getMonthlyCommissionDetails($year, $month);
 
+        // التحقق من أن العمولة لم تُسحب من قبل
+        $alreadyWithdrawn = CommissionWithdrawal::isAlreadyWithdrawn($salesRep->id, $year, $month);
+
+        if ($alreadyWithdrawn) {
+            return back()->with('error', 'تم صرف عمولة هذا الشهر مسبقاً');
+        }
+
         if (!$commissionDetails['has_met_target']) {
             return back()->with('error', 'المندوب لم يحقق التارجت لهذا الشهر بعد');
         }
@@ -400,6 +408,11 @@ class SalesRepController extends Controller
             'month' => 'required|integer|min:1|max:12',
             'notes' => 'nullable|string|max:500',
         ]);
+
+        // التحقق من أن العمولة لم تُسحب من قبل
+        if (CommissionWithdrawal::isAlreadyWithdrawn($salesRep->id, $validated['year'], $validated['month'])) {
+            return back()->with('error', 'تم صرف عمولة هذا الشهر مسبقاً');
+        }
 
         $commissionDetails = $salesRep->getMonthlyCommissionDetails($validated['year'], $validated['month']);
 
@@ -435,6 +448,16 @@ class SalesRepController extends Controller
                 'user_id' => auth()->id(),
                 'sales_rep_id' => $salesRep->id,
                 'notes' => $validated['notes'] ?? null,
+            ]);
+
+            // تسجيل أن العمولة تم سحبها لهذا الشهر
+            CommissionWithdrawal::create([
+                'sales_rep_id' => $salesRep->id,
+                'expense_id' => $expense->id,
+                'year' => $validated['year'],
+                'month' => $validated['month'],
+                'amount' => $validated['amount'],
+                'withdrawn_by' => auth()->id(),
             ]);
         });
 

@@ -22,6 +22,7 @@ class Expense extends Model
         'expense_category_id',
         'branch_id',
         'user_id',
+        'sales_rep_id',
         'employee_id',
         'partner_id',
         'employee_transaction_id',

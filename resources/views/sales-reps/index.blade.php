@@ -34,6 +34,7 @@
                     $hasMetTarget = $rep->hasMetMonthlyTarget();
                     $commission = $rep->calculateMonthlyCommission();
                     $progressColor = $monthlyAchievement >= 100 ? '#16a34a' : ($monthlyAchievement >= 50 ? '#f59e0b' : '#ef4444');
+                    $alreadyWithdrawn = \App\Models\CommissionWithdrawal::isAlreadyWithdrawn($rep->id, now()->year, now()->month);
                 @endphp
                 <tr>
                     <td><strong>{{ $rep->name }}</strong></td>
@@ -76,7 +77,11 @@
                             <a href="{{ route('sales-reps.show', $rep) }}" class="btn btn-sm">عرض</a>
                             <a href="{{ route('sales-reps.edit', $rep) }}" class="btn btn-sm">تعديل</a>
                             @if($hasMetTarget && $commission > 0)
-                                <a href="{{ route('sales-reps.withdraw-commission.form', $rep) }}" class="btn btn-sm btn-success" title="سحب العمولة">💰 سحب</a>
+                                @if($alreadyWithdrawn)
+                                    <span class="btn btn-sm btn-secondary" style="cursor: not-allowed;" title="تم سحب العمولة">✅ تم السحب</span>
+                                @else
+                                    <a href="{{ route('sales-reps.withdraw-commission.form', $rep) }}" class="btn btn-sm btn-success" title="سحب العمولة">💰 سحب</a>
+                                @endif
                             @endif
                             <form action="{{ route('sales-reps.destroy', $rep) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
                                 @csrf

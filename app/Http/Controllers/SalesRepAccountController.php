@@ -11,6 +11,7 @@ use App\Models\Warehouse;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\InventoryLevel;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -227,14 +228,29 @@ class SalesRepAccountController extends Controller
         }
 
         DB::transaction(function () use ($salesRep, $amount, $validated) {
+            // سحب من خزينة المندوب
             $salesRep->withdraw(
                 $amount,
                 $validated['notes'] ?? 'سحب للخزينة الرئيسية بواسطة الإدارة'
             );
+
+            // تسجيل إيداع في الخزينة الرئيسية (كـ Payment من نوع received)
+            Payment::create([
+                'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
+                'payable_type' => SalesRep::class,
+                'payable_id' => $salesRep->id,
+                'type' => Payment::TYPE_RECEIVED,
+                'amount' => $amount,
+                'method' => Payment::METHOD_CASH,
+                'payment_date' => now(),
+                'user_id' => auth()->id(),
+                'status' => Payment::STATUS_COMPLETED,
+                'notes' => 'سحب من خزينة المندوب: ' . $salesRep->name . ($validated['notes'] ? ' - ' . $validated['notes'] : ''),
+            ]);
         });
 
         return redirect()->route('admin.sales-rep-treasury.index')
-            ->with('success', 'تم سحب ' . number_format($amount, 2) . ' ج.م من خزينة ' . $salesRep->name);
+            ->with('success', 'تم سحب ' . number_format($amount, 2) . ' ج.م من خزينة ' . $salesRep->name . ' وإيداعها في الخزينة الرئيسية');
     }
 
     /**

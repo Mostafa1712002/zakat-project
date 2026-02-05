@@ -11,6 +11,13 @@
             طباعة الفاتورة
         </button>
         @if($sale->status === 'draft')
+            <form action="{{ route('sales.confirm', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تأكيد الفاتورة؟ سيتم خصم الكميات من المخزون.')">
+                @csrf
+                <button type="submit" class="btn btn-success btn-lg">
+                    <span class="btn-icon">✅</span>
+                    تأكيد الفاتورة
+                </button>
+            </form>
             <a href="{{ route('sales.edit', $sale) }}" class="btn">تعديل</a>
         @endif
         <a href="{{ route('sales.index') }}" class="btn">← رجوع للمبيعات</a>
@@ -328,6 +335,15 @@
 .status-confirmed { background: #dbeafe; color: #1d4ed8; }
 .status-delivered { background: #d1fae5; color: #059669; }
 .status-cancelled { background: #fee2e2; color: #dc2626; }
+
+.btn-success {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border: none;
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+}
 
 /* Contacts Bar */
 .contacts-bar {
