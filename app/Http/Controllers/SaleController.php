@@ -110,20 +110,23 @@ class SaleController extends Controller
             $salesReps = collect(); // لا يرى قائمة المندوبين
             $currentSalesRep = $salesRep;
 
-            // المندوب يرى كل الأصناف النشطة مع كمية المخزون المخصصة له
-            $repInventoryMap = $salesRep->inventory()->pluck('quantity', 'product_id');
-            $products = Product::active()->with('unit')->get()->map(function ($product) use ($repInventoryMap) {
-                $product->rep_stock = $repInventoryMap[$product->id] ?? 0;
+            // المندوب يرى فقط الأصناف المخصصة له والتي لها كمية > 0
+            $repInventory = $salesRep->inventory()->where('quantity', '>', 0)->with('product.unit')->get();
+            $products = $repInventory->map(function ($item) {
+                $product = $item->product;
+                $product->rep_stock = $item->quantity;
                 return $product;
-            });
+            })->filter(fn($p) => $p && $p->is_active);
             $useSalesRepInventory = true;
         } else {
             $customers = Customer::active()->get();
             $warehouses = Warehouse::active()->get();
             $salesReps = SalesRep::where('is_active', true)->get();
             $currentSalesRep = null;
-            // الأدمن يرى كل الأصناف - المخزون يُجلب من API حسب المخزن المختار
-            $products = Product::active()->with('unit')->get();
+
+            // الأدمن يرى فقط الأصناف الموجودة في المخزن (كمية > 0)
+            $productIdsWithStock = InventoryLevel::where('quantity', '>', 0)->pluck('product_id')->unique();
+            $products = Product::active()->with('unit')->whereIn('id', $productIdsWithStock)->get();
             $useSalesRepInventory = false;
         }
 
