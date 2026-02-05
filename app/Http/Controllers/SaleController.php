@@ -110,15 +110,11 @@ class SaleController extends Controller
             $salesReps = collect(); // لا يرى قائمة المندوبين
             $currentSalesRep = $salesRep;
 
-            // المندوب يرى فقط المنتجات المخصصة له (حتى لو الكمية صفر)
-            $repInventory = $salesRep->inventory()->with('product.unit')->get();
-            $products = $repInventory->map(function ($item) {
-                $product = $item->product;
-                $product->rep_stock = $item->available_quantity;
+            // المندوب يرى كل الأصناف النشطة مع كمية المخزون المخصصة له
+            $repInventoryMap = $salesRep->inventory()->pluck('quantity', 'product_id');
+            $products = Product::active()->with('unit')->get()->map(function ($product) use ($repInventoryMap) {
+                $product->rep_stock = $repInventoryMap[$product->id] ?? 0;
                 return $product;
-            })->filter(function ($product) {
-                // عرض كل الأصناف النشطة - الـ JavaScript سيتحكم في عرض المخزون
-                return $product->is_active;
             });
             $useSalesRepInventory = true;
         } else {
@@ -126,6 +122,7 @@ class SaleController extends Controller
             $warehouses = Warehouse::active()->get();
             $salesReps = SalesRep::where('is_active', true)->get();
             $currentSalesRep = null;
+            // الأدمن يرى كل الأصناف - المخزون يُجلب من API حسب المخزن المختار
             $products = Product::active()->with('unit')->get();
             $useSalesRepInventory = false;
         }
