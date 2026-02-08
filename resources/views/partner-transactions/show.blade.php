@@ -28,9 +28,13 @@
                 <div class="info-item">
                     <label>الشريك</label>
                     <span>
-                        <a href="{{ route('partner-transactions.partner-history', $partnerTransaction->partner) }}">
-                            {{ $partnerTransaction->partner->name }}
-                        </a>
+                        @if($partnerTransaction->partner)
+                            <a href="{{ route('partner-transactions.partner-history', $partnerTransaction->partner) }}">
+                                {{ $partnerTransaction->partner->name }}
+                            </a>
+                        @else
+                            شريك محذوف
+                        @endif
                     </span>
                 </div>
 
