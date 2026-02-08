@@ -118,6 +118,6 @@ trait SalesRepScope
         $salesRepId = $user->salesRep?->id;
         $column = $this->getSalesRepColumn();
 
-        return $salesRepId && $this->{$column} === $salesRepId;
+        return $salesRepId && (int) $this->{$column} === (int) $salesRepId;
     }
 }

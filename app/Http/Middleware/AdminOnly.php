@@ -21,8 +21,13 @@ class AdminOnly
             return $next($request);
         }
 
-        // If user is employee only (not admin), deny access
-        if ($user && $user->isEmployee() && !$user->hasRole('admin')) {
+        // If user has admin-level roles, allow access
+        if ($user && $user->hasRole(['admin', 'branch_manager', 'accountant'])) {
+            return $next($request);
+        }
+
+        // Block employees and sales reps without admin roles
+        if ($user && ($user->isEmployee() || $user->isSalesRep())) {
             abort(403, 'ليس لديك صلاحية للوصول لهذه الصفحة');
         }
 

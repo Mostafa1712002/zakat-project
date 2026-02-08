@@ -22,8 +22,10 @@ class DashboardController extends Controller
         $todaySales = Sale::whereDate('invoice_date', $today)->sum('total_amount');
         $todayPurchases = Purchase::whereDate('invoice_date', $today)->sum('total_amount');
 
-        // Monthly stats
-        $monthlySales = Sale::where('invoice_date', '>=', $monthStart)->sum('total_amount');
+        // Monthly stats - only confirmed sales count in profit
+        $monthlySales = Sale::where('invoice_date', '>=', $monthStart)
+            ->where('status', Sale::STATUS_CONFIRMED)
+            ->sum('total_amount');
         $monthlyPurchases = Purchase::where('invoice_date', '>=', $monthStart)->sum('total_amount');
         $monthlyExpenses = Expense::where('expense_date', '>=', $monthStart)->sum('amount');
         $monthlyProfit = $monthlySales - $monthlyPurchases - $monthlyExpenses;
