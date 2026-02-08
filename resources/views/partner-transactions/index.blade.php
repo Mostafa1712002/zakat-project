@@ -94,9 +94,13 @@
                 <tr>
                     <td><code>{{ $transaction->transaction_number }}</code></td>
                     <td>
-                        <a href="{{ route('partner-transactions.partner-history', $transaction->partner) }}">
-                            <strong>{{ $transaction->partner->name }}</strong>
-                        </a>
+                        @if($transaction->partner)
+                            <a href="{{ route('partner-transactions.partner-history', $transaction->partner) }}">
+                                <strong>{{ $transaction->partner->name }}</strong>
+                            </a>
+                        @else
+                            <strong>شريك محذوف</strong>
+                        @endif
                     </td>
                     <td>
                         @php
