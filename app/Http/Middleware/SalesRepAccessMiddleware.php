@@ -21,6 +21,8 @@ class SalesRepAccessMiddleware
         'sales.show',       // عرض فاتورة
         'sales.edit',       // تعديل فاتورة
         'sales.update',     // حفظ تعديل فاتورة
+        'sales.confirm',    // تأكيد فاتورة بيع
+        'sales.get-stock',  // جلب المخزون المتاح
         'customers.index',  // عرض العملاء
         'customers.create', // إضافة عميل
         'customers.store',  // حفظ عميل
