@@ -59,11 +59,15 @@
                     <tr>
                         <td><code>{{ $transaction->transaction_number }}</code></td>
                         <td>
-                            <a href="{{ route('partner-transactions.partner-history', $transaction->partner) }}">
-                                <strong>{{ $transaction->partner->name }}</strong>
-                            </a>
+                            @if($transaction->partner)
+                                <a href="{{ route('partner-transactions.partner-history', $transaction->partner) }}">
+                                    <strong>{{ $transaction->partner->name }}</strong>
+                                </a>
+                            @else
+                                <strong>شريك محذوف</strong>
+                            @endif
                         </td>
-                        <td>{{ $transaction->partner->ownership_percentage }}%</td>
+                        <td>{{ $transaction->partner?->ownership_percentage ?? '-' }}%</td>
                         <td class="text-success">{{ number_format($transaction->amount, 2) }} ج.م</td>
                         <td>{{ $transaction->payment_method_name }}</td>
                         <td>
