@@ -177,49 +177,71 @@ class WarehouseController extends Controller
     }
 
     /**
-     * Transfer stock between warehouses.
+     * AJAX: Get products with stock in a warehouse.
+     */
+    public function productsWithStock(Warehouse $warehouse)
+    {
+        $products = $warehouse->inventoryLevels()
+            ->where('quantity', '>', 0)
+            ->with('product')
+            ->get()
+            ->map(function ($level) {
+                return [
+                    'id' => $level->product->id,
+                    'name' => $level->product->name,
+                    'available' => $level->quantity,
+                ];
+            });
+
+        return response()->json($products);
+    }
+
+    /**
+     * Transfer stock between warehouses (supports multi-item).
      */
     public function transfer(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
             'from_warehouse_id' => 'required|exists:warehouses,id',
             'to_warehouse_id' => 'required|exists:warehouses,id|different:from_warehouse_id',
-            'quantity' => 'required|numeric|min:0.001',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|numeric|min:0.001',
             'notes' => 'nullable|string',
         ]);
 
         $fromWarehouse = Warehouse::findOrFail($validated['from_warehouse_id']);
-        $product = Product::findOrFail($validated['product_id']);
-
-        // Check available stock
-        $availableStock = $fromWarehouse->getAvailableStock($product->id);
-        if ($availableStock < $validated['quantity']) {
-            return back()
-                ->withInput()
-                ->with('error', 'الكمية المطلوبة غير متوفرة في المستودع المصدر. الكمية المتاحة: ' . $availableStock);
-        }
 
         DB::beginTransaction();
 
         try {
-            // Record the transfer movement
-            StockMovement::recordMovement([
-                'product_id' => $validated['product_id'],
-                'warehouse_id' => $validated['from_warehouse_id'],
-                'to_warehouse_id' => $validated['to_warehouse_id'],
-                'type' => StockMovement::TYPE_TRANSFER,
-                'quantity' => $validated['quantity'],
-                'unit_cost' => $product->cost_price,
-                'user_id' => auth()->id(),
-                'reason' => 'تحويل مخزون',
-                'notes' => $validated['notes'] ?? null,
-            ]);
+            foreach ($validated['items'] as $item) {
+                $product = Product::findOrFail($item['product_id']);
+
+                // Check available stock
+                $availableStock = $fromWarehouse->getAvailableStock($product->id);
+                if ($availableStock < $item['quantity']) {
+                    throw new \Exception('الكمية المطلوبة غير متوفرة للصنف: ' . $product->name . '. المتاح: ' . $availableStock);
+                }
+
+                // Record the transfer movement
+                StockMovement::recordMovement([
+                    'product_id' => $item['product_id'],
+                    'warehouse_id' => $validated['from_warehouse_id'],
+                    'to_warehouse_id' => $validated['to_warehouse_id'],
+                    'type' => StockMovement::TYPE_TRANSFER,
+                    'quantity' => $item['quantity'],
+                    'unit_cost' => $product->cost_price,
+                    'user_id' => auth()->id(),
+                    'reason' => 'تحويل مخزون',
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+            }
 
             DB::commit();
 
             return redirect()->route('warehouses.index')
-                ->with('success', 'تم تحويل المخزون بنجاح');
+                ->with('success', 'تم تحويل ' . count($validated['items']) . ' صنف بنجاح');
 
         } catch (\Exception $e) {
             DB::rollBack();

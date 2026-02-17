@@ -69,6 +69,15 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label for="supervisor_phone" class="form-label">هاتف مشرف الخط</label>
+                <input type="text" name="supervisor_phone" id="supervisor_phone" class="form-control" value="{{ old('supervisor_phone', $settings['supervisor_phone'] ?? '') }}" placeholder="رقم هاتف مشرف الخط (يظهر في الفاتورة)">
+                <small style="color: #64748b; font-size: 12px;">يظهر في فاتورة المبيعات المطبوعة</small>
+                @error('supervisor_phone')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="website" class="form-label">الموقع الإلكتروني</label>

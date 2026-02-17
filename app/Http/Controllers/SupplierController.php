@@ -88,4 +88,23 @@ class SupplierController extends Controller
         $supplier->delete();
         return redirect()->route('suppliers.index')->with('success', 'تم حذف المورد بنجاح');
     }
+
+    /**
+     * AJAX: Get products associated with a supplier.
+     */
+    public function products(Supplier $supplier)
+    {
+        $products = $supplier->products()
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'cost_price' => $product->cost_price,
+                ];
+            });
+
+        return response()->json($products);
+    }
 }

@@ -14,36 +14,21 @@
 </div>
 
 <div class="grid-2">
-    <!-- نموذج تخصيص صنف -->
+    <!-- نموذج تخصيص أصناف -->
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">➕ تخصيص صنف للمندوب</h3>
+            <h3 class="card-title">➕ تخصيص أصناف للمندوب</h3>
         </div>
         <div class="card-body">
-            <form action="{{ route('admin.sales-rep-inventory.allocate', $salesRep) }}" method="POST">
+            <form action="{{ route('admin.sales-rep-inventory.allocate', $salesRep) }}" method="POST" id="allocateForm">
                 @csrf
-
-                <div class="form-group">
-                    <label for="product_id" class="form-label">الصنف *</label>
-                    <select name="product_id" id="product_id" class="form-control" required>
-                        <option value="">-- اختر صنف --</option>
-                        @foreach($products as $product)
-                            <option value="{{ $product->id }}">
-                                {{ $product->name }} {{ $product->sku ? "({$product->sku})" : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('product_id')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
 
                 <div class="form-group">
                     <label for="warehouse_id" class="form-label">من مخزن *</label>
                     <select name="warehouse_id" id="warehouse_id" class="form-control" required>
                         <option value="">-- اختر المخزن --</option>
                         @foreach($warehouses as $warehouse)
-                            <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
+                            <option value="{{ $warehouse->id }}" {{ old('warehouse_id') == $warehouse->id ? 'selected' : '' }}>{{ $warehouse->name }}</option>
                         @endforeach
                     </select>
                     @error('warehouse_id')
@@ -51,16 +36,46 @@
                     @enderror
                 </div>
 
-                <div class="form-group">
-                    <label for="quantity" class="form-label">الكمية *</label>
-                    <input type="number" step="0.01" name="quantity" id="quantity" class="form-control"
-                           value="{{ old('quantity') }}" min="0.01" required>
-                    @error('quantity')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
+                <h4 style="margin: 16px 0 8px;">📦 الأصناف</h4>
+                <div class="table-container overflow-auto">
+                    <table class="table text-nowrap" id="allocateItemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 45%;">الصنف</th>
+                                <th style="width: 15%;">المتاح</th>
+                                <th style="width: 25%;">الكمية</th>
+                                <th style="width: 15%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="allocateItemsBody">
+                            <tr class="allocate-row" data-index="0">
+                                <td>
+                                    <select name="items[0][product_id]" class="form-control alloc-product-select" required>
+                                        <option value="">اختر الصنف</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <span class="alloc-stock-badge badge badge-secondary">-</span>
+                                </td>
+                                <td>
+                                    <input type="number" name="items[0][quantity]" class="form-control alloc-quantity-input" value="1" min="0.001" step="0.001" required>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger alloc-remove-row" style="display: none;">×</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4">
+                                    <button type="button" class="btn btn-sm" id="allocAddRowBtn" disabled>+ إضافة صنف</button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" style="margin-top: 12px;">
                     <label for="notes" class="form-label">ملاحظات</label>
                     <textarea name="notes" id="notes" class="form-control" rows="2">{{ old('notes') }}</textarea>
                 </div>
@@ -232,16 +247,140 @@
         grid-template-columns: 1fr;
     }
 }
+.alloc-stock-badge { display: inline-block; min-width: 50px; text-align: center; padding: 4px 8px; font-size: 12px; }
+.alloc-stock-ok { background: #dcfce7 !important; color: #166534 !important; }
+.alloc-stock-low { background: #fef3c7 !important; color: #92400e !important; }
+.alloc-stock-out { background: #fee2e2 !important; color: #991b1b !important; }
+.alloc-qty-warning { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-document.getElementById('return_product_id').addEventListener('change', function() {
-    const selected = this.options[this.selectedIndex];
-    const max = selected.dataset.max || 0;
-    document.getElementById('return_quantity').max = max;
-    document.getElementById('return_quantity').value = max;
+document.addEventListener('DOMContentLoaded', function() {
+    // === Return form logic ===
+    document.getElementById('return_product_id').addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const max = selected.dataset.max || 0;
+        document.getElementById('return_quantity').max = max;
+        document.getElementById('return_quantity').value = max;
+    });
+
+    // === Allocation multi-item logic ===
+    let allocRowIndex = 1;
+    let allocProductsCache = [];
+
+    const warehouseSelect = document.getElementById('warehouse_id');
+    const allocAddRowBtn = document.getElementById('allocAddRowBtn');
+
+    // Fetch products when warehouse changes
+    warehouseSelect.addEventListener('change', function() {
+        const warehouseId = this.value;
+        if (!warehouseId) {
+            allocProductsCache = [];
+            allocAddRowBtn.disabled = true;
+            updateAllocProductSelects();
+            return;
+        }
+
+        fetch(`/warehouses/${warehouseId}/products-with-stock`)
+            .then(r => r.json())
+            .then(products => {
+                allocProductsCache = products;
+                allocAddRowBtn.disabled = false;
+                updateAllocProductSelects();
+            });
+    });
+
+    function updateAllocProductSelects() {
+        document.querySelectorAll('.alloc-product-select').forEach(select => {
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">اختر الصنف</option>';
+            allocProductsCache.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                opt.dataset.available = p.available;
+                if (p.id == currentVal) opt.selected = true;
+                select.appendChild(opt);
+            });
+            updateAllocStockDisplay(select.closest('.allocate-row'));
+        });
+    }
+
+    function updateAllocStockDisplay(row) {
+        const select = row.querySelector('.alloc-product-select');
+        const badge = row.querySelector('.alloc-stock-badge');
+        const selectedOption = select.options[select.selectedIndex];
+
+        if (!select.value || !selectedOption.dataset.available) {
+            badge.textContent = '-';
+            badge.className = 'alloc-stock-badge badge badge-secondary';
+            return;
+        }
+
+        const available = parseFloat(selectedOption.dataset.available);
+        badge.textContent = Math.floor(available);
+        badge.dataset.stock = available;
+
+        if (available <= 0) badge.className = 'alloc-stock-badge badge alloc-stock-out';
+        else if (available < 10) badge.className = 'alloc-stock-badge badge alloc-stock-low';
+        else badge.className = 'alloc-stock-badge badge alloc-stock-ok';
+    }
+
+    function attachAllocRowEvents(row) {
+        row.querySelector('.alloc-product-select').addEventListener('change', () => updateAllocStockDisplay(row));
+        row.querySelector('.alloc-quantity-input').addEventListener('input', function() {
+            const badge = row.querySelector('.alloc-stock-badge');
+            const stock = parseFloat(badge.dataset.stock) || 0;
+            const qty = parseFloat(this.value) || 0;
+            this.classList.toggle('alloc-qty-warning', qty > stock && stock > 0);
+        });
+    }
+
+    // Add row
+    allocAddRowBtn.addEventListener('click', function() {
+        const tbody = document.getElementById('allocateItemsBody');
+        const firstRow = document.querySelector('.allocate-row');
+        const newRow = firstRow.cloneNode(true);
+
+        newRow.setAttribute('data-index', allocRowIndex);
+        newRow.querySelectorAll('[name]').forEach(input => {
+            input.name = input.name.replace('[0]', '[' + allocRowIndex + ']');
+            if (input.classList.contains('alloc-quantity-input')) input.value = 1;
+            else if (input.classList.contains('alloc-product-select')) input.value = '';
+        });
+
+        const badge = newRow.querySelector('.alloc-stock-badge');
+        badge.textContent = '-';
+        badge.className = 'alloc-stock-badge badge badge-secondary';
+        newRow.querySelector('.alloc-quantity-input').classList.remove('alloc-qty-warning');
+        newRow.querySelector('.alloc-remove-row').style.display = 'inline-block';
+
+        tbody.appendChild(newRow);
+        allocRowIndex++;
+        updateAllocRemoveButtons();
+        attachAllocRowEvents(newRow);
+        updateAllocProductSelects();
+    });
+
+    // Remove row
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('alloc-remove-row')) {
+            e.target.closest('.allocate-row').remove();
+            updateAllocRemoveButtons();
+        }
+    });
+
+    function updateAllocRemoveButtons() {
+        const rows = document.querySelectorAll('.allocate-row');
+        rows.forEach(row => {
+            row.querySelector('.alloc-remove-row').style.display = rows.length > 1 ? 'inline-block' : 'none';
+        });
+    }
+
+    // Initial event setup
+    attachAllocRowEvents(document.querySelector('.allocate-row'));
 });
 </script>
 @endpush

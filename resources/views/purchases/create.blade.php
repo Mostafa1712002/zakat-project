@@ -23,7 +23,7 @@
 
                 <div class="form-group">
                     <label class="form-label">المورد * <a href="{{ route('suppliers.create') }}" target="_blank" style="font-size: 12px; margin-right: 8px;">+ إضافة مورد جديد</a></label>
-                    <select name="supplier_id" class="form-control" required>
+                    <select name="supplier_id" id="supplier_id" class="form-control" required>
                         <option value="">اختر المورد</option>
                         @foreach($suppliers as $supplier)
                         <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
@@ -32,6 +32,9 @@
                     @if($suppliers->isEmpty())
                     <p class="form-text text-danger">لا يوجد موردين. <a href="{{ route('suppliers.create') }}">أضف مورد جديد</a> أولاً.</p>
                     @endif
+                    <label style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);">
+                        <input type="checkbox" id="filterBySupplier"> عرض أصناف المورد فقط
+                    </label>
                 </div>
 
                 <div class="form-row">
@@ -146,7 +149,56 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let rowIndex = 1;
-    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => $p->cost_price]));
+    const allProductsData = @json($products->mapWithKeys(fn($p) => [$p->id => $p->cost_price]));
+    const allProductsOptions = @json($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'cost_price' => $p->cost_price]));
+    let supplierProducts = null; // null = not filtered
+    const supplierSelect = document.getElementById('supplier_id');
+    const filterCheckbox = document.getElementById('filterBySupplier');
+
+    // Supplier filter logic
+    supplierSelect.addEventListener('change', function() {
+        if (filterCheckbox.checked && this.value) {
+            fetchSupplierProducts(this.value);
+        }
+    });
+
+    filterCheckbox.addEventListener('change', function() {
+        if (this.checked && supplierSelect.value) {
+            fetchSupplierProducts(supplierSelect.value);
+        } else {
+            supplierProducts = null;
+            updateAllProductSelects();
+        }
+    });
+
+    function fetchSupplierProducts(supplierId) {
+        fetch(`/suppliers/${supplierId}/products`)
+            .then(r => r.json())
+            .then(products => {
+                if (products.length > 0) {
+                    supplierProducts = products;
+                } else {
+                    supplierProducts = null;
+                }
+                updateAllProductSelects();
+            });
+    }
+
+    function updateAllProductSelects() {
+        const source = supplierProducts || allProductsOptions;
+        document.querySelectorAll('.product-select').forEach(select => {
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">اختر الصنف</option>';
+            source.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name + ' - ' + parseFloat(p.cost_price).toFixed(2) + ' ج.م';
+                opt.dataset.price = p.cost_price;
+                if (p.id == currentVal) opt.selected = true;
+                select.appendChild(opt);
+            });
+        });
+    }
 
     document.getElementById('addRowBtn').addEventListener('click', function() {
         const tbody = document.getElementById('itemsBody');
@@ -164,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
         rowIndex++;
         updateRemoveButtons();
         attachRowEvents(newRow);
+        if (supplierProducts) updateAllProductSelects();
     });
 
     document.addEventListener('click', function(e) {
@@ -197,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function attachRowEvents(row) {
         row.querySelector('.product-select').addEventListener('change', function() {
-            const price = productsData[this.value] || 0;
+            const price = allProductsData[this.value] || 0;
             row.querySelector('.price-input').value = price;
             calculateTotals();
         });

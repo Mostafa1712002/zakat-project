@@ -375,7 +375,12 @@ class SaleController extends Controller
 
         $sale->load(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'items.product', 'payments']);
 
-        return view('sales.show', compact('sale'));
+        $supervisorPhone = '';
+        try {
+            $supervisorPhone = \DB::table('settings')->where('key', 'supervisor_phone')->value('value') ?? '';
+        } catch (\Exception $e) {}
+
+        return view('sales.show', compact('sale', 'supervisorPhone'));
     }
 
     /**

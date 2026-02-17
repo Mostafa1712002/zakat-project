@@ -49,7 +49,7 @@ class SalesRepController extends Controller
         // قواعد التحقق حسب النوع
         $rules = [
             'code' => 'nullable|string|max:50|unique:sales_reps,code',
-            'type' => 'required|in:fridge,special',
+            'type' => 'nullable|in:fridge,special',
             'phone' => 'nullable|string|max:20',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'commission_type' => 'nullable|in:percentage,fixed',
@@ -260,7 +260,7 @@ class SalesRepController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50|unique:sales_reps,code,' . $salesRep->id,
-            'type' => 'required|in:fridge,special',
+            'type' => 'nullable|in:fridge,special',
             'phone' => 'nullable|string|max:20',
             'email' => 'required|email|max:255|unique:users,email,' . $salesRep->user_id,
             'password' => 'nullable|string|min:8|confirmed',

@@ -58,7 +58,7 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
             'tax_number' => 'nullable|string|max:50',
-            'type' => 'required|in:retail,wholesale,corporate',
+            'item_type' => 'nullable|in:fridge,special',
             'price_tier' => 'nullable|in:retail,wholesale,special',
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms_days' => 'nullable|integer|min:0',
@@ -70,6 +70,7 @@ class CustomerController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $validated['type'] = 'retail';
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['current_balance'] = 0;
         $validated['target_paid_amount'] = 0;
@@ -153,7 +154,7 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
             'tax_number' => 'nullable|string|max:50',
-            'type' => 'required|in:retail,wholesale,corporate',
+            'item_type' => 'nullable|in:fridge,special',
             'price_tier' => 'nullable|in:retail,wholesale,special',
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms_days' => 'nullable|integer|min:0',
@@ -165,6 +166,7 @@ class CustomerController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $validated['type'] = 'retail';
         $validated['is_active'] = $request->boolean('is_active');
         if (empty($validated['price_tier'] ?? null)) {
             $validated['price_tier'] = $customer->price_tier ?? 'retail';

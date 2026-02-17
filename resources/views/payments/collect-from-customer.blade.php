@@ -28,9 +28,12 @@
                 <span class="text-muted">كود العميل:</span>
                 <strong>{{ $customer->code }}</strong>
             </div>
+            @php
+                $calculatedBalance = $unpaidSales->sum('remaining_amount');
+            @endphp
             <div>
                 <span class="text-muted">الرصيد المستحق:</span>
-                <strong class="text-danger">{{ number_format($customer->current_balance) }} ج.م</strong>
+                <strong class="text-danger">{{ number_format($calculatedBalance) }} ج.م</strong>
             </div>
             <div>
                 <span class="text-muted">الهاتف:</span>
@@ -114,7 +117,7 @@
                 <div class="form-group">
                     <label for="amount" class="form-label">المبلغ *</label>
                     <input type="number" step="0.01" name="amount" id="amount" class="form-control"
-                           value="{{ old('amount', $customer->current_balance) }}" min="0.01" required>
+                           value="{{ old('amount', $calculatedBalance) }}" min="0.01" required>
                     @error('amount')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
@@ -284,7 +287,7 @@ function selectInvoice(row) {
 function clearSelectedInvoice() {
     document.querySelectorAll('.invoice-row').forEach(r => r.classList.remove('selected'));
     document.getElementById('sale_id').value = '';
-    document.getElementById('amount').value = '{{ $customer->current_balance }}';
+    document.getElementById('amount').value = '{{ $calculatedBalance }}';
     document.getElementById('selectedInvoiceInfo').style.display = 'none';
 }
 

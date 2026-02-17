@@ -76,6 +76,7 @@ Route::middleware(['auth'])->group(function () {
     // Warehouses (المخازن)
     Route::get('warehouses/transfer', [WarehouseController::class, 'showTransferForm'])->name('warehouses.transfer');
     Route::post('warehouses/transfer', [WarehouseController::class, 'transfer'])->name('warehouses.process-transfer');
+    Route::get('warehouses/{warehouse}/products-with-stock', [WarehouseController::class, 'productsWithStock'])->name('warehouses.products-with-stock');
     Route::resource('warehouses', WarehouseController::class);
 
     // Sales (المبيعات)
@@ -92,6 +93,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('purchases', PurchaseController::class);
 
     // Suppliers (الموردين)
+    Route::get('suppliers/{supplier}/products', [SupplierController::class, 'products'])->name('suppliers.products');
     Route::resource('suppliers', SupplierController::class);
     Route::middleware(['feature:payments'])->group(function () {
         Route::get('suppliers/{supplier}/pay', [PaymentController::class, 'showPayToSupplier'])->name('suppliers.pay.form');

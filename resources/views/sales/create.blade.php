@@ -46,10 +46,12 @@
                         @enderror
                     </div>
 
+                    @unless(auth()->user()->isSalesRep())
                     <div class="form-group">
                         <label for="due_date" class="form-label">تاريخ الاستحقاق</label>
                         <input type="date" name="due_date" id="due_date" class="form-control" value="{{ old('due_date') }}">
                     </div>
+                    @endunless
                 </div>
 
                 <div class="form-row">
@@ -61,6 +63,7 @@
                         </select>
                     </div>
 
+                    @unless(auth()->user()->isSalesRep())
                     <div class="form-group">
                         <label for="warehouse_id" class="form-label">المستودع *</label>
                         <select name="warehouse_id" id="warehouse_id" class="form-control" required>
@@ -71,6 +74,9 @@
                             @endforeach
                         </select>
                     </div>
+                    @else
+                    <input type="hidden" name="warehouse_id" id="warehouse_id" value="{{ $warehouses->first()?->id }}">
+                    @endunless
                 </div>
 
                 <!-- Advance Payment Section - Only for Credit Sales -->
@@ -108,6 +114,7 @@
                     </div>
                 </div>
 
+                @unless(auth()->user()->isSalesRep())
                 <div class="form-row">
                     <div class="form-group">
                         <label for="branch_id" class="form-label">الفرع</label>
@@ -133,6 +140,10 @@
                         </select>
                     </div>
                 </div>
+                @else
+                <input type="hidden" name="branch_id" value="{{ $currentSalesRep->branch_id }}">
+                <input type="hidden" name="sales_rep_id" value="{{ $currentSalesRep->id }}">
+                @endunless
             </div>
         </div>
 
@@ -305,7 +316,8 @@
     color: #991b1b !important;
 }
 
-.quantity-warning {
+.quantity-warning,
+.min-price-error {
     border-color: #ef4444 !important;
     background-color: #fef2f2 !important;
     animation: pulse-warning 1s infinite;
@@ -532,11 +544,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!product) {
             priceInput.value = 0;
+            removeMinPriceHint(row);
             return;
         }
 
         priceInput.value = product.retail;
+        showMinPriceHint(row, product.min_price);
         calculateTotals();
+    }
+
+    // Show min price hint below price input
+    function showMinPriceHint(row, minPrice) {
+        removeMinPriceHint(row);
+        if (minPrice > 0) {
+            const priceInput = row.querySelector('.price-input');
+            const hint = document.createElement('small');
+            hint.className = 'min-price-hint';
+            hint.style.cssText = 'color: #64748b; font-size: 11px; display: block; margin-top: 2px;';
+            hint.textContent = 'أقل سعر: ' + minPrice.toFixed(2) + ' ج.م';
+            priceInput.parentNode.appendChild(hint);
+        }
+    }
+
+    function removeMinPriceHint(row) {
+        const hint = row.querySelector('.min-price-hint');
+        if (hint) hint.remove();
+    }
+
+    // Validate price against min_selling_price
+    function validateMinPrice(row) {
+        const productId = row.querySelector('.product-select').value;
+        const product = productsData[productId];
+        const priceInput = row.querySelector('.price-input');
+        const price = parseFloat(priceInput.value) || 0;
+
+        if (!product || !product.min_price || product.min_price <= 0) {
+            priceInput.classList.remove('min-price-error');
+            return true;
+        }
+
+        if (price < product.min_price) {
+            priceInput.classList.add('min-price-error');
+            return false;
+        } else {
+            priceInput.classList.remove('min-price-error');
+            return true;
+        }
     }
 
     // Calculate row total
@@ -580,6 +633,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quantity change validation
         row.querySelector('.quantity-input').addEventListener('input', function() {
             validateQuantity(row);
+        });
+
+        // Price change validation against min price
+        row.querySelector('.price-input').addEventListener('input', function() {
+            validateMinPrice(row);
         });
     }
 
@@ -669,6 +727,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 hasErrors = true;
                 quantityInput.classList.add('quantity-warning');
                 errorMessages.push(`${productName}: الكمية المطلوبة (${quantity}) أكبر من المتاح في المخزون (${stock})`);
+            }
+
+            // Check min price
+            const priceInput = row.querySelector('.price-input');
+            const price = parseFloat(priceInput.value) || 0;
+            if (product && product.min_price > 0 && price < product.min_price) {
+                hasErrors = true;
+                priceInput.classList.add('min-price-error');
+                errorMessages.push(`${productName}: السعر (${price}) أقل من الحد الأدنى (${product.min_price})`);
             }
         });
 

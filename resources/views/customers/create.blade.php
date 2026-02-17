@@ -40,13 +40,13 @@
             </div>
 
             <div class="form-group">
-                <label for="type" class="form-label">نوع العميل *</label>
-                <select name="type" id="type" class="form-control" required>
-                    <option value="retail" {{ old('type', 'retail') == 'retail' ? 'selected' : '' }}>قطاعي</option>
-                    <option value="wholesale" {{ old('type') == 'wholesale' ? 'selected' : '' }}>جملة</option>
-                    <option value="corporate" {{ old('type') == 'corporate' ? 'selected' : '' }}>شركة</option>
+                <label for="item_type" class="form-label">صنف العميل</label>
+                <select name="item_type" id="item_type" class="form-control">
+                    <option value="">اختر صنف العميل</option>
+                    <option value="fridge" {{ old('item_type') == 'fridge' ? 'selected' : '' }}>تلاجة</option>
+                    <option value="special" {{ old('item_type') == 'special' ? 'selected' : '' }}>خاص</option>
                 </select>
-                @error('type')
+                @error('item_type')
                     <div class="form-error">{{ $message }}</div>
                 @enderror
             </div>
@@ -89,47 +89,11 @@
             </div>
 
             <hr style="margin: 24px 0; border-color: var(--border-color);">
-            <h3 style="margin-bottom: 16px;">💰 الإعدادات المالية</h3>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="price_tier" class="form-label">فئة السعر</label>
-                    <select name="price_tier" id="price_tier" class="form-control">
-                        <option value="">اختر فئة السعر</option>
-                        <option value="retail" {{ old('price_tier') == 'retail' ? 'selected' : '' }}>قطاعي</option>
-                        <option value="wholesale" {{ old('price_tier') == 'wholesale' ? 'selected' : '' }}>جملة</option>
-                        <option value="special" {{ old('price_tier') == 'special' ? 'selected' : '' }}>خاص</option>
-                    </select>
-                    @error('price_tier')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="credit_limit" class="form-label">حد الائتمان (ج.م)</label>
-                    <input type="number" step="0.01" name="credit_limit" id="credit_limit" class="form-control" value="{{ old('credit_limit', 0) }}" min="0">
-                    @error('credit_limit')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="payment_terms_days" class="form-label">فترة السداد (بالأيام)</label>
-                    <input type="number" name="payment_terms_days" id="payment_terms_days" class="form-control" value="{{ old('payment_terms_days', 0) }}" min="0">
-                    @error('payment_terms_days')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-
-            <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">🎯 التارجت والخصم</h3>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="target_amount" class="form-label">مبلغ التارجت (ج.م)</label>
+                    <label for="target_amount" class="form-label">التارجت السنوي (ج.م)</label>
                     <input type="number" step="0.01" name="target_amount" id="target_amount" class="form-control" value="{{ old('target_amount', 0) }}" min="0" placeholder="المبلغ المطلوب للحصول على الخصم">
                     <small style="color: #64748b; font-size: 12px;">💡 عند وصول مشتريات العميل لهذا المبلغ يحصل على الخصم</small>
                     @error('target_amount')

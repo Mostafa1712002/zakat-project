@@ -126,6 +126,11 @@ class PurchaseController extends Controller
                 }
             }
 
+            // ربط الأصناف بالمورد تلقائياً
+            $supplier = Supplier::find($validated['supplier_id']);
+            $productIds = collect($validated['items'])->pluck('product_id')->unique()->toArray();
+            $supplier->products()->syncWithoutDetaching($productIds);
+
             $purchase->subtotal = $subtotal;
             $discount = $purchase->discount_type === 'percentage'
                 ? $subtotal * ($purchase->discount_value / 100)

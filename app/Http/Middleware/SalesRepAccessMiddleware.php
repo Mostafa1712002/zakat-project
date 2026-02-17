@@ -27,8 +27,11 @@ class SalesRepAccessMiddleware
         'customers.create', // إضافة عميل
         'customers.store',  // حفظ عميل
         'customers.show',   // عرض عميل
+        'customers.edit',   // تعديل عميل
+        'customers.update', // حفظ تعديل عميل
         'customers.collect.form', // نموذج التحصيل
         'customers.collect', // تحصيل من عميل
+        'sales.index',      // عرض قائمة المبيعات
         'products.index',   // عرض المنتجات (للاختيار في الفاتورة)
         'products.show',    // عرض منتج
     ];

@@ -112,26 +112,13 @@
             <h3 class="card-title">بيانات المندوب</h3>
         </div>
         <div class="card-body">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="code" class="form-label">كود المندوب</label>
-                    <input type="text" name="code" id="code" class="form-control" value="{{ old('code') }}" placeholder="سيتم توليده تلقائياً">
-                    <small class="text-muted">يتم توليده تلقائياً إذا تُرك فارغاً</small>
-                    @error('code')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="type" class="form-label">نوع المندوب *</label>
-                    <select name="type" id="type" class="form-control" required>
-                        <option value="fridge" {{ old('type', 'fridge') == 'fridge' ? 'selected' : '' }}>🧊 تلاجة</option>
-                        <option value="special" {{ old('type') == 'special' ? 'selected' : '' }}>⭐ خاص</option>
-                    </select>
-                    @error('type')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
+            <div class="form-group">
+                <label for="code" class="form-label">كود المندوب</label>
+                <input type="text" name="code" id="code" class="form-control" value="{{ old('code') }}" placeholder="سيتم توليده تلقائياً">
+                <small class="text-muted">يتم توليده تلقائياً إذا تُرك فارغاً</small>
+                @error('code')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="form-row-3">

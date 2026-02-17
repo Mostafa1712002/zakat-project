@@ -227,11 +227,13 @@ class SalesRepAccountController extends Controller
             return back()->with('error', 'المبلغ أكبر من الرصيد المتاح');
         }
 
-        DB::transaction(function () use ($salesRep, $amount, $validated) {
+        $notes = $validated['notes'] ?? null;
+
+        DB::transaction(function () use ($salesRep, $amount, $notes) {
             // سحب من خزينة المندوب
             $salesRep->withdraw(
                 $amount,
-                $validated['notes'] ?? 'سحب للخزينة الرئيسية بواسطة الإدارة'
+                $notes ?? 'سحب للخزينة الرئيسية بواسطة الإدارة'
             );
 
             // تسجيل إيداع في الخزينة الرئيسية (كـ Payment من نوع received)
@@ -244,8 +246,9 @@ class SalesRepAccountController extends Controller
                 'method' => Payment::METHOD_CASH,
                 'payment_date' => now(),
                 'user_id' => auth()->id(),
+                'branch_id' => $salesRep->branch_id,
                 'status' => Payment::STATUS_COMPLETED,
-                'notes' => 'سحب من خزينة المندوب: ' . $salesRep->name . ($validated['notes'] ? ' - ' . $validated['notes'] : ''),
+                'notes' => 'سحب من خزينة المندوب: ' . $salesRep->name . ($notes ? ' - ' . $notes : ''),
             ]);
         });
 
@@ -296,40 +299,45 @@ class SalesRepAccountController extends Controller
     }
 
     /**
-     * تخصيص أصناف للمندوب (للأدمن)
+     * تخصيص أصناف للمندوب (للأدمن) - يدعم تخصيص عدة أصناف
      */
     public function allocateStock(Request $request, SalesRep $salesRep)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|numeric|min:0.01',
             'warehouse_id' => 'required|exists:warehouses,id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|numeric|min:0.001',
             'notes' => 'nullable|string|max:500',
         ]);
 
-        // التحقق من توفر الكمية في المخزن
-        $warehouseStock = InventoryLevel::where('warehouse_id', $validated['warehouse_id'])
-            ->where('product_id', $validated['product_id'])
-            ->first();
+        DB::transaction(function () use ($salesRep, $validated) {
+            foreach ($validated['items'] as $item) {
+                // التحقق من توفر الكمية في المخزن
+                $warehouseStock = InventoryLevel::where('warehouse_id', $validated['warehouse_id'])
+                    ->where('product_id', $item['product_id'])
+                    ->first();
 
-        if (!$warehouseStock || $warehouseStock->available_quantity < $validated['quantity']) {
-            return back()->withInput()->with('error', 'الكمية المطلوبة غير متوفرة في المخزن');
-        }
+                $product = Product::find($item['product_id']);
 
-        DB::transaction(function () use ($salesRep, $validated, $warehouseStock) {
-            // خصم من المخزن الرئيسي
-            $warehouseStock->decrement('quantity', $validated['quantity']);
+                if (!$warehouseStock || $warehouseStock->available_quantity < $item['quantity']) {
+                    throw new \Exception('الكمية المطلوبة غير متوفرة للصنف: ' . ($product->name ?? '') . '. المتاح: ' . ($warehouseStock->available_quantity ?? 0));
+                }
 
-            // إضافة لمخزون المندوب
-            $salesRep->allocateStock(
-                $validated['product_id'],
-                $validated['quantity'],
-                $validated['warehouse_id'],
-                $validated['notes']
-            );
+                // خصم من المخزن الرئيسي
+                $warehouseStock->decrement('quantity', $item['quantity']);
+
+                // إضافة لمخزون المندوب
+                $salesRep->allocateStock(
+                    $item['product_id'],
+                    $item['quantity'],
+                    $validated['warehouse_id'],
+                    $validated['notes']
+                );
+            }
         });
 
-        return back()->with('success', 'تم تخصيص الكمية للمندوب بنجاح');
+        return back()->with('success', 'تم تخصيص ' . count($validated['items']) . ' صنف للمندوب بنجاح');
     }
 
     /**
