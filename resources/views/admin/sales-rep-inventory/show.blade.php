@@ -292,7 +292,25 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 
+    function initAllocSelect2() {
+        $('.alloc-product-select').each(function() {
+            if (!$(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2({ placeholder: 'ابحث عن الصنف...', allowClear: true, dir: 'rtl', width: '100%' })
+                .on('change', function() {
+                    const row = this.closest('.allocate-row');
+                    if (row) updateAllocStockDisplay(row);
+                });
+            }
+        });
+    }
+
     function updateAllocProductSelects() {
+        $('.alloc-product-select').each(function() {
+            if ($(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2('destroy');
+            }
+        });
+
         document.querySelectorAll('.alloc-product-select').forEach(select => {
             const currentVal = select.value;
             select.innerHTML = '<option value="">اختر الصنف</option>';
@@ -306,6 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             updateAllocStockDisplay(select.closest('.allocate-row'));
         });
+
+        initAllocSelect2();
     }
 
     function updateAllocStockDisplay(row) {
@@ -342,11 +362,18 @@ document.addEventListener('DOMContentLoaded', function() {
     allocAddRowBtn.addEventListener('click', function() {
         const tbody = document.getElementById('allocateItemsBody');
         const firstRow = document.querySelector('.allocate-row');
+
+        // Destroy Select2 before cloning
+        const $firstSelect = $(firstRow).find('.alloc-product-select');
+        if ($firstSelect.hasClass('select2-hidden-accessible')) {
+            $firstSelect.select2('destroy');
+        }
+
         const newRow = firstRow.cloneNode(true);
 
         newRow.setAttribute('data-index', allocRowIndex);
         newRow.querySelectorAll('[name]').forEach(input => {
-            input.name = input.name.replace('[0]', '[' + allocRowIndex + ']');
+            input.name = input.name.replace(/\[\d+\]/, '[' + allocRowIndex + ']');
             if (input.classList.contains('alloc-quantity-input')) input.value = 1;
             else if (input.classList.contains('alloc-product-select')) input.value = '';
         });
@@ -381,6 +408,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial event setup
     attachAllocRowEvents(document.querySelector('.allocate-row'));
+    initAllocSelect2();
 });
 </script>
 @endpush

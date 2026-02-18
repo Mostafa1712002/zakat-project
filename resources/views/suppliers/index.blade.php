@@ -19,10 +19,9 @@
             <thead>
                 <tr>
                     <th>الاسم</th>
-                    <th>الكود</th>
                     <th>الهاتف</th>
-                    <th>جهة الاتصال</th>
                     <th>الرصيد</th>
+                    <th>عدد الأصناف</th>
                     <th>الحالة</th>
                     <th>الإجراءات</th>
                 </tr>
@@ -31,10 +30,11 @@
                 @forelse($suppliers as $supplier)
                 <tr>
                     <td><strong>{{ $supplier->name }}</strong></td>
-                    <td>{{ $supplier->code ?? '-' }}</td>
                     <td>{{ $supplier->phone ?? $supplier->mobile ?? '-' }}</td>
-                    <td>{{ $supplier->contact_person ?? '-' }}</td>
                     <td>{{ number_format($supplier->current_balance, 2) }} ج.م</td>
+                    <td>
+                        <span class="badge badge-primary">{{ $supplier->products_count ?? 0 }}</span>
+                    </td>
                     <td>
                         @if($supplier->is_active)
                             <span class="badge badge-success">نشط</span>
@@ -55,7 +55,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center">لا يوجد موردين</td>
+                    <td colspan="6" class="text-center">لا يوجد موردين</td>
                 </tr>
                 @endforelse
             </tbody>

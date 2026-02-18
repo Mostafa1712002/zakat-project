@@ -65,7 +65,7 @@
                         <strong class="{{ $item->available_quantity <= 5 ? 'text-danger' : 'text-success' }}">
                             {{ number_format($item->available_quantity, 0) }}
                         </strong>
-                        <small>{{ $item->product->unit ?? 'وحدة' }}</small>
+                        <small>{{ $item->product->unit?->name ?? 'وحدة' }}</small>
                     </td>
                     <td>
                         @if($item->reserved_quantity > 0)

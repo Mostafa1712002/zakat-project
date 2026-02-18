@@ -11,6 +11,43 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        /* Select2 RTL fixes */
+        .select2-container--default .select2-selection--single {
+            height: 46px;
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            direction: rtl;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 28px;
+            padding-right: 0;
+            padding-left: 20px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px;
+            left: 4px;
+            right: auto;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            padding: 8px 12px;
+            direction: rtl;
+        }
+        .select2-results__option {
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            direction: rtl;
+        }
+        .select2-container { width: 100% !important; }
+        .select2-dropdown { direction: rtl; }
+    </style>
     <style>
         :root {
             --primary: #0891b2;
@@ -521,9 +558,6 @@
                     @if(feature_enabled('products'))
                     <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span> {{ feature_name('products', 'الأصناف') }}</a></li>
                     @endif
-                    @if(feature_enabled('categories'))
-                    <li><a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('categories', '🏷️') }}</span> {{ feature_name('categories', 'الأقسام') }}</a></li>
-                    @endif
                     @if(feature_enabled('warehouses'))
                     <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('warehouses', '🏭') }}</span> {{ feature_name('warehouses', 'المخازن') }}</a></li>
                     @endif
@@ -556,9 +590,6 @@
                     @endif
                     @if(feature_enabled('products'))
                     <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span> {{ feature_name('products', 'الأصناف') }}</a></li>
-                    @endif
-                    @if(feature_enabled('categories'))
-                    <li><a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('categories', '🏷️') }}</span> {{ feature_name('categories', 'الأقسام') }}</a></li>
                     @endif
                     @if(feature_enabled('customers'))
                     <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('customers', '👥') }}</span> {{ feature_name('customers', 'العملاء') }}</a></li>
@@ -627,6 +658,9 @@
             document.querySelector('.sidebar-overlay').classList.toggle('open');
         }
     </script>
+    <!-- jQuery + Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @stack('scripts')
 </body>
 </html>

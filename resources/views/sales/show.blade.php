@@ -80,11 +80,11 @@
                             <td class="info-label">الهاتف:</td>
                             <td class="info-value">{{ $sale->customer->phone ?? '-' }}</td>
                         </tr>
-                        <tr>
+                        <tr class="no-print">
                             <td class="info-label">العنوان:</td>
                             <td class="info-value">{{ $sale->customer->address ?? '-' }}</td>
                         </tr>
-                        <tr>
+                        <tr class="no-print">
                             <td class="info-label">المدينة:</td>
                             <td class="info-value">{{ $sale->customer->city ?? '-' }}</td>
                         </tr>
@@ -103,11 +103,11 @@
                             <td class="info-label">التاريخ:</td>
                             <td class="info-value"><strong>{{ $sale->invoice_date?->format('Y-m-d') ?? '-' }}</strong></td>
                         </tr>
-                        <tr>
+                        <tr class="no-print">
                             <td class="info-label">الاستحقاق:</td>
                             <td class="info-value">{{ $sale->due_date?->format('Y-m-d') ?? '-' }}</td>
                         </tr>
-                        <tr>
+                        <tr class="no-print">
                             <td class="info-label">نوع الدفع:</td>
                             <td class="info-value">
                                 <span class="payment-type {{ $sale->payment_type === 'credit' ? 'credit' : 'cash' }}">
@@ -115,7 +115,7 @@
                                 </span>
                             </td>
                         </tr>
-                        <tr>
+                        <tr class="no-print">
                             <td class="info-label">حالة الدفع:</td>
                             <td class="info-value">
                                 @switch($sale->payment_status)
@@ -141,7 +141,7 @@
                     <th>الكمية</th>
                     <th>سعر الوحدة</th>
                     <th>الخدمة</th>
-                    <th>الضريبة</th>
+                    <th class="no-print">الضريبة</th>
                     <th>الإجمالي</th>
                 </tr>
             </thead>
@@ -153,14 +153,15 @@
                     <td>{{ number_format($item->quantity, 2) }}</td>
                     <td>{{ number_format($item->unit_price, 2) }} ج.م</td>
                     <td>{{ number_format($item->discount_amount, 2) }} ج.م</td>
-                    <td>{{ number_format($item->tax_amount, 2) }} ج.م</td>
+                    <td class="no-print">{{ number_format($item->tax_amount, 2) }} ج.م</td>
                     <td>{{ number_format($item->total ?? $item->subtotal, 2) }} ج.م</td>
                 </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="6" class="text-left"><strong>الإجمالي الفرعي</strong></td>
+                    <td colspan="5" class="text-left"><strong>الإجمالي الفرعي</strong></td>
+                    <td class="no-print"></td>
                     <td><strong>{{ number_format($sale->subtotal, 2) }} ج.م</strong></td>
                 </tr>
                 @if($sale->discount_amount > 0)
@@ -199,7 +200,7 @@
         </div>
 
 @if($sale->payments->count() > 0)
-<div class="card" style="margin-top: 1.5rem;">
+<div class="card no-print" style="margin-top: 1.5rem;">
     <div class="card-body">
         <h3>الدفعات</h3>
         <div class="table-container overflow-auto">
@@ -231,7 +232,7 @@
 @endif
 
 @if($sale->notes)
-<div class="card" style="margin-top: 1.5rem;">
+<div class="card no-print" style="margin-top: 1.5rem;">
     <div class="card-body">
         <h3>ملاحظات</h3>
         <p>{{ $sale->notes }}</p>
@@ -659,8 +660,16 @@
     nav,
     header,
     footer,
-    .invoice-actions {
+    .invoice-actions,
+    .menu-toggle {
         display: none !important;
+    }
+
+    .main {
+        margin-right: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     .invoice-wrapper {
@@ -779,7 +788,7 @@
 
     @page {
         size: A4;
-        margin: 5mm;
+        margin: 3mm;
     }
 }
 

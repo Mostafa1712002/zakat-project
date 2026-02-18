@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\Expense;
 use App\Models\Sale;
+use App\Models\SalesRep;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -17,9 +18,13 @@ class TreasuryController extends Controller
 
         // === الوارد (المقبوضات) ===
 
-        // 1. التحصيلات من العملاء
+        // 1. التحصيلات من العملاء (excluding rep withdrawals)
         $collections = Payment::where('type', Payment::TYPE_RECEIVED)
             ->where('status', Payment::STATUS_COMPLETED)
+            ->where(function ($q) {
+                $q->where('payable_type', '!=', SalesRep::class)
+                  ->orWhereNull('payable_type');
+            })
             ->whereBetween('payment_date', [$startDate, $endDate])
             ->sum('amount');
 
@@ -29,7 +34,14 @@ class TreasuryController extends Controller
             ->whereBetween('invoice_date', [$startDate, $endDate])
             ->sum('total_amount');
 
-        $totalIncome = $collections + $cashSales;
+        // 3. سحب خزينات المندوبين
+        $repWithdrawals = Payment::where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where('payable_type', SalesRep::class)
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->sum('amount');
+
+        $totalIncome = $collections + $cashSales + $repWithdrawals;
 
         // === الصادر (المدفوعات) ===
 
@@ -61,10 +73,14 @@ class TreasuryController extends Controller
         // === آخر الحركات ===
         $recentTransactions = collect();
 
-        // إضافة التحصيلات
+        // إضافة التحصيلات (excluding rep withdrawals)
         $recentCollections = Payment::with('payable')
             ->where('type', Payment::TYPE_RECEIVED)
             ->where('status', Payment::STATUS_COMPLETED)
+            ->where(function ($q) {
+                $q->where('payable_type', '!=', SalesRep::class)
+                  ->orWhereNull('payable_type');
+            })
             ->whereBetween('payment_date', [$startDate, $endDate])
             ->latest('payment_date')
             ->take(10)
@@ -73,6 +89,23 @@ class TreasuryController extends Controller
                 'date' => $p->payment_date,
                 'type' => 'income',
                 'description' => 'تحصيل من ' . ($p->payable?->name ?? 'عميل'),
+                'amount' => $p->amount,
+                'method' => $p->method,
+            ]);
+
+        // إضافة سحب خزينات المندوبين
+        $recentRepWithdrawals = Payment::with('payable')
+            ->where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where('payable_type', SalesRep::class)
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->latest('payment_date')
+            ->take(10)
+            ->get()
+            ->map(fn($p) => [
+                'date' => $p->payment_date,
+                'type' => 'income',
+                'description' => 'سحب خزينة مندوب: ' . ($p->payable?->name ?? 'مندوب'),
                 'amount' => $p->amount,
                 'method' => $p->method,
             ]);
@@ -110,6 +143,7 @@ class TreasuryController extends Controller
 
         // دمج وترتيب الحركات
         $recentTransactions = $recentCollections
+            ->concat($recentRepWithdrawals)
             ->concat($recentCashSales)
             ->concat($recentExpenses)
             ->sortByDesc('date')
@@ -119,6 +153,15 @@ class TreasuryController extends Controller
         // === الرصيد الكلي (من بداية النظام) ===
         $totalCollectionsAll = Payment::where('type', Payment::TYPE_RECEIVED)
             ->where('status', Payment::STATUS_COMPLETED)
+            ->where(function ($q) {
+                $q->where('payable_type', '!=', SalesRep::class)
+                  ->orWhereNull('payable_type');
+            })
+            ->sum('amount');
+
+        $totalRepWithdrawalsAll = Payment::where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where('payable_type', SalesRep::class)
             ->sum('amount');
 
         $totalCashSalesAll = Sale::where('payment_type', 'cash')
@@ -131,7 +174,7 @@ class TreasuryController extends Controller
             ->where('status', Payment::STATUS_COMPLETED)
             ->sum('amount');
 
-        $overallBalance = ($totalCollectionsAll + $totalCashSalesAll) - ($totalExpensesAll + $totalSupplierPaymentsAll);
+        $overallBalance = ($totalCollectionsAll + $totalCashSalesAll + $totalRepWithdrawalsAll) - ($totalExpensesAll + $totalSupplierPaymentsAll);
 
         // === الفواتير المستحقة والمتأخرة ===
         $overdueInvoices = Sale::with('customer')
@@ -167,6 +210,7 @@ class TreasuryController extends Controller
             'endDate',
             'collections',
             'cashSales',
+            'repWithdrawals',
             'totalIncome',
             'expenses',
             'supplierPayments',

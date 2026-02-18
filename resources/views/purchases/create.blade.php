@@ -184,7 +184,29 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    function initPurchaseSelect2() {
+        $('.product-select').each(function() {
+            if (!$(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2({ placeholder: 'ابحث عن الصنف...', allowClear: true, dir: 'rtl', width: '100%' })
+                .on('change', function() {
+                    const row = this.closest('.item-row');
+                    if (row) {
+                        const price = allProductsData[this.value] || 0;
+                        row.querySelector('.price-input').value = price;
+                        calculateTotals();
+                    }
+                });
+            }
+        });
+    }
+
     function updateAllProductSelects() {
+        $('.product-select').each(function() {
+            if ($(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2('destroy');
+            }
+        });
+
         const source = supplierProducts || allProductsOptions;
         document.querySelectorAll('.product-select').forEach(select => {
             const currentVal = select.value;
@@ -198,14 +220,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 select.appendChild(opt);
             });
         });
+
+        initPurchaseSelect2();
     }
 
     document.getElementById('addRowBtn').addEventListener('click', function() {
         const tbody = document.getElementById('itemsBody');
-        const newRow = document.querySelector('.item-row').cloneNode(true);
+        const firstRow = document.querySelector('.item-row');
+
+        // Destroy Select2 before cloning
+        const $firstSelect = $(firstRow).find('.product-select');
+        if ($firstSelect.hasClass('select2-hidden-accessible')) {
+            $firstSelect.select2('destroy');
+        }
+
+        const newRow = firstRow.cloneNode(true);
         newRow.setAttribute('data-index', rowIndex);
         newRow.querySelectorAll('[name]').forEach(input => {
-            input.name = input.name.replace('[0]', '[' + rowIndex + ']');
+            input.name = input.name.replace(/\[\d+\]/, '[' + rowIndex + ']');
             if (input.classList.contains('quantity-input')) input.value = 1;
             else if (input.classList.contains('product-select')) input.value = '';
             else input.value = 0;
@@ -216,7 +248,8 @@ document.addEventListener('DOMContentLoaded', function() {
         rowIndex++;
         updateRemoveButtons();
         attachRowEvents(newRow);
-        if (supplierProducts) updateAllProductSelects();
+        // Re-init Select2 for all rows
+        initPurchaseSelect2();
     });
 
     document.addEventListener('click', function(e) {
@@ -260,6 +293,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     attachRowEvents(document.querySelector('.item-row'));
+
+    // Init Select2 for supplier and product selects
+    initPurchaseSelect2();
+    $('#supplier_id').select2({ placeholder: 'ابحث عن المورد...', allowClear: true, dir: 'rtl', width: '100%' });
 });
 </script>
 @endsection

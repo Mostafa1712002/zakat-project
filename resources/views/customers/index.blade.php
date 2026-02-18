@@ -21,7 +21,7 @@
                     <th>#</th>
                     <th>الاسم</th>
                     <th>الهاتف</th>
-                    <th>النوع</th>
+                    <th>الصنف</th>
                     <th>التارجت</th>
                     <th>الإجراءات</th>
                 </tr>
@@ -34,18 +34,22 @@
                     <td>{{ $customer->phone ?? '-' }}</td>
                     <td>
                         @php
-                            $typeLabel = match ($customer->type) {
-                                'wholesale' => 'جملة',
-                                'corporate' => 'شركة',
-                                default => 'قطاعي',
+                            $itemTypeLabel = match ($customer->item_type) {
+                                'fridge' => 'تلاجة',
+                                'special' => 'خاص',
+                                default => '-',
                             };
-                            $typeClass = match ($customer->type) {
-                                'corporate' => 'badge-primary',
-                                'wholesale' => 'badge-warning',
-                                default => 'badge-secondary',
+                            $itemTypeClass = match ($customer->item_type) {
+                                'fridge' => 'badge-primary',
+                                'special' => 'badge-warning',
+                                default => '',
                             };
                         @endphp
-                        <span class="badge {{ $typeClass }}">{{ $typeLabel }}</span>
+                        @if($itemTypeClass)
+                            <span class="badge {{ $itemTypeClass }}">{{ $itemTypeLabel }}</span>
+                        @else
+                            <span class="text-muted">{{ $itemTypeLabel }}</span>
+                        @endif
                     </td>
                     <td>
                         @if($customer->target_amount > 0)

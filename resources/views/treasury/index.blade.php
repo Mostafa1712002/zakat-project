@@ -46,6 +46,7 @@
         <div style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
             <div>تحصيلات: {{ number_format($collections, 2) }} ج.م</div>
             <div>مبيعات نقدية: {{ number_format($cashSales, 2) }} ج.م</div>
+            <div>سحب خزينات المندوبين: {{ number_format($repWithdrawals, 2) }} ج.م</div>
         </div>
     </div>
 

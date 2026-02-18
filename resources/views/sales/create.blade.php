@@ -485,16 +485,40 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Select2 initialization
+    function initProductSelect2() {
+        $('.product-select').each(function() {
+            if (!$(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2({ placeholder: 'ابحث عن الصنف...', allowClear: true, dir: 'rtl', width: '100%' })
+                .on('change', function() {
+                    const row = this.closest('.item-row');
+                    if (row) {
+                        updateRowPrice(row);
+                        updateStockDisplay(row);
+                    }
+                });
+            }
+        });
+    }
+
     // Add new row
     document.getElementById('addRowBtn').addEventListener('click', function() {
         const tbody = document.getElementById('itemsBody');
-        const newRow = document.querySelector('.item-row').cloneNode(true);
+        const firstRow = document.querySelector('.item-row');
+
+        // Destroy Select2 before cloning
+        const $firstSelect = $(firstRow).find('.product-select');
+        if ($firstSelect.hasClass('select2-hidden-accessible')) {
+            $firstSelect.select2('destroy');
+        }
+
+        const newRow = firstRow.cloneNode(true);
 
         newRow.setAttribute('data-index', rowIndex);
 
         // Update names
         newRow.querySelectorAll('[name]').forEach(input => {
-            input.name = input.name.replace('[0]', '[' + rowIndex + ']');
+            input.name = input.name.replace(/\[\d+\]/, '[' + rowIndex + ']');
             if (input.classList.contains('quantity-input')) input.value = 1;
             else if (input.classList.contains('product-select')) input.value = '';
             else input.value = 0;
@@ -516,6 +540,7 @@ document.addEventListener('DOMContentLoaded', function() {
         rowIndex++;
         updateRemoveButtons();
         attachRowEvents(newRow);
+        initProductSelect2();
     });
 
     // Remove row
@@ -641,14 +666,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Warehouse change - update all stock displays
+    // Warehouse change - fetch products for this warehouse (admin only)
     document.getElementById('warehouse_id').addEventListener('change', function() {
         // Clear cache when warehouse changes
         Object.keys(stockCache).forEach(key => delete stockCache[key]);
 
-        document.querySelectorAll('.item-row').forEach(row => {
-            updateStockDisplay(row);
-        });
+        if (!useSalesRepInventory && this.value) {
+            // Admin: fetch products from selected warehouse
+            fetch(`/warehouses/${this.value}/products-with-stock`)
+                .then(r => r.json())
+                .then(products => {
+                    // Rebuild productsData
+                    Object.keys(productsData).forEach(key => delete productsData[key]);
+                    products.forEach(p => {
+                        productsData[p.id] = {
+                            retail: p.selling_price,
+                            min_price: p.min_selling_price || 0,
+                            track: p.track_inventory,
+                            rep_stock: null
+                        };
+                        // Pre-fill stock cache
+                        stockCache[`${p.id}_${document.getElementById('warehouse_id').value}`] = p.available;
+                    });
+
+                    // Destroy existing Select2
+                    $('.product-select').each(function() {
+                        if ($(this).hasClass('select2-hidden-accessible')) {
+                            $(this).select2('destroy');
+                        }
+                    });
+
+                    // Rebuild all product selects with fetched products
+                    document.querySelectorAll('.product-select').forEach(select => {
+                        select.innerHTML = '<option value="">اختر الصنف</option>';
+                        products.forEach(p => {
+                            const opt = document.createElement('option');
+                            opt.value = p.id;
+                            opt.textContent = p.name;
+                            opt.dataset.track = p.track_inventory ? '1' : '0';
+                            select.appendChild(opt);
+                        });
+                    });
+
+                    // Re-init Select2
+                    initProductSelect2();
+
+                    // Update stock displays
+                    document.querySelectorAll('.item-row').forEach(row => {
+                        updateStockDisplay(row);
+                    });
+                });
+        } else {
+            // Sales rep or no warehouse selected: just update stock displays
+            document.querySelectorAll('.item-row').forEach(row => {
+                updateStockDisplay(row);
+            });
+        }
     });
 
     // Toggle advance payment section based on payment type
@@ -705,6 +778,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('discount_type').addEventListener('change', calculateTotals);
     document.getElementById('discount_value').addEventListener('input', calculateTotals);
     toggleAdvancePayment();
+
+    // Init Select2 for product and customer selects
+    initProductSelect2();
+    $('#customer_id').select2({ placeholder: 'ابحث عن العميل...', allowClear: true, dir: 'rtl', width: '100%' });
 
     // Form submit validation
     document.getElementById('saleForm').addEventListener('submit', function(e) {

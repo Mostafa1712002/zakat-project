@@ -190,6 +190,9 @@ class WarehouseController extends Controller
                     'id' => $level->product->id,
                     'name' => $level->product->name,
                     'available' => $level->quantity,
+                    'selling_price' => $level->product->selling_price,
+                    'min_selling_price' => $level->product->min_selling_price ?? 0,
+                    'track_inventory' => $level->product->track_inventory,
                 ];
             });
 
