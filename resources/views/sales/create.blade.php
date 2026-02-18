@@ -783,6 +783,14 @@ document.addEventListener('DOMContentLoaded', function() {
     initProductSelect2();
     $('#customer_id').select2({ placeholder: 'ابحث عن العميل...', allowClear: true, dir: 'rtl', width: '100%' });
 
+    // For admin: trigger warehouse change on load to filter products by default warehouse
+    if (!useSalesRepInventory) {
+        const warehouseEl = document.getElementById('warehouse_id');
+        if (warehouseEl && warehouseEl.value) {
+            warehouseEl.dispatchEvent(new Event('change'));
+        }
+    }
+
     // Form submit validation
     document.getElementById('saleForm').addEventListener('submit', function(e) {
         let hasErrors = false;

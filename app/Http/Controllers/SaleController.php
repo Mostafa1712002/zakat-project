@@ -647,6 +647,19 @@ class SaleController extends Controller
                 $sale->customer->updateBalance($sale->total_amount);
             }
 
+            // إيداع مبلغ المبيعات النقدية في خزينة المندوب
+            if ($sale->sales_rep_id && $sale->payment_type === 'cash') {
+                $salesRep = SalesRep::find($sale->sales_rep_id);
+                if ($salesRep) {
+                    $salesRep->deposit(
+                        $sale->total_amount,
+                        'مبيعات نقدية - فاتورة ' . $sale->invoice_number,
+                        Sale::class,
+                        $sale->id
+                    );
+                }
+            }
+
             DB::commit();
 
             return redirect()->route('sales.show', $sale)
@@ -715,6 +728,19 @@ class SaleController extends Controller
                 // Reverse customer balance if credit sale
                 if ($sale->payment_type === 'credit') {
                     $sale->customer->updateBalance(-$sale->total_amount);
+                }
+
+                // سحب مبلغ المبيعات النقدية من خزينة المندوب (عكس الإيداع)
+                if ($sale->sales_rep_id && $sale->payment_type === 'cash') {
+                    $salesRep = SalesRep::find($sale->sales_rep_id);
+                    if ($salesRep && $salesRep->treasury_balance >= $sale->total_amount) {
+                        $salesRep->withdraw(
+                            $sale->total_amount,
+                            'إلغاء فاتورة نقدية - ' . $sale->invoice_number,
+                            Sale::class,
+                            $sale->id
+                        );
+                    }
                 }
             }
 

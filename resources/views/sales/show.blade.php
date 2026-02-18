@@ -49,22 +49,26 @@
         <div class="contacts-bar">
             @if(!empty($supervisorPhone))
             <div class="contact-item">
-                <span class="contact-icon">📞</span>
                 <span class="contact-label">مشرف الخط:</span>
                 <span class="contact-value">{{ $supervisorPhone }}</span>
             </div>
             @endif
             @if($sale->salesRep)
             <div class="contact-item">
-                <span class="contact-icon">👤</span>
                 <span class="contact-label">المندوب:</span>
                 <span class="contact-value">{{ $sale->salesRep->name }} {{ $sale->salesRep->phone ? '- ' . $sale->salesRep->phone : '' }}</span>
             </div>
             @endif
         </div>
 
-        <!-- Info Grid -->
-        <div class="info-grid">
+        <!-- Print: Compact Info Row -->
+        <div class="print-info-row">
+            <div><strong>العميل:</strong> {{ $sale->customer->name ?? '-' }} {{ $sale->customer->phone ? '- ' . $sale->customer->phone : '' }}</div>
+            <div><strong>التاريخ:</strong> {{ $sale->invoice_date?->format('Y-m-d') ?? '-' }}</div>
+        </div>
+
+        <!-- Info Grid - Screen only details -->
+        <div class="info-grid no-print">
             <div class="info-box">
                 <div class="info-box-header">
                     <span class="info-icon">👤</span>
@@ -80,11 +84,11 @@
                             <td class="info-label">الهاتف:</td>
                             <td class="info-value">{{ $sale->customer->phone ?? '-' }}</td>
                         </tr>
-                        <tr class="no-print">
+                        <tr>
                             <td class="info-label">العنوان:</td>
                             <td class="info-value">{{ $sale->customer->address ?? '-' }}</td>
                         </tr>
-                        <tr class="no-print">
+                        <tr>
                             <td class="info-label">المدينة:</td>
                             <td class="info-value">{{ $sale->customer->city ?? '-' }}</td>
                         </tr>
@@ -103,11 +107,11 @@
                             <td class="info-label">التاريخ:</td>
                             <td class="info-value"><strong>{{ $sale->invoice_date?->format('Y-m-d') ?? '-' }}</strong></td>
                         </tr>
-                        <tr class="no-print">
+                        <tr>
                             <td class="info-label">الاستحقاق:</td>
                             <td class="info-value">{{ $sale->due_date?->format('Y-m-d') ?? '-' }}</td>
                         </tr>
-                        <tr class="no-print">
+                        <tr>
                             <td class="info-label">نوع الدفع:</td>
                             <td class="info-value">
                                 <span class="payment-type {{ $sale->payment_type === 'credit' ? 'credit' : 'cash' }}">
@@ -115,7 +119,7 @@
                                 </span>
                             </td>
                         </tr>
-                        <tr class="no-print">
+                        <tr>
                             <td class="info-label">حالة الدفع:</td>
                             <td class="info-value">
                                 @switch($sale->payment_status)
@@ -131,59 +135,64 @@
             </div>
         </div>
 
-<div class="card" style="margin-top: 1.5rem;">
-    <div class="table-container overflow-auto">
-        <table class="table text-nowrap">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>الصنف</th>
-                    <th>الكمية</th>
-                    <th>سعر الوحدة</th>
-                    <th>الخدمة</th>
-                    <th class="no-print">الضريبة</th>
-                    <th>الإجمالي</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($sale->items as $index => $item)
-                <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
-                    <td>{{ number_format($item->quantity, 2) }}</td>
-                    <td>{{ number_format($item->unit_price, 2) }} ج.م</td>
-                    <td>{{ number_format($item->discount_amount, 2) }} ج.م</td>
-                    <td class="no-print">{{ number_format($item->tax_amount, 2) }} ج.م</td>
-                    <td>{{ number_format($item->total ?? $item->subtotal, 2) }} ج.م</td>
-                </tr>
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="5" class="text-left"><strong>الإجمالي الفرعي</strong></td>
-                    <td class="no-print"></td>
-                    <td><strong>{{ number_format($sale->subtotal, 2) }} ج.م</strong></td>
-                </tr>
-                @if($sale->discount_amount > 0)
-                <tr>
-                    <td class="total-label">الخدمة:</td>
-                    <td class="total-value discount">- {{ number_format($sale->discount_amount, 2) }} ج.م</td>
-                </tr>
-                @endif
-                <tr class="grand-total-row">
-                    <td class="total-label"><strong>الإجمالي النهائي:</strong></td>
-                    <td class="total-value grand-total"><strong>{{ number_format($sale->total_amount, 2) }} ج.م</strong></td>
-                </tr>
-                @if($sale->paid_amount > 0)
-                <tr>
-                    <td class="total-label">المدفوع:</td>
-                    <td class="total-value paid">{{ number_format($sale->paid_amount, 2) }} ج.م</td>
-                </tr>
-                <tr>
-                    <td class="total-label">المتبقي:</td>
-                    <td class="total-value remaining">{{ number_format($sale->remaining_amount, 2) }} ج.م</td>
-                </tr>
-                @endif
+        <!-- Items Table -->
+        <div class="items-card">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الصنف</th>
+                        <th>الكمية</th>
+                        <th>سعر الوحدة</th>
+                        <th>الخدمة</th>
+                        <th class="no-print">الضريبة</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($sale->items as $index => $item)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td class="item-name">{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
+                        <td>{{ number_format($item->quantity, 2) }}</td>
+                        <td>{{ number_format($item->unit_price, 2) }}</td>
+                        <td>{{ number_format($item->discount_amount, 2) }}</td>
+                        <td class="no-print">{{ number_format($item->tax_amount, 2) }}</td>
+                        <td class="item-total">{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr class="subtotal-row">
+                        <td colspan="5" class="text-left"><strong>الإجمالي الفرعي</strong></td>
+                        <td class="no-print"></td>
+                        <td><strong>{{ number_format($sale->subtotal, 2) }} ج.م</strong></td>
+                    </tr>
+                    @if($sale->discount_amount > 0)
+                    <tr>
+                        <td colspan="5" class="text-left">الخدمة</td>
+                        <td class="no-print"></td>
+                        <td class="discount">- {{ number_format($sale->discount_amount, 2) }} ج.م</td>
+                    </tr>
+                    @endif
+                    <tr class="grand-total-row">
+                        <td colspan="5" class="text-left"><strong>الإجمالي النهائي</strong></td>
+                        <td class="no-print"></td>
+                        <td class="grand-total"><strong>{{ number_format($sale->total_amount, 2) }} ج.م</strong></td>
+                    </tr>
+                    @if($sale->paid_amount > 0)
+                    <tr>
+                        <td colspan="5" class="text-left">المدفوع</td>
+                        <td class="no-print"></td>
+                        <td class="paid">{{ number_format($sale->paid_amount, 2) }} ج.م</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="text-left"><strong>المتبقي</strong></td>
+                        <td class="no-print"></td>
+                        <td class="remaining"><strong>{{ number_format($sale->remaining_amount, 2) }} ج.م</strong></td>
+                    </tr>
+                    @endif
+                </tfoot>
             </table>
         </div>
 
@@ -198,47 +207,50 @@
                 <span>توقيع المندوب</span>
             </div>
         </div>
+    </div>
 
-@if($sale->payments->count() > 0)
-<div class="card no-print" style="margin-top: 1.5rem;">
-    <div class="card-body">
-        <h3>الدفعات</h3>
-        <div class="table-container overflow-auto">
-            <table class="table text-nowrap">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>التاريخ</th>
-                        <th>المبلغ</th>
-                        <th>الطريقة</th>
-                        <th>الحالة</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($sale->payments as $index => $payment)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $payment->paid_at?->format('Y-m-d') ?? $payment->created_at->format('Y-m-d') }}</td>
-                        <td>{{ number_format($payment->amount, 2) }} ج.م</td>
-                        <td>{{ $payment->method ?? '-' }}</td>
-                        <td>{{ $payment->status }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+    {{-- Screen-only sections --}}
+    @if($sale->payments->count() > 0)
+    <div class="card no-print" style="margin-top: 1.5rem;">
+        <div class="card-body">
+            <h3>الدفعات</h3>
+            <div class="table-container overflow-auto">
+                <table class="table text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>التاريخ</th>
+                            <th>المبلغ</th>
+                            <th>الطريقة</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($sale->payments as $index => $payment)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $payment->paid_at?->format('Y-m-d') ?? $payment->created_at->format('Y-m-d') }}</td>
+                            <td>{{ number_format($payment->amount, 2) }} ج.م</td>
+                            <td>{{ $payment->method ?? '-' }}</td>
+                            <td>{{ $payment->status }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
-@endif
+    @endif
 
-@if($sale->notes)
-<div class="card no-print" style="margin-top: 1.5rem;">
-    <div class="card-body">
-        <h3>ملاحظات</h3>
-        <p>{{ $sale->notes }}</p>
+    @if($sale->notes)
+    <div class="card no-print" style="margin-top: 1.5rem;">
+        <div class="card-body">
+            <h3>ملاحظات</h3>
+            <p>{{ $sale->notes }}</p>
+        </div>
     </div>
+    @endif
 </div>
-@endif
 @endsection
 
 @push('styles')
@@ -266,9 +278,7 @@
     gap: 8px;
 }
 
-.btn-icon {
-    font-size: 1.2rem;
-}
+.btn-icon { font-size: 1.2rem; }
 
 /* Invoice Container */
 .invoice-container {
@@ -289,9 +299,7 @@
     margin-bottom: 20px;
 }
 
-.company-info {
-    text-align: right;
-}
+.company-info { text-align: right; }
 
 .company-name {
     font-size: 1.8rem;
@@ -306,9 +314,7 @@
     margin: 4px 0 0 0;
 }
 
-.invoice-title {
-    text-align: left;
-}
+.invoice-title { text-align: left; }
 
 .invoice-title h2 {
     font-size: 1.3rem;
@@ -323,9 +329,7 @@
     margin-top: 8px;
 }
 
-.invoice-status {
-    margin-top: 8px;
-}
+.invoice-status { margin-top: 8px; }
 
 .status-badge {
     padding: 4px 12px;
@@ -366,10 +370,6 @@
     gap: 8px;
 }
 
-.contact-icon {
-    font-size: 1.1rem;
-}
-
 .contact-label {
     font-weight: 600;
     color: #374151;
@@ -379,6 +379,11 @@
     color: var(--primary);
     font-weight: bold;
     direction: ltr;
+}
+
+/* Print Info Row - hidden on screen, shown in print */
+.print-info-row {
+    display: none;
 }
 
 /* Info Grid */
@@ -410,17 +415,11 @@
     color: var(--primary);
 }
 
-.info-icon {
-    font-size: 1.1rem;
-}
+.info-icon { font-size: 1.1rem; }
 
-.info-box-body {
-    padding: 12px 16px;
-}
+.info-box-body { padding: 12px 16px; }
 
-.info-table {
-    width: 100%;
-}
+.info-table { width: 100%; }
 
 .info-table tr td {
     padding: 6px 0;
@@ -460,26 +459,9 @@
 .payment-badge.paid { background: #d1fae5; color: #059669; }
 .payment-badge.overdue { background: #ffedd5; color: #ea580c; }
 
-/* Items Section */
-.items-section {
-    margin-bottom: 25px;
-}
-
-.section-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.section-header h3 {
-    margin: 0;
-    font-size: 1rem;
-    color: var(--primary);
-}
-
-.section-icon {
-    font-size: 1.1rem;
+/* Items Table */
+.items-card {
+    margin-bottom: 0;
 }
 
 .items-table {
@@ -490,38 +472,23 @@
 .items-table th {
     background: var(--primary);
     color: white;
-    padding: 12px 10px;
+    padding: 10px 8px;
     font-size: 0.9rem;
     text-align: center;
     font-weight: 600;
 }
 
-.items-table th:first-child {
-    border-radius: 8px 0 0 0;
-}
-
-.items-table th:last-child {
-    border-radius: 0 8px 0 0;
-}
+.items-table th:first-child { border-radius: 8px 0 0 0; }
+.items-table th:last-child { border-radius: 0 8px 0 0; }
 
 .items-table td {
-    padding: 12px 10px;
+    padding: 10px 8px;
     border-bottom: 1px solid #e5e7eb;
     text-align: center;
     font-size: 0.9rem;
 }
 
-.items-table tbody tr:hover {
-    background: #f9fafb;
-}
-
-.items-table tbody tr:last-child td:first-child {
-    border-radius: 0 0 0 8px;
-}
-
-.items-table tbody tr:last-child td:last-child {
-    border-radius: 0 0 8px 0;
-}
+.items-table tbody tr:hover { background: #f9fafb; }
 
 .item-name {
     text-align: right !important;
@@ -533,65 +500,26 @@
     color: var(--primary);
 }
 
-.min-price {
-    color: #d97706;
-    font-weight: 500;
-}
-
-/* Totals Section */
-.totals-section {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 30px;
-}
-
-.totals-table {
-    width: 280px;
-    border-collapse: collapse;
-}
-
-.totals-table tr td {
-    padding: 10px 12px;
+.items-table tfoot td {
+    padding: 8px;
     border-bottom: 1px solid #e5e7eb;
 }
 
-.total-label {
-    text-align: right;
-    color: #6b7280;
-    font-size: 0.9rem;
-}
-
-.total-value {
-    text-align: left;
-    font-weight: 500;
-    direction: ltr;
-    font-size: 0.95rem;
-}
-
-.total-value.discount {
-    color: #dc2626;
-}
-
-.total-value.paid {
-    color: #059669;
-}
-
-.total-value.remaining {
-    color: #d97706;
-}
+.discount { color: #dc2626; }
+.paid { color: #059669; }
+.remaining { color: #d97706; }
 
 .grand-total-row {
     background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border-top: 2px solid var(--primary) !important;
 }
 
 .grand-total-row td {
-    border-bottom: none !important;
-    padding: 14px 12px !important;
+    border-top: 2px solid var(--primary) !important;
+    padding: 12px 8px !important;
 }
 
 .grand-total {
-    font-size: 1.2rem !important;
+    font-size: 1.1rem;
     color: var(--primary);
 }
 
@@ -599,7 +527,7 @@
 .signatures-section {
     display: flex;
     justify-content: space-around;
-    margin: 40px 0 30px;
+    margin: 40px 0 20px;
     padding-top: 20px;
     border-top: 1px dashed #d1d5db;
 }
@@ -620,27 +548,7 @@
     color: #6b7280;
 }
 
-/* Invoice Footer */
-.invoice-footer {
-    text-align: center;
-    padding-top: 15px;
-    border-top: 1px solid #e5e7eb;
-}
-
-.thank-you {
-    font-size: 1rem;
-    color: var(--primary);
-    font-weight: 600;
-    margin: 0 0 5px 0;
-}
-
-.print-date {
-    font-size: 0.8rem;
-    color: #9ca3af;
-    margin: 0;
-}
-
-/* Print Styles */
+/* ========== PRINT STYLES ========== */
 @media print {
     * {
         -webkit-print-color-adjust: exact !important;
@@ -651,7 +559,7 @@
         background: white !important;
         margin: 0;
         padding: 0;
-        font-size: 11pt;
+        font-size: 10pt;
         font-family: 'Arial', 'Tahoma', sans-serif;
     }
 
@@ -681,109 +589,94 @@
     .invoice-container {
         box-shadow: none;
         border: none;
-        padding: 5mm 10mm;
+        padding: 4mm 8mm;
         border-radius: 0;
     }
 
+    /* Header - compact */
     .invoice-header {
-        padding-bottom: 6px;
-        margin-bottom: 6px;
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+        border-bottom: 2px solid #333;
     }
 
-    .company-name {
-        font-size: 16pt;
-    }
+    .company-name { font-size: 14pt; }
+    .company-slogan { font-size: 8pt; margin-top: 2px; }
+    .invoice-title h2 { font-size: 10pt; }
+    .invoice-number { font-size: 11pt; margin-top: 2px; }
 
-    .company-slogan {
-        font-size: 9pt;
-    }
-
-    .invoice-title h2 {
-        font-size: 11pt;
-    }
-
-    .invoice-number {
-        font-size: 12pt;
-        margin-top: 4px;
-    }
-
+    /* Contacts bar - compact */
     .contacts-bar {
-        background: #f5f5f5 !important;
-        padding: 5px 10px;
-        margin-bottom: 8px;
+        background: #f0f0f0 !important;
+        padding: 4px 8px;
+        margin-bottom: 4px;
+        font-size: 9pt;
+        gap: 20px;
+        border-radius: 0;
+    }
+
+    /* Print info row - visible in print */
+    .print-info-row {
+        display: flex !important;
+        justify-content: space-between;
+        padding: 4px 0;
+        margin-bottom: 4px;
+        border-bottom: 1px solid #ccc;
         font-size: 10pt;
     }
 
-    .info-grid {
-        gap: 8px;
-        margin-bottom: 8px;
-    }
-
-    .info-box-header {
-        background: #f8f8f8 !important;
-        padding: 6px 10px;
-    }
-
-    .info-box-header h4 {
-        font-size: 10pt;
-    }
-
-    .info-box-body {
-        padding: 6px 10px;
-    }
-
-    .info-table tr td {
-        padding: 2px 0;
-        font-size: 10pt;
-    }
-
-    .table th {
-        padding: 6px 5px;
-        font-size: 10pt;
-    }
-
-    .table td {
-        padding: 5px;
-        font-size: 10pt;
+    /* Items table - tight */
+    .items-card {
+        margin: 0;
     }
 
     .items-table th {
-        background: var(--primary) !important;
+        background: #333 !important;
         color: white !important;
-        padding: 6px 5px;
-        font-size: 10pt;
+        padding: 4px 3px;
+        font-size: 9pt;
+        border-radius: 0 !important;
     }
 
     .items-table td {
-        padding: 5px;
-        font-size: 10pt;
+        padding: 3px;
+        font-size: 9pt;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .items-table tfoot td {
+        padding: 3px;
+        font-size: 9pt;
     }
 
     .items-table tbody tr:nth-child(even) {
-        background: #f9f9f9 !important;
+        background: #f5f5f5 !important;
     }
 
     .grand-total-row {
-        background: #f0f9ff !important;
+        background: #e8e8e8 !important;
     }
 
+    .grand-total-row td {
+        padding: 5px 3px !important;
+    }
+
+    .grand-total {
+        font-size: 10pt !important;
+    }
+
+    /* Signatures - compact */
     .signatures-section {
-        margin: 20px 0 10px;
+        margin: 15px 0 5px;
+        padding-top: 10px;
     }
 
     .signature-line {
-        height: 35px;
+        height: 30px;
     }
 
-    .card {
-        box-shadow: none !important;
-        border: 1px solid #ddd !important;
-        margin-top: 8px !important;
-    }
-
-    .card-body h3 {
-        font-size: 11pt;
-        margin-bottom: 6px !important;
+    .signature-box span {
+        font-size: 8pt;
     }
 
     @page {
@@ -812,14 +705,6 @@
 
     .info-grid {
         grid-template-columns: 1fr;
-    }
-
-    .totals-section {
-        justify-content: stretch;
-    }
-
-    .totals-table {
-        width: 100%;
     }
 
     .signatures-section {
