@@ -34,6 +34,17 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label for="category_id" class="form-label">القسم (تصنيف الأصناف)</label>
+                <select name="category_id" id="category_id" class="form-control">
+                    <option value="">-- بدون قسم --</option>
+                    @foreach($categories as $category)
+                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                    @endforeach
+                </select>
+                <small style="color: #64748b; font-size: 12px;">اختر القسم لربط أصناف هذا المورد تلقائياً في فواتير المشتريات</small>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="phone" class="form-label">الهاتف</label>

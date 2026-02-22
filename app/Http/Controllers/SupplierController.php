@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 
@@ -15,7 +17,8 @@ class SupplierController extends Controller
 
     public function create()
     {
-        return view('suppliers.create');
+        $categories = Category::orderBy('name')->get();
+        return view('suppliers.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -33,6 +36,7 @@ class SupplierController extends Controller
             'payment_terms_days' => 'nullable|integer|min:0',
             'bank_name' => 'nullable|string|max:255',
             'bank_account' => 'nullable|string|max:100',
+            'category_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
         ]);
@@ -56,7 +60,8 @@ class SupplierController extends Controller
 
     public function edit(Supplier $supplier)
     {
-        return view('suppliers.edit', compact('supplier'));
+        $categories = Category::orderBy('name')->get();
+        return view('suppliers.edit', compact('supplier', 'categories'));
     }
 
     public function update(Request $request, Supplier $supplier)
@@ -74,6 +79,7 @@ class SupplierController extends Controller
             'payment_terms_days' => 'nullable|integer|min:0',
             'bank_name' => 'nullable|string|max:255',
             'bank_account' => 'nullable|string|max:100',
+            'category_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
         ]);
@@ -90,20 +96,26 @@ class SupplierController extends Controller
     }
 
     /**
-     * AJAX: Get products associated with a supplier.
+     * AJAX: Get products associated with a supplier (by category).
      */
     public function products(Supplier $supplier)
     {
-        $products = $supplier->products()
-            ->where('is_active', true)
-            ->get()
-            ->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'cost_price' => $product->cost_price,
-                ];
-            });
+        $query = Product::where('is_active', true);
+
+        if ($supplier->category_id) {
+            $query->where('category_id', $supplier->category_id);
+        } else {
+            // Fallback to pivot table if no category linked
+            $query->whereIn('id', $supplier->products()->pluck('products.id'));
+        }
+
+        $products = $query->orderBy('name')->get()->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'cost_price' => $product->cost_price,
+            ];
+        });
 
         return response()->json($products);
     }
