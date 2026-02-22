@@ -25,6 +25,87 @@
 
     <!-- Invoice Container -->
     <div class="invoice-container">
+        <div class="print-minimal">
+            <div class="print-minimal-header">
+                <div class="print-logo-block">
+                    <img src="{{ asset('logo.png') }}" alt="Rogence" class="print-logo">
+                </div>
+                <div class="print-invoice-meta">
+                    <div class="print-invoice-label">فاتورة مبيعات</div>
+                    <div class="print-invoice-number">{{ $sale->invoice_number }}</div>
+                </div>
+            </div>
+
+            <div class="print-minimal-row">
+                <div class="print-info-cell">
+                    <span class="print-info-label">هاتف مشرف الخط</span>
+                    <span class="print-info-value ltr">{{ !empty($supervisorPhone) ? $supervisorPhone : '-' }}</span>
+                </div>
+                <div class="print-info-cell">
+                    <span class="print-info-label">هاتف المندوب</span>
+                    <span class="print-info-value ltr">{{ $sale->salesRep->phone ?? '-' }}</span>
+                </div>
+            </div>
+
+            <div class="print-minimal-row">
+                <div class="print-info-cell">
+                    <span class="print-info-label">بيانات العميل</span>
+                    <span class="print-info-value">{{ $sale->customer->name ?? '-' }} {{ $sale->customer->phone ? '- ' . $sale->customer->phone : '' }}</span>
+                </div>
+                <div class="print-info-cell">
+                    <span class="print-info-label">تاريخ الفاتورة</span>
+                    <span class="print-info-value ltr">{{ $sale->invoice_date?->format('Y-m-d') ?? '-' }}</span>
+                </div>
+            </div>
+
+            <table class="print-items-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الصنف</th>
+                        <th>الكمية</th>
+                        <th>سعر الوحدة</th>
+                        <th>الخدمة</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($sale->items as $index => $item)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
+                        <td>{{ number_format($item->quantity, 2) }}</td>
+                        <td>{{ number_format($item->unit_price, 2) }}</td>
+                        <td>{{ number_format($item->discount_amount, 2) }}</td>
+                        <td>{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="print-payment-summary">
+                <div class="print-total-box">
+                    <span class="print-total-label">المدفوع</span>
+                    <span class="print-total-value">{{ number_format($sale->paid_amount, 2) }} ج.م</span>
+                </div>
+                <div class="print-total-box">
+                    <span class="print-total-label">المتبقي</span>
+                    <span class="print-total-value">{{ number_format($sale->remaining_amount, 2) }} ج.م</span>
+                </div>
+            </div>
+
+            <div class="print-signatures">
+                <div class="print-signature-box">
+                    <span class="print-signature-label">توقيع العميل</span>
+                    <div class="print-signature-line"></div>
+                </div>
+                <div class="print-signature-box">
+                    <span class="print-signature-label">توقيع المندوب</span>
+                    <div class="print-signature-line"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Invoice Header -->
         <div class="invoice-header">
             <div class="company-info">
@@ -290,6 +371,10 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     padding: 30px;
     border: 1px solid #e5e7eb;
+}
+
+.print-minimal {
+    display: none;
 }
 
 /* Invoice Header */
@@ -588,8 +673,8 @@
         background: white !important;
         margin: 0;
         padding: 0;
-        font-size: 8.7pt;
-        line-height: 1.25;
+        font-size: 8.5pt;
+        line-height: 1.2;
         font-family: 'Arial', 'Tahoma', sans-serif;
     }
 
@@ -624,147 +709,240 @@
     .invoice-container {
         box-shadow: none;
         border: none;
-        padding: 4mm 5mm 3mm;
+        padding: 5mm 6mm 4mm;
         border-radius: 0;
-        page-break-inside: avoid;
     }
 
-    /* Header - compact */
-    .company-name-screen {
+    .invoice-header,
+    .contacts-bar,
+    .print-info-row,
+    .info-grid,
+    .items-card,
+    .signatures-section {
         display: none !important;
     }
 
-    .company-name-print {
+    .print-minimal {
         display: block !important;
+        color: #111827;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        border: 1px solid #d9e2ec;
+        border-radius: 4px;
+        padding: 2.4mm 2.6mm 2.2mm;
+        background: #ffffff;
     }
 
-    .invoice-header {
+    .print-minimal-header {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 10mm;
-        padding-bottom: 3mm;
-        margin-bottom: 2.5mm;
-        border-bottom: 1px solid #333;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.4mm;
+        margin-bottom: 1.8mm;
+        padding-bottom: 1.6mm;
+        border-bottom: 1px solid #0f172a;
     }
 
-    .company-info,
-    .invoice-title {
-        flex: 1;
-    }
-
-    .company-info { text-align: right; }
-    .invoice-title { text-align: left; }
-
-    .company-name { font-size: 13pt; line-height: 1.1; }
-    .company-slogan { display: none !important; }
-    .invoice-title-main { display: inline-flex; align-items: baseline; gap: 2mm; }
-    .invoice-title h2 { font-size: 10pt; }
-    .invoice-number { font-size: 10.5pt; margin: 0; }
-    .invoice-status { display: none !important; }
-
-    /* Contacts bar - compact */
-    .contacts-bar {
-        background: #f3f4f6 !important;
-        padding: 1.5mm 2.5mm;
-        margin-bottom: 2mm;
-        font-size: 8pt;
-        gap: 6mm;
-        border-radius: 0;
-    }
-
-    /* Print info row - visible in print */
-    .print-info-row {
-        display: flex !important;
-        justify-content: space-between;
-        padding: 1.5mm 0;
-        margin-bottom: 2mm;
-        border-bottom: 1px solid #d1d5db;
-        font-size: 8.5pt;
-    }
-
-    /* Items table - tight */
-    .items-card {
-        margin: 0;
-        overflow: visible !important;
-    }
-
-    .table-container,
-    .table-container-auto,
-    .info-box-body {
-        overflow: visible !important;
-    }
-
-    .items-table {
+    .print-logo-block {
         width: 100%;
-        table-layout: fixed;
+        text-align: center;
     }
 
-    .items-table th,
-    .items-table td {
-        white-space: normal !important;
+    .print-logo {
+        width: 22mm;
+        max-height: 12mm;
+        object-fit: contain;
+    }
+
+    .print-invoice-meta {
+        width: 100%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .print-invoice-label {
+        font-size: 9pt;
+        font-weight: 700;
+        margin-bottom: 0.8mm;
+        color: #0f172a;
+    }
+
+    .print-invoice-number {
+        font-size: 9pt;
+        font-weight: 700;
+        letter-spacing: 0.1px;
+        direction: ltr;
+        padding: 0.6mm 1.6mm;
+        border: 1px solid #94a3b8;
+        border-radius: 3px;
+        background: #f8fafc;
+    }
+
+    .print-minimal-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2.2mm;
+        margin-bottom: 1.4mm;
+    }
+
+    .print-info-cell {
+        border: 1px solid #d5dee8;
+        border-radius: 3px;
+        background: #f8fafc;
+        padding: 1.2mm 1.6mm;
+        min-height: 10mm;
+    }
+
+    .print-info-label {
+        display: block;
+        font-size: 7.2pt;
+        color: #475569;
+        margin-bottom: 0.7mm;
+        font-weight: 700;
+    }
+
+    .print-info-value {
+        display: block;
+        font-size: 8pt;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
         word-break: break-word;
     }
 
-    .items-table th {
-        background: #333 !important;
-        color: white !important;
-        padding: 1.5mm 1mm;
-        font-size: 7.4pt;
-        border-radius: 0 !important;
+    .print-info-value.ltr {
+        direction: ltr;
+        text-align: left;
     }
 
-    .items-table td {
-        padding: 1.3mm 1mm;
-        font-size: 7.4pt;
-        border-bottom: 1px solid #ddd;
+    .print-items-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin: 1.4mm 0 1.5mm;
     }
 
-    .items-table tfoot td {
-        padding: 1.4mm 1mm;
-        font-size: 7.4pt;
+    .print-items-table th,
+    .print-items-table td {
+        border: 1px solid #cfd8e3;
+        padding: 0.9mm 0.8mm;
+        font-size: 6.9pt;
+        text-align: center;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.15;
     }
 
-    .items-table tbody tr:nth-child(even) {
-        background: #f8f8f8 !important;
+    .print-items-table th {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+        font-weight: 700;
+        font-size: 7pt;
     }
 
-    .grand-total-row {
-        background: #ececec !important;
+    .print-items-table td:nth-child(2),
+    .print-items-table th:nth-child(2) {
+        text-align: right;
     }
 
-    .grand-total-row td {
-        padding: 1.8mm 1mm !important;
+    .print-items-table th:first-child,
+    .print-items-table td:first-child {
+        width: 7%;
     }
 
-    .grand-total {
-        font-size: 8pt !important;
+    .print-items-table th:nth-child(2),
+    .print-items-table td:nth-child(2) {
+        width: 34%;
     }
 
-    /* Signatures - compact */
-    .signatures-section {
-        display: flex !important;
-        flex-direction: row !important;
+    .print-items-table th:nth-child(3),
+    .print-items-table td:nth-child(3) {
+        width: 12%;
+    }
+
+    .print-items-table th:nth-child(4),
+    .print-items-table td:nth-child(4) {
+        width: 16%;
+    }
+
+    .print-items-table th:nth-child(5),
+    .print-items-table td:nth-child(5) {
+        width: 14%;
+    }
+
+    .print-items-table th:nth-child(6),
+    .print-items-table td:nth-child(6) {
+        width: 17%;
+    }
+
+    .print-payment-summary {
+        display: flex;
         justify-content: space-between;
-        gap: 12mm;
-        margin: 4mm 0 0;
-        padding-top: 3mm;
-        border-top: 1px dashed #d1d5db;
-        page-break-inside: avoid;
-    }
-
-    .signature-box {
-        flex: 1;
-        max-width: none;
-    }
-
-    .signature-line {
-        height: 9mm;
-        margin-bottom: 1.5mm;
-    }
-
-    .signature-box span {
+        gap: 2.2mm;
+        margin-top: 1mm;
+        padding-top: 1.4mm;
+        border-top: 1px solid #111827;
         font-size: 8pt;
+    }
+
+    .print-total-box {
+        flex: 1;
+        border: 1px solid #d5dee8;
+        border-radius: 3px;
+        background: #f8fafc;
+        padding: 1.2mm 1.6mm;
+    }
+
+    .print-total-label {
+        display: block;
+        font-size: 7pt;
+        color: #475569;
+        margin-bottom: 0.7mm;
+        font-weight: 700;
+    }
+
+    .print-total-value {
+        display: block;
+        font-size: 8pt;
+        font-weight: 800;
+        color: #0f172a;
+        direction: ltr;
+        text-align: left;
+    }
+
+    .print-total-box:last-child .print-total-value {
+        color: #b45309;
+    }
+
+    .print-signatures {
+        display: flex;
+        justify-content: space-between;
+        gap: 3mm;
+        margin-top: 1.5mm;
+        padding-top: 1.4mm;
+        border-top: 1px dashed #94a3b8;
+    }
+
+    .print-signature-box {
+        flex: 1;
+        text-align: center;
+    }
+
+    .print-signature-label {
+        display: block;
+        font-size: 7pt;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 0.8mm;
+    }
+
+    .print-signature-line {
+        height: 8mm;
+        border-bottom: 1px solid #475569;
     }
 
     @page {
@@ -819,6 +997,10 @@
 
     .signature-box {
         max-width: none;
+    }
+
+    .print-minimal-row {
+        grid-template-columns: 1fr;
     }
 }
 
