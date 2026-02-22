@@ -112,9 +112,6 @@ class PaymentController extends Controller
                 'notes' => $validated['notes'],
             ]);
 
-            // تحديث رصيد العميل
-            $customer->decrement('current_balance', $validated['amount']);
-
             // تحديث حالة الدفع للفاتورة إذا تم تحديدها
             if ($validated['sale_id']) {
                 $sale = \App\Models\Sale::find($validated['sale_id']);
@@ -122,6 +119,9 @@ class PaymentController extends Controller
                     $sale->addPayment($validated['amount']);
                 }
             }
+
+            // إعادة حساب رصيد العميل من الفواتير الفعلية
+            $customer->recalculateBalance();
 
             // إضافة التحصيل لخزينة المندوب تلقائياً
             if ($salesRep) {
