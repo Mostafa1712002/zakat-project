@@ -56,8 +56,8 @@ class SettingController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'stamp' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'contacts' => 'nullable|array',
-            'contacts.*.name' => 'required|string|max:255',
-            'contacts.*.phone' => 'required|string|max:20',
+            'contacts.*.name' => 'nullable|string|max:255',
+            'contacts.*.phone' => 'nullable|string|max:20',
         ]);
 
         // Save invoice contacts as JSON

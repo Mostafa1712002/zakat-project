@@ -172,19 +172,13 @@
 
             <div id="contacts-container">
                 @php $existingContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: []; @endphp
-                @forelse($existingContacts as $index => $contact)
+                @foreach($existingContacts as $index => $contact)
                 <div class="contact-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px;">
                     <input type="text" name="contacts[{{ $index }}][name]" class="form-control" placeholder="اسم جهة الاتصال" value="{{ $contact['name'] ?? '' }}" style="flex: 1;">
                     <input type="text" name="contacts[{{ $index }}][phone]" class="form-control" placeholder="رقم الهاتف" value="{{ $contact['phone'] ?? '' }}" style="flex: 1;">
                     <button type="button" class="btn" onclick="removeContact(this)" style="padding: 8px 12px; color: #dc2626;">✕</button>
                 </div>
-                @empty
-                <div class="contact-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px;">
-                    <input type="text" name="contacts[0][name]" class="form-control" placeholder="اسم جهة الاتصال" style="flex: 1;">
-                    <input type="text" name="contacts[0][phone]" class="form-control" placeholder="رقم الهاتف" style="flex: 1;">
-                    <button type="button" class="btn" onclick="removeContact(this)" style="padding: 8px 12px; color: #dc2626;">✕</button>
-                </div>
-                @endforelse
+                @endforeach
             </div>
 
             <button type="button" class="btn" onclick="addContact()" style="margin-bottom: 16px;">+ إضافة جهة اتصال</button>
@@ -323,14 +317,7 @@ function addContact() {
 }
 
 function removeContact(btn) {
-    var container = document.getElementById('contacts-container');
-    if (container.children.length > 1) {
-        btn.parentElement.remove();
-    } else {
-        // Clear inputs instead of removing last row
-        var inputs = btn.parentElement.querySelectorAll('input');
-        inputs.forEach(function(input) { input.value = ''; });
-    }
+    btn.parentElement.remove();
 }
 
 function removeFile(type) {
