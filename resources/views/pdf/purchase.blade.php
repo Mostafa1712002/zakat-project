@@ -12,9 +12,9 @@
         }
 
         body {
-            font-family: 'Arial', 'Tahoma', 'DejaVu Sans', sans-serif;
+            font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', 'Tahoma', 'Arial', sans-serif;
             font-size: 11pt;
-            line-height: 1.4;
+            line-height: 1.6;
             color: #1f2937;
             direction: rtl;
             padding: 15mm;

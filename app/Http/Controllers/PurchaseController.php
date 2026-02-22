@@ -206,6 +206,8 @@ class PurchaseController extends Controller
                 ->whereIn('key', ['company_name', 'company_logo', 'company_stamp'])
                 ->pluck('value', 'key');
             $companyName = $settings['company_name'] ?? '';
+            $companyName = preg_replace('/[\x{1F000}-\x{1FFFF}|\x{2600}-\x{27FF}|\x{FE00}-\x{FEFF}]/u', '', $companyName);
+            $companyName = trim($companyName);
             $companyLogo = $settings['company_logo'] ?? '';
             $companyStamp = $settings['company_stamp'] ?? '';
         } catch (\Exception $e) {}
