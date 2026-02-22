@@ -114,25 +114,19 @@
                 </div>
             </div>
 
-            @if(!empty($invoiceContacts))
-            <div class="invoice-contacts-section" style="margin-top: 10px;">
-                <div class="invoice-contacts-title">جهات الاتصال</div>
-                <div class="invoice-contacts-grid">
-                    @foreach($invoiceContacts as $contact)
-                    <div class="invoice-contact-item">
-                        <strong>{{ $contact['name'] }}</strong>
-                        <span dir="ltr">{{ $contact['phone'] }}</span>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
         </div>
 
         <!-- Invoice Header -->
         <div class="invoice-header">
             <div class="company-info">
                 <h1 class="company-name">{{ $companyName ?: 'الشركة' }}</h1>
+                @if(!empty($invoiceContacts))
+                <div class="header-contacts">
+                    @foreach($invoiceContacts as $contact)
+                    <span class="header-contact-item">{{ $contact['name'] }}: <span dir="ltr">{{ $contact['phone'] }}</span></span>
+                    @endforeach
+                </div>
+                @endif
             </div>
             <div class="invoice-title">
                 <div class="invoice-title-main">
@@ -314,20 +308,6 @@
             </div>
         </div>
 
-        <!-- Invoice Contact Persons -->
-        @if(!empty($invoiceContacts))
-        <div class="invoice-contacts-section">
-            <div class="invoice-contacts-title">جهات الاتصال</div>
-            <div class="invoice-contacts-grid">
-                @foreach($invoiceContacts as $contact)
-                <div class="invoice-contact-item">
-                    <strong>{{ $contact['name'] }}</strong>
-                    <span dir="ltr">{{ $contact['phone'] }}</span>
-                </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
     </div>
 
     {{-- Screen-only sections --}}
@@ -696,42 +676,20 @@
     opacity: 0.85;
 }
 
-/* Invoice Contacts */
-.invoice-contacts-section {
-    margin-top: 16px;
-    padding-top: 12px;
-    border-top: 1px solid #e5e7eb;
-}
-.invoice-contacts-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 8px;
-    text-align: center;
-}
-.invoice-contacts-grid {
+/* Header Contacts */
+.header-contacts {
     display: flex;
-    justify-content: center;
-    gap: 24px;
+    gap: 16px;
     flex-wrap: wrap;
+    margin-top: 4px;
 }
-.invoice-contact-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 6px 16px;
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+.header-contact-item {
     font-size: 0.85rem;
-}
-.invoice-contact-item strong {
     color: #374151;
 }
-.invoice-contact-item span {
-    color: #6b7280;
-    font-size: 0.8rem;
+.header-contact-item span {
+    color: var(--primary);
+    font-weight: 600;
 }
 
 /* ========== PRINT STYLES ========== */
@@ -881,19 +839,13 @@
         max-height: 70px;
     }
 
-    .invoice-contacts-section {
-        margin-top: 12px;
-        padding-top: 8px;
+    .header-contacts {
+        margin-top: 2px;
+        gap: 10px;
     }
 
-    .invoice-contacts-title {
-        font-size: 9pt;
-    }
-
-    .invoice-contact-item {
+    .header-contact-item {
         font-size: 8pt;
-        padding: 4px 10px;
-        background: #f8fafc !important;
     }
 
     @page {

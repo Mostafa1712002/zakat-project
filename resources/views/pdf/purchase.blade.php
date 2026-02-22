@@ -242,41 +242,21 @@
             opacity: 0.85;
         }
 
-        /* Invoice Contacts */
-        .contacts-section {
-            margin-top: 16px;
-            padding-top: 10px;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
+        /* Header Contacts */
+        .header-contacts {
+            margin-top: 4px;
         }
 
-        .contacts-title {
-            font-size: 12pt;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-        .contacts-grid {
-            display: table;
-            width: 100%;
-        }
-
-        .contact-cell {
-            display: table-cell;
-            text-align: center;
-            padding: 4px 10px;
+        .header-contact-item {
             font-size: 11pt;
-        }
-
-        .contact-cell .contact-name {
-            font-weight: 600;
             color: #374151;
+            margin-left: 14px;
+            display: inline;
         }
 
-        .contact-cell .contact-phone {
-            color: #6b7280;
-            font-size: 10pt;
+        .header-contact-item .contact-phone {
+            color: #0891b2;
+            font-weight: 600;
             direction: ltr;
         }
     </style>
@@ -289,6 +269,13 @@
                 <img src="file://{{ public_path('storage/' . $companyLogo) }}" alt="{{ $companyName }}" class="company-logo"><br>
             @endif
             <div class="company-name">{{ $companyName ?: 'الشركة' }}</div>
+            @if(!empty($invoiceContacts))
+            <div class="header-contacts">
+                @foreach($invoiceContacts as $contact)
+                <span class="header-contact-item">{{ $contact['name'] }}: <span class="contact-phone">{{ $contact['phone'] }}</span></span>
+                @endforeach
+            </div>
+            @endif
         </div>
         <div class="header-left">
             <div class="invoice-label">فاتورة مشتريات</div>
@@ -423,19 +410,5 @@
         </div>
     </div>
 
-    <!-- Invoice Contacts -->
-    @if(!empty($invoiceContacts))
-    <div class="contacts-section">
-        <div class="contacts-title">جهات الاتصال</div>
-        <div class="contacts-grid">
-            @foreach($invoiceContacts as $contact)
-            <div class="contact-cell">
-                <div class="contact-name">{{ $contact['name'] }}</div>
-                <div class="contact-phone">{{ $contact['phone'] }}</div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
 </body>
 </html>
