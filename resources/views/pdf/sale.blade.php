@@ -313,7 +313,7 @@
                 <th style="width: 38%;">الصنف</th>
                 <th style="width: 12%;">الكمية</th>
                 <th style="width: 16%;">سعر الوحدة</th>
-                <th style="width: 12%;">الخدمة</th>
+                <th style="width: 12%;">الخصم</th>
                 <th style="width: 16%;">الإجمالي</th>
             </tr>
         </thead>
@@ -340,7 +340,7 @@
             </tr>
             @if($sale->discount_amount > 0)
             <tr class="discount-row">
-                <td class="total-label">الخدمة</td>
+                <td class="total-label">الخصم</td>
                 <td class="total-value">- {{ number_format($sale->discount_amount, 2) }} ج.م</td>
             </tr>
             @endif

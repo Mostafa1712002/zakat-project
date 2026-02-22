@@ -125,11 +125,11 @@
 
         <div class="card">
             <div class="card-body">
-                <h3 style="margin-bottom: 16px;">💰 الخدمة</h3>
+                <h3 style="margin-bottom: 16px;">💰 الخصم</h3>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="discount_type" class="form-label">نوع الخدمة</label>
+                        <label for="discount_type" class="form-label">نوع الخصم</label>
                         <select name="discount_type" id="discount_type" class="form-control">
                             <option value="fixed" {{ old('discount_type', $sale->discount_type) == 'fixed' ? 'selected' : '' }}>مبلغ ثابت</option>
                             <option value="percentage" {{ old('discount_type', $sale->discount_type) == 'percentage' ? 'selected' : '' }}>نسبة مئوية</option>
@@ -137,7 +137,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="discount_value" class="form-label">قيمة الخدمة</label>
+                        <label for="discount_value" class="form-label">قيمة الخصم</label>
                         <input type="number" step="0.01" name="discount_value" id="discount_value" class="form-control" value="{{ old('discount_value', $sale->discount_value ?? 0) }}" min="0">
                     </div>
                 </div>
@@ -214,7 +214,7 @@
                     <strong id="subtotal">0.00</strong> ج.م
                 </div>
                 <div class="totals-row">
-                    <span>الخدمة:</span>
+                    <span>الخصم:</span>
                     <strong id="totalDiscount">0.00</strong> ج.م
                 </div>
                 <div class="totals-row total-final">
