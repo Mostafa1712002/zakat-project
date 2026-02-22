@@ -15,7 +15,7 @@
 
 {{-- إحصائيات --}}
 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-    <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+    <div class="stat-card" style=" background: linear-gradient(180deg, #0891b2 0%, #0e7490 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
         <div style="font-size: 32px; font-weight: 700;">{{ $stats['total'] }}</div>
         <div style="font-size: 14px; opacity: 0.9;">إجمالي المميزات</div>
     </div>

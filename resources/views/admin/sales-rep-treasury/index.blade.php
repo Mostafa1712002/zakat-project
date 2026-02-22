@@ -11,7 +11,10 @@
 </div>
 
 <!-- إجمالي الأرصدة -->
-<div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+<div class="card" style="margin-bottom: 24px; background: linear-gradient(180deg, #0891b2 0%, #0e7490 100%); color: white;">
+
+
+
     <div class="card-body" style="text-align: center; padding: 32px;">
         <h2 style="font-size: 36px; margin-bottom: 8px;">{{ number_format($totalBalance, 2) }} ج.م</h2>
         <p style="margin: 0; opacity: 0.9;">إجمالي أرصدة جميع المندوبين</p>

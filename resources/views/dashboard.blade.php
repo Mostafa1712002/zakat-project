@@ -71,18 +71,18 @@
         </div>
         <div class="card-body">
             @if(isset($low_stock_products) && $low_stock_products->count() > 0)
-                @foreach($low_stock_products as $product)
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: 8px; margin-bottom: 8px;">
-                    <span>{{ $product->name }}</span>
-                    <span class="badge {{ $product->total_stock < 10 ? 'badge-danger' : 'badge-warning' }}">متبقي {{ $product->total_stock ?? 0 }}</span>
-                </div>
-                @endforeach
+            @foreach($low_stock_products as $product)
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: 8px; margin-bottom: 8px;">
+                <span>{{ $product->name }}</span>
+                <span class="badge {{ $product->total_stock < 10 ? 'badge-danger' : 'badge-warning' }}">متبقي {{ $product->total_stock ?? 0 }}</span>
+            </div>
+            @endforeach
             @else
-                <div class="empty-state" style="padding: 30px 20px;">
-                    <div class="empty-state-icon">✅</div>
-                    <h3>المخزون جيد</h3>
-                    <p>لا توجد أصناف منخفضة المخزون</p>
-                </div>
+            <div class="empty-state" style="padding: 30px 20px;">
+                <div class="empty-state-icon">✅</div>
+                <h3>المخزون جيد</h3>
+                <p>لا توجد أصناف منخفضة المخزون</p>
+            </div>
             @endif
         </div>
     </div>
@@ -109,17 +109,17 @@
     </div>
 </div>
 
-<!-- Three Column Layout -->
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+<!-- Three Column Layout (No Bootstrap) -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
     <!-- Top Customers -->
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3 class="card-title">🏆 أفضل العملاء</h3>
             <a href="{{ route('customers.index') }}" class="btn btn-sm">عرض الكل</a>
         </div>
         <div class="card-body overflow-auto">
             @if(isset($top_customers) && $top_customers->count() > 0)
-            <table class="table text-nowrap">
+            <table class="table text-nowrap" style="width: 100%;">
                 <thead>
                     <tr>
                         <th>العميل</th>
@@ -138,46 +138,44 @@
                 </tbody>
             </table>
             @else
-                <div class="empty-state" style="padding: 30px 20px;">
-                    <div class="empty-state-icon">👥</div>
-                    <h3>لا يوجد عملاء بعد</h3>
-                    <p>ابدأ بإضافة عملائك</p>
-                    <a href="{{ route('customers.create') }}" class="btn btn-primary" style="margin-top: 12px;">+ إضافة عميل</a>
-                </div>
+            <div class="empty-state" style="padding: 30px 20px;">
+                <div class="empty-state-icon">👥</div>
+                <h3>لا يوجد عملاء بعد</h3>
+                <p>ابدأ بإضافة عملائك</p>
+                <a href="{{ route('customers.create') }}" class="btn btn-primary" style="margin-top: 12px;">+ إضافة عميل</a>
+            </div>
             @endif
         </div>
     </div>
-
     <!-- Recent Sales -->
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3 class="card-title">📄 آخر الفواتير</h3>
             <a href="{{ route('sales.index') }}" class="btn btn-sm">عرض الكل</a>
         </div>
         <div class="card-body">
             @if(isset($recent_sales) && $recent_sales->count() > 0)
-                @foreach($recent_sales as $sale)
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: 8px; margin-bottom: 8px;">
-                    <div>
-                        <span class="text-primary font-bold">{{ $sale->invoice_number }}</span>
-                        @if($sale->customer)
-                            <small class="text-muted" style="display: block; font-size: 11px;">{{ $sale->customer->name }}</small>
-                        @endif
-                    </div>
-                    <strong>{{ number_format($sale->total_amount) }} ج.م</strong>
+            @foreach($recent_sales as $sale)
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: 8px; margin-bottom: 8px;">
+                <div>
+                    <span class="text-primary font-bold">{{ $sale->invoice_number }}</span>
+                    @if($sale->customer)
+                    <small class="text-muted" style="display: block; font-size: 11px;">{{ $sale->customer->name }}</small>
+                    @endif
                 </div>
-                @endforeach
+                <strong>{{ number_format($sale->total_amount) }} ج.م</strong>
+            </div>
+            @endforeach
             @else
-                <div class="empty-state" style="padding: 30px 20px;">
-                    <div class="empty-state-icon">📄</div>
-                    <h3>لا توجد فواتير بعد</h3>
-                    <p>ابدأ بإنشاء أول فاتورة مبيعات</p>
-                    <a href="{{ route('sales.create') }}" class="btn btn-primary" style="margin-top: 12px;">+ إنشاء فاتورة</a>
-                </div>
+            <div class="empty-state" style="padding: 30px 20px;">
+                <div class="empty-state-icon">📄</div>
+                <h3>لا توجد فواتير بعد</h3>
+                <p>ابدأ بإنشاء أول فاتورة مبيعات</p>
+                <a href="{{ route('sales.create') }}" class="btn btn-primary" style="margin-top: 12px;">+ إنشاء فاتورة</a>
+            </div>
             @endif
         </div>
     </div>
-
     <!-- System Stats -->
     <div class="card">
         <div class="card-header">
@@ -203,17 +201,23 @@
 
 @push('styles')
 <style>
-    .mb-4 { margin-bottom: 20px; }
+    .mb-4 {
+        margin-bottom: 20px;
+    }
 
     @media (max-width: 1200px) {
-        .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
     }
 
     @media (max-width: 900px) {
+
         div[style*="grid-template-columns: repeat(2, 1fr)"],
         div[style*="grid-template-columns: repeat(3, 1fr)"] {
             grid-template-columns: 1fr !important;
         }
     }
+
 </style>
 @endpush

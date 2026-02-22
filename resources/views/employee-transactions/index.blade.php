@@ -21,14 +21,14 @@
 
 <!-- Summary Cards -->
 <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card bg-white">
         <div class="stat-icon" style="background: #10b981;">💵</div>
         <div class="stat-content">
             <div class="stat-value">{{ number_format($totals['salaries'], 2) }}</div>
             <div class="stat-label">إجمالي المرتبات المصروفة</div>
         </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card bg-white">
         <div class="stat-icon" style="background: #f59e0b;">🏦</div>
         <div class="stat-content">
             <div class="stat-value">{{ number_format($totals['advances'], 2) }}</div>
@@ -153,8 +153,7 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
-.stat-card {
-    background: var(--card-bg);
+.stat-card { 
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.25rem;

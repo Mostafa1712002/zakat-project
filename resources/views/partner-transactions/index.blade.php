@@ -164,8 +164,7 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
-.stat-card {
-    background: var(--card-bg);
+.stat-card { 
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.25rem;
