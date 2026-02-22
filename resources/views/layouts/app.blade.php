@@ -103,6 +103,7 @@
             height: 100vh;
             overflow-y: auto;
             z-index: 100;
+            transition: width 0.3s ease;
         }
 
         .main {
@@ -114,7 +115,57 @@
             width: calc(100% - 260px);
             max-width: calc(100% - 260px);
             overflow-x: hidden;
+            transition: margin-right 0.3s ease, width 0.3s ease, max-width 0.3s ease;
         }
+
+        /* Sidebar collapse toggle */
+        .sidebar-toggle {
+            position: absolute;
+            left: -14px;
+            top: 50px;
+            width: 28px;
+            height: 28px;
+            background: var(--primary-dark);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            z-index: 101;
+            transition: transform 0.3s ease, background 0.2s;
+        }
+        .sidebar-toggle:hover { background: var(--primary-light); }
+
+        /* Collapsed sidebar */
+        .app.sidebar-collapsed .sidebar {
+            width: 72px;
+            padding: 12px;
+        }
+        .app.sidebar-collapsed .main {
+            margin-right: 72px;
+            width: calc(100% - 72px);
+            max-width: calc(100% - 72px);
+        }
+        .app.sidebar-collapsed .sidebar-toggle { transform: rotate(180deg); }
+        .app.sidebar-collapsed .logo-text,
+        .app.sidebar-collapsed .user-details { display: none; }
+        .app.sidebar-collapsed .nav-menu a { font-size: 0; gap: 0; }
+        .app.sidebar-collapsed .nav-menu a .nav-icon { font-size: 20px; }
+        .app.sidebar-collapsed .logo { padding-bottom: 12px; margin-bottom: 12px; }
+        .app.sidebar-collapsed .logo-icon { width: 44px; height: 44px; }
+        .app.sidebar-collapsed .user-info { padding: 8px; justify-content: center; }
+        .app.sidebar-collapsed .user-avatar { width: 36px; height: 36px; font-size: 14px; }
+        .app.sidebar-collapsed .nav-menu a { padding: 12px; justify-content: center; }
+        .app.sidebar-collapsed .nav-icon { width: auto; margin: 0; font-size: 20px; }
+        .app.sidebar-collapsed .sidebar-footer .profile-btn span { display: none; }
+        .app.sidebar-collapsed .sidebar-footer .profile-btn { padding: 10px !important; }
+        .app.sidebar-collapsed .sidebar-footer .profile-btn::after { content: '👤'; font-size: 18px; }
+        .app.sidebar-collapsed .logout-btn span { display: none; }
+        .app.sidebar-collapsed .logout-btn { padding: 10px; }
+        .app.sidebar-collapsed .logout-btn::after { content: '🚪'; font-size: 18px; }
 
         .logo {
             display: flex;
@@ -459,6 +510,9 @@
         }
 
         @media (max-width: 768px) {
+            .sidebar-toggle { display: none; }
+            .app.sidebar-collapsed .sidebar { width: 260px; padding: 20px; }
+            .app.sidebar-collapsed .main { margin-right: 0; width: 100%; max-width: 100%; }
             .menu-toggle { display: flex; align-items: center; justify-content: center; }
             .sidebar { transform: translateX(100%); transition: transform 0.3s ease; }
             .sidebar.open { transform: translateX(0); }
@@ -540,6 +594,7 @@
 
     <div class="app">
         <aside class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebarToggle" title="طي القائمة">◀</button>
             @php
                 if (auth()->user()->isSalesRep() && !auth()->user()->isSuperAdmin()) {
                     $homeRoute = route('sales-rep.dashboard');
@@ -660,11 +715,11 @@
 
             <div class="sidebar-footer">
                 <a href="{{ route('profile.index') }}" class="profile-btn" style="display: block; text-align: center; padding: 10px; margin-bottom: 10px; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #93c5fd; text-decoration: none;">
-                    👤 {{ auth()->user()->name ?? 'الملف الشخصي' }}
+                    <span>👤 {{ auth()->user()->name ?? 'الملف الشخصي' }}</span>
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="logout-btn">🚪 تسجيل الخروج</button>
+                    <button type="submit" class="logout-btn"><span>🚪 تسجيل الخروج</span></button>
                 </form>
             </div>
         </aside>
@@ -687,6 +742,19 @@
             document.getElementById('sidebar').classList.toggle('open');
             document.querySelector('.sidebar-overlay').classList.toggle('open');
         }
+
+        // Sidebar collapse (desktop)
+        (function() {
+            const app = document.querySelector('.app');
+            const toggle = document.getElementById('sidebarToggle');
+            if (localStorage.getItem('sidebar-collapsed') === '1') {
+                app.classList.add('sidebar-collapsed');
+            }
+            toggle.addEventListener('click', function() {
+                app.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', app.classList.contains('sidebar-collapsed') ? '1' : '0');
+            });
+        })();
     </script>
     <!-- jQuery + Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
