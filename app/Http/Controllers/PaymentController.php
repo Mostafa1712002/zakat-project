@@ -112,11 +112,31 @@ class PaymentController extends Controller
                 'notes' => $validated['notes'],
             ]);
 
-            // تحديث حالة الدفع للفاتورة إذا تم تحديدها
+            // تحديث حالة الدفع للفواتير
             if ($validated['sale_id']) {
+                // تحصيل على فاتورة محددة
                 $sale = \App\Models\Sale::find($validated['sale_id']);
                 if ($sale) {
                     $sale->addPayment($validated['amount']);
+                }
+            } else {
+                // تحصيل عام - توزيع المبلغ على الفواتير المستحقة (الأقدم أولاً)
+                $remainingAmount = $validated['amount'];
+                $unpaidSales = $customer->sales()
+                    ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
+                    ->where('status', '!=', 'cancelled')
+                    ->orderBy('due_date')
+                    ->orderBy('invoice_date')
+                    ->get();
+
+                foreach ($unpaidSales as $sale) {
+                    if ($remainingAmount <= 0) break;
+
+                    $applyAmount = min($remainingAmount, $sale->remaining_amount);
+                    if ($applyAmount > 0) {
+                        $sale->addPayment($applyAmount);
+                        $remainingAmount -= $applyAmount;
+                    }
                 }
             }
 
