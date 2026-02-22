@@ -34,8 +34,13 @@
     </div>
     <div class="stat-card">
         <div class="stat-icon success">📈</div>
-        <div class="stat-value">{{ number_format($stats['monthly_profit'] ?? 410200) }} ج.م</div>
+        <div class="stat-value">{{ number_format($stats['monthly_profit'] ?? 0) }} ج.م</div>
         <div class="stat-label">صافي الربح (30 يوم)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon primary">💵</div>
+        <div class="stat-value">{{ number_format($stats['monthly_cash_balance'] ?? 0) }} ج.م</div>
+        <div class="stat-label">الرصيد النقدي (30 يوم)</div>
     </div>
 </div>
 

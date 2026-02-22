@@ -59,18 +59,6 @@
         </div>
     </div>
 
-    <!-- Branches -->
-    <div class="card settings-card">
-        <div class="settings-card-icon">🏬</div>
-        <div class="settings-card-content">
-            <h3>الفروع</h3>
-            <p>إدارة فروع الشركة</p>
-        </div>
-        <div class="settings-card-action">
-            <a href="#" class="btn btn-primary">إدارة</a>
-        </div>
-    </div>
-
     <!-- Categories -->
     <div class="card settings-card">
         <div class="settings-card-icon">🏷️</div>
@@ -95,17 +83,6 @@
         </div>
     </div>
 
-    <!-- General Settings -->
-    <div class="card settings-card">
-        <div class="settings-card-icon">🔧</div>
-        <div class="settings-card-content">
-            <h3>إعدادات عامة</h3>
-            <p>العملة والضرائب وإعدادات النظام</p>
-        </div>
-        <div class="settings-card-action">
-            <a href="#" class="btn btn-primary">إدارة</a>
-        </div>
-    </div>
 </div>
 
 <style>

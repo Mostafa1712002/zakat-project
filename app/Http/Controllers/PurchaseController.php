@@ -178,7 +178,20 @@ class PurchaseController extends Controller
     public function show(Purchase $purchase)
     {
         $purchase->load(['supplier', 'items.product', 'warehouse']);
-        return view('purchases.show', compact('purchase'));
+
+        $companyName = '';
+        $companyLogo = '';
+        $companyStamp = '';
+        try {
+            $settings = \DB::table('settings')
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp'])
+                ->pluck('value', 'key');
+            $companyName = $settings['company_name'] ?? '';
+            $companyLogo = $settings['company_logo'] ?? '';
+            $companyStamp = $settings['company_stamp'] ?? '';
+        } catch (\Exception $e) {}
+
+        return view('purchases.show', compact('purchase', 'companyName', 'companyLogo', 'companyStamp'));
     }
 
     public function edit(Purchase $purchase)

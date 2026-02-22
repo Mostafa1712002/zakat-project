@@ -8,6 +8,8 @@ use App\Models\Customer;
 use App\Models\Sale;
 use App\Models\Purchase;
 use App\Models\Expense;
+use App\Models\Payment;
+use App\Models\SalesRep;
 use App\Models\InventoryLevel;
 use Carbon\Carbon;
 
@@ -27,8 +29,25 @@ class DashboardController extends Controller
             ->where('status', Sale::STATUS_CONFIRMED)
             ->sum('total_amount');
         $monthlyPurchases = Purchase::where('invoice_date', '>=', $monthStart)->sum('total_amount');
-        $monthlyExpenses = Expense::where('expense_date', '>=', $monthStart)->sum('amount');
+        $monthlyExpenses = Expense::where('expense_date', '>=', $monthStart)
+            ->where('status', 'paid')
+            ->sum('amount');
         $monthlyProfit = $monthlySales - $monthlyPurchases - $monthlyExpenses;
+
+        // Cash balance (actual money received - paid out this month)
+        $monthlyCollections = Payment::where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where('payment_date', '>=', $monthStart)
+            ->sum('amount');
+        $monthlyCashSales = Sale::where('payment_type', 'cash')
+            ->where('status', Sale::STATUS_CONFIRMED)
+            ->where('invoice_date', '>=', $monthStart)
+            ->sum('total_amount');
+        $monthlySupplierPayments = Payment::where('type', Payment::TYPE_PAID)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where('payment_date', '>=', $monthStart)
+            ->sum('amount');
+        $monthlyCashBalance = ($monthlyCollections + $monthlyCashSales) - ($monthlyExpenses + $monthlySupplierPayments);
 
         // Collection stats
         $unpaidInvoices = Sale::where('payment_status', 'unpaid')->count();
@@ -48,6 +67,7 @@ class DashboardController extends Controller
             'total_purchases' => $todayPurchases,
             'low_stock_count' => $lowStockCount,
             'monthly_profit' => $monthlyProfit,
+            'monthly_cash_balance' => $monthlyCashBalance,
             'customers_count' => Customer::count(),
             'products_count' => Product::count(),
             'categories_count' => Category::count(),

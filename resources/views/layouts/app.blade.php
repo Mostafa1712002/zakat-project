@@ -1,10 +1,22 @@
+@php
+    $__siteSettings = \Illuminate\Support\Facades\Cache::remember('sidebar_settings', 3600, function() {
+        try {
+            return \DB::table('settings')
+                ->whereIn('key', ['company_name', 'company_logo'])
+                ->pluck('value', 'key')
+                ->toArray();
+        } catch (\Exception $e) { return []; }
+    });
+    $__sidebarLogo = $__siteSettings['company_logo'] ?? '';
+    $__sidebarName = $__siteSettings['company_name'] ?? config('app.name', 'CRM');
+@endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'لوحة التحكم') - Rogence System</title>
+    <title>@yield('title', 'لوحة التحكم') - {{ $__sidebarName }}</title>
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -118,54 +130,94 @@
             transition: margin-right 0.3s ease, width 0.3s ease, max-width 0.3s ease;
         }
 
-        /* Sidebar collapse toggle */
-        .sidebar-toggle {
-            position: absolute;
-            left: -14px;
-            top: 50px;
-            width: 28px;
-            height: 28px;
-            background: var(--primary-dark);
-            border: 2px solid rgba(255,255,255,0.3);
-            color: white;
-            border-radius: 50%;
-            cursor: pointer;
+        /* Sidebar collapse button */
+        .sidebar-collapse-btn {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            z-index: 101;
-            transition: transform 0.3s ease, background 0.2s;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            margin-top: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            transition: all 0.2s;
         }
-        .sidebar-toggle:hover { background: var(--primary-light); }
+        .sidebar-collapse-btn:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .sidebar-collapse-btn svg {
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        /* Custom scrollbar for sidebar */
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.35); }
+        .sidebar { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; }
+
+        /* JS Tooltip (appended to body, not clipped by sidebar overflow) */
+        .sidebar-tooltip {
+            position: fixed;
+            background: #1e293b;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Cairo', sans-serif;
+            white-space: nowrap;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .sidebar-tooltip.visible { opacity: 1; }
+        .sidebar-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -8px;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-left-color: #1e293b;
+        }
 
         /* Collapsed sidebar */
         .app.sidebar-collapsed .sidebar {
             width: 72px;
             padding: 12px;
+            overflow-x: hidden;
         }
+        .app.sidebar-collapsed .sidebar::-webkit-scrollbar { display: none; }
+        .app.sidebar-collapsed .sidebar { scrollbar-width: none; }
         .app.sidebar-collapsed .main {
             margin-right: 72px;
             width: calc(100% - 72px);
             max-width: calc(100% - 72px);
         }
-        .app.sidebar-collapsed .sidebar-toggle { transform: rotate(180deg); }
         .app.sidebar-collapsed .logo-text,
-        .app.sidebar-collapsed .user-details { display: none; }
-        .app.sidebar-collapsed .nav-menu a { font-size: 0; gap: 0; }
-        .app.sidebar-collapsed .nav-menu a .nav-icon { font-size: 20px; }
+        .app.sidebar-collapsed .user-details,
+        .app.sidebar-collapsed .nav-label { display: none; }
         .app.sidebar-collapsed .logo { padding-bottom: 12px; margin-bottom: 12px; }
         .app.sidebar-collapsed .logo-icon { width: 44px; height: 44px; }
         .app.sidebar-collapsed .user-info { padding: 8px; justify-content: center; }
         .app.sidebar-collapsed .user-avatar { width: 36px; height: 36px; font-size: 14px; }
-        .app.sidebar-collapsed .nav-menu a { padding: 12px; justify-content: center; }
+        .app.sidebar-collapsed .nav-menu a { padding: 12px; justify-content: center; gap: 0; }
         .app.sidebar-collapsed .nav-icon { width: auto; margin: 0; font-size: 20px; }
-        .app.sidebar-collapsed .sidebar-footer .profile-btn span { display: none; }
-        .app.sidebar-collapsed .sidebar-footer .profile-btn { padding: 10px !important; }
-        .app.sidebar-collapsed .sidebar-footer .profile-btn::after { content: '👤'; font-size: 18px; }
-        .app.sidebar-collapsed .logout-btn span { display: none; }
-        .app.sidebar-collapsed .logout-btn { padding: 10px; }
-        .app.sidebar-collapsed .logout-btn::after { content: '🚪'; font-size: 18px; }
+        .app.sidebar-collapsed .sidebar-collapse-btn { justify-content: center; padding: 10px; }
+        .app.sidebar-collapsed .sidebar-collapse-btn svg { transform: rotate(180deg); }
+        .app.sidebar-collapsed .sidebar-footer { padding-top: 12px; }
+        .app.sidebar-collapsed .sidebar-footer .profile-btn { padding: 10px !important; justify-content: center; border: none; background: rgba(59,130,246,0.15); }
+        .app.sidebar-collapsed .sidebar-footer .logout-btn { padding: 10px; justify-content: center; }
+        .app.sidebar-collapsed .sidebar-footer .nav-icon { font-size: 18px; width: auto; }
 
         .logo {
             display: flex;
@@ -510,9 +562,13 @@
         }
 
         @media (max-width: 768px) {
-            .sidebar-toggle { display: none; }
+            .sidebar-collapse-btn { display: none; }
             .app.sidebar-collapsed .sidebar { width: 260px; padding: 20px; }
             .app.sidebar-collapsed .main { margin-right: 0; width: 100%; max-width: 100%; }
+            .app.sidebar-collapsed .nav-label { display: inline; }
+            .app.sidebar-collapsed .nav-menu a { justify-content: flex-start; gap: 10px; }
+            .app.sidebar-collapsed .sidebar-footer .profile-btn { justify-content: flex-start !important; gap: 10px !important; }
+            .app.sidebar-collapsed .sidebar-footer .logout-btn { justify-content: flex-start; gap: 10px; }
             .menu-toggle { display: flex; align-items: center; justify-content: center; }
             .sidebar { transform: translateX(100%); transition: transform 0.3s ease; }
             .sidebar.open { transform: translateX(0); }
@@ -594,7 +650,6 @@
 
     <div class="app">
         <aside class="sidebar" id="sidebar">
-            <button class="sidebar-toggle" id="sidebarToggle" title="طي القائمة">◀</button>
             @php
                 if (auth()->user()->isSalesRep() && !auth()->user()->isSuperAdmin()) {
                     $homeRoute = route('sales-rep.dashboard');
@@ -603,8 +658,12 @@
                 }
             @endphp
             <a href="{{ $homeRoute }}" class="logo">
-                <img src="{{ asset('logo.png') }}" alt="Rogence System" class="logo-icon">
-                <div class="logo-text">Rogence System</div>
+                @if($__sidebarLogo)
+                    <img src="{{ asset('storage/' . $__sidebarLogo) }}" alt="{{ $__sidebarName }}" class="logo-icon">
+                @else
+                    <img src="{{ asset('logo.png') }}" alt="{{ $__sidebarName }}" class="logo-icon">
+                @endif
+                <div class="logo-text">{{ $__sidebarName }}</div>
             </a>
 
             <div class="user-info">
@@ -623,103 +682,112 @@
 
                 @if($isSalesRepOnly)
                     {{-- Sales Rep Menu --}}
-                    <li><a href="{{ route('sales-rep.dashboard') }}" class="{{ request()->routeIs('sales-rep.dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
-                    <li><a href="{{ route('sales-rep.customers') }}" class="{{ request()->routeIs('sales-rep.customers') ? 'active' : '' }}"><span class="nav-icon">👥</span> عملائي</a></li>
-                    <li><a href="{{ route('sales-rep.sales') }}" class="{{ request()->routeIs('sales-rep.sales') ? 'active' : '' }}"><span class="nav-icon">💰</span> مبيعاتي</a></li>
-                    <li><a href="{{ route('sales-rep.collections') }}" class="{{ request()->routeIs('sales-rep.collections') ? 'active' : '' }}"><span class="nav-icon">💵</span> تحصيلاتي</a></li>
-                    <li><a href="{{ route('sales-rep.treasury') }}" class="{{ request()->routeIs('sales-rep.treasury') ? 'active' : '' }}"><span class="nav-icon">🏦</span> خزينتي</a></li>
-                    <li><a href="{{ route('sales-rep.expenses') }}" class="{{ request()->routeIs('sales-rep.expenses*') ? 'active' : '' }}"><span class="nav-icon">🧾</span> مصروفاتي</a></li>
-                    <li><a href="{{ route('sales-rep.inventory') }}" class="{{ request()->routeIs('sales-rep.inventory') ? 'active' : '' }}"><span class="nav-icon">📦</span> مخزني</a></li>
-                    <li><a href="{{ route('sales-rep.reports') }}" class="{{ request()->routeIs('sales-rep.reports') ? 'active' : '' }}"><span class="nav-icon">📈</span> تقاريري</a></li>
+                    <li><a href="{{ route('sales-rep.dashboard') }}" class="{{ request()->routeIs('sales-rep.dashboard') ? 'active' : '' }}" data-tooltip="لوحة التحكم"><span class="nav-icon">📊</span><span class="nav-label">لوحة التحكم</span></a></li>
+                    <li><a href="{{ route('sales-rep.customers') }}" class="{{ request()->routeIs('sales-rep.customers') ? 'active' : '' }}" data-tooltip="عملائي"><span class="nav-icon">👥</span><span class="nav-label">عملائي</span></a></li>
+                    <li><a href="{{ route('sales-rep.sales') }}" class="{{ request()->routeIs('sales-rep.sales') ? 'active' : '' }}" data-tooltip="مبيعاتي"><span class="nav-icon">💰</span><span class="nav-label">مبيعاتي</span></a></li>
+                    <li><a href="{{ route('sales-rep.collections') }}" class="{{ request()->routeIs('sales-rep.collections') ? 'active' : '' }}" data-tooltip="تحصيلاتي"><span class="nav-icon">💵</span><span class="nav-label">تحصيلاتي</span></a></li>
+                    <li><a href="{{ route('sales-rep.treasury') }}" class="{{ request()->routeIs('sales-rep.treasury') ? 'active' : '' }}" data-tooltip="خزينتي"><span class="nav-icon">🏦</span><span class="nav-label">خزينتي</span></a></li>
+                    <li><a href="{{ route('sales-rep.expenses') }}" class="{{ request()->routeIs('sales-rep.expenses*') ? 'active' : '' }}" data-tooltip="مصروفاتي"><span class="nav-icon">🧾</span><span class="nav-label">مصروفاتي</span></a></li>
+                    <li><a href="{{ route('sales-rep.inventory') }}" class="{{ request()->routeIs('sales-rep.inventory') ? 'active' : '' }}" data-tooltip="مخزني"><span class="nav-icon">📦</span><span class="nav-label">مخزني</span></a></li>
+                    <li><a href="{{ route('sales-rep.reports') }}" class="{{ request()->routeIs('sales-rep.reports') ? 'active' : '' }}" data-tooltip="تقاريري"><span class="nav-icon">📈</span><span class="nav-label">تقاريري</span></a></li>
                 @elseif($isEmployeeOnly)
                     {{-- Employee Menu - Operational Access --}}
-                    <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
+                    <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" data-tooltip="لوحة التحكم"><span class="nav-icon">📊</span><span class="nav-label">لوحة التحكم</span></a></li>
                     @if(feature_enabled('sales'))
-                    <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('sales', '💰') }}</span> {{ feature_name('sales', 'المبيعات') }}</a></li>
+                    <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('sales', 'المبيعات') }}"><span class="nav-icon">{{ feature_icon('sales', '💰') }}</span><span class="nav-label">{{ feature_name('sales', 'المبيعات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('purchases'))
-                    <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('purchases', '🛒') }}</span> {{ feature_name('purchases', 'المشتريات') }}</a></li>
+                    <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchases', 'المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchases', '🛒') }}</span><span class="nav-label">{{ feature_name('purchases', 'المشتريات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('products'))
-                    <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span> {{ feature_name('products', 'الأصناف') }}</a></li>
+                    <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('products', 'الأصناف') }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span><span class="nav-label">{{ feature_name('products', 'الأصناف') }}</span></a></li>
                     @endif
                     @if(feature_enabled('warehouses'))
-                    <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('warehouses', '🏭') }}</span> {{ feature_name('warehouses', 'المخازن') }}</a></li>
+                    <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('warehouses', 'المخازن') }}"><span class="nav-icon">{{ feature_icon('warehouses', '🏭') }}</span><span class="nav-label">{{ feature_name('warehouses', 'المخازن') }}</span></a></li>
                     @endif
                     @if(feature_enabled('customers'))
-                    <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('customers', '👥') }}</span> {{ feature_name('customers', 'العملاء') }}</a></li>
+                    <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('customers', 'العملاء') }}"><span class="nav-icon">{{ feature_icon('customers', '👥') }}</span><span class="nav-label">{{ feature_name('customers', 'العملاء') }}</span></a></li>
                     @endif
                     @if(feature_enabled('suppliers'))
-                    <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('suppliers', '🏢') }}</span> {{ feature_name('suppliers', 'الموردين') }}</a></li>
+                    <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('suppliers', 'الموردين') }}"><span class="nav-icon">{{ feature_icon('suppliers', '🏢') }}</span><span class="nav-label">{{ feature_name('suppliers', 'الموردين') }}</span></a></li>
                     @endif
                     @if(feature_enabled('reports'))
-                    <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('reports', '📈') }}</span> {{ feature_name('reports', 'التقارير') }}</a></li>
+                    <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('reports', 'التقارير') }}"><span class="nav-icon">{{ feature_icon('reports', '📈') }}</span><span class="nav-label">{{ feature_name('reports', 'التقارير') }}</span></a></li>
                     @endif
                 @else
                     {{-- Admin/Full Menu --}}
-                    <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><span class="nav-icon">📊</span> لوحة التحكم</a></li>
+                    <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" data-tooltip="لوحة التحكم"><span class="nav-icon">📊</span><span class="nav-label">لوحة التحكم</span></a></li>
                     @if(feature_enabled('sales'))
-                    <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('sales', '💰') }}</span> {{ feature_name('sales', 'المبيعات') }}</a></li>
+                    <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('sales', 'المبيعات') }}"><span class="nav-icon">{{ feature_icon('sales', '💰') }}</span><span class="nav-label">{{ feature_name('sales', 'المبيعات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('purchases'))
-                    <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('purchases', '🛒') }}</span> {{ feature_name('purchases', 'المشتريات') }}</a></li>
+                    <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchases', 'المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchases', '🛒') }}</span><span class="nav-label">{{ feature_name('purchases', 'المشتريات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('suppliers'))
-                    <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('suppliers', '🏢') }}</span> {{ feature_name('suppliers', 'الموردين') }}</a></li>
+                    <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('suppliers', 'الموردين') }}"><span class="nav-icon">{{ feature_icon('suppliers', '🏢') }}</span><span class="nav-label">{{ feature_name('suppliers', 'الموردين') }}</span></a></li>
                     @endif
                     @if(feature_enabled('invoices'))
-                    <li><a href="{{ route('invoices.index') }}" class="{{ request()->routeIs('invoices.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('invoices', '📄') }}</span> {{ feature_name('invoices', 'الفواتير') }}</a></li>
+                    <li><a href="{{ route('invoices.index') }}" class="{{ request()->routeIs('invoices.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('invoices', 'الفواتير') }}"><span class="nav-icon">{{ feature_icon('invoices', '📄') }}</span><span class="nav-label">{{ feature_name('invoices', 'الفواتير') }}</span></a></li>
                     @endif
                     @if(feature_enabled('warehouses'))
-                    <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('warehouses', '🏭') }}</span> {{ feature_name('warehouses', 'المخازن') }}</a></li>
+                    <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('warehouses', 'المخازن') }}"><span class="nav-icon">{{ feature_icon('warehouses', '🏭') }}</span><span class="nav-label">{{ feature_name('warehouses', 'المخازن') }}</span></a></li>
                     @endif
                     @if(feature_enabled('products'))
-                    <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span> {{ feature_name('products', 'الأصناف') }}</a></li>
+                    <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('products', 'الأصناف') }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span><span class="nav-label">{{ feature_name('products', 'الأصناف') }}</span></a></li>
                     @endif
                     @if(feature_enabled('customers'))
-                    <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('customers', '👥') }}</span> {{ feature_name('customers', 'العملاء') }}</a></li>
+                    <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('customers', 'العملاء') }}"><span class="nav-icon">{{ feature_icon('customers', '👥') }}</span><span class="nav-label">{{ feature_name('customers', 'العملاء') }}</span></a></li>
                     @endif
                     @if(feature_enabled('sales_reps'))
-                    <li><a href="{{ route('sales-reps.index') }}" class="{{ request()->routeIs('sales-reps.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('sales_reps', '👔') }}</span> {{ feature_name('sales_reps', 'المندوبين') }}</a></li>
-                    <li><a href="{{ route('admin.sales-rep-treasury.index') }}" class="{{ request()->routeIs('admin.sales-rep-treasury.*') ? 'active' : '' }}"><span class="nav-icon">💰</span> خزينات المندوبين</a></li>
-                    <li><a href="{{ route('admin.sales-rep-inventory.index') }}" class="{{ request()->routeIs('admin.sales-rep-inventory.*') ? 'active' : '' }}"><span class="nav-icon">📦</span> مخازن المندوبين</a></li>
+                    <li><a href="{{ route('sales-reps.index') }}" class="{{ request()->routeIs('sales-reps.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('sales_reps', 'المندوبين') }}"><span class="nav-icon">{{ feature_icon('sales_reps', '👔') }}</span><span class="nav-label">{{ feature_name('sales_reps', 'المندوبين') }}</span></a></li>
+                    <li><a href="{{ route('admin.sales-rep-treasury.index') }}" class="{{ request()->routeIs('admin.sales-rep-treasury.*') ? 'active' : '' }}" data-tooltip="خزينات المندوبين"><span class="nav-icon">💰</span><span class="nav-label">خزينات المندوبين</span></a></li>
+                    <li><a href="{{ route('admin.sales-rep-inventory.index') }}" class="{{ request()->routeIs('admin.sales-rep-inventory.*') ? 'active' : '' }}" data-tooltip="مخازن المندوبين"><span class="nav-icon">📦</span><span class="nav-label">مخازن المندوبين</span></a></li>
                     @endif
                     @if(feature_enabled('employees'))
-                    <li><a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('employees', '👨‍💻') }}</span> {{ feature_name('employees', 'الموظفين') }}</a></li>
-                    <li><a href="{{ route('employee-transactions.index') }}" class="{{ request()->routeIs('employee-transactions.*') ? 'active' : '' }}"><span class="nav-icon">💰</span> المرتبات والسلف</a></li>
+                    <li><a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('employees', 'الموظفين') }}"><span class="nav-icon">{{ feature_icon('employees', '👨‍💻') }}</span><span class="nav-label">{{ feature_name('employees', 'الموظفين') }}</span></a></li>
+                    <li><a href="{{ route('employee-transactions.index') }}" class="{{ request()->routeIs('employee-transactions.*') ? 'active' : '' }}" data-tooltip="المرتبات والسلف"><span class="nav-icon">💰</span><span class="nav-label">المرتبات والسلف</span></a></li>
                     @endif
-                    <li><a href="{{ route('partners.index') }}" class="{{ request()->routeIs('partners.*') ? 'active' : '' }}"><span class="nav-icon">🤝</span> الشركاء</a></li>
-                    <li><a href="{{ route('partner-transactions.index') }}" class="{{ request()->routeIs('partner-transactions.*') ? 'active' : '' }}"><span class="nav-icon">📊</span> معاملات الشركاء</a></li>
-                    <li><a href="{{ route('profit-distribution.index') }}" class="{{ request()->routeIs('profit-distribution.*') ? 'active' : '' }}"><span class="nav-icon">💹</span> توزيع الأرباح</a></li>
+                    <li><a href="{{ route('partners.index') }}" class="{{ request()->routeIs('partners.*') ? 'active' : '' }}" data-tooltip="الشركاء"><span class="nav-icon">🤝</span><span class="nav-label">الشركاء</span></a></li>
+                    <li><a href="{{ route('partner-transactions.index') }}" class="{{ request()->routeIs('partner-transactions.*') ? 'active' : '' }}" data-tooltip="معاملات الشركاء"><span class="nav-icon">📊</span><span class="nav-label">معاملات الشركاء</span></a></li>
+                    <li><a href="{{ route('profit-distribution.index') }}" class="{{ request()->routeIs('profit-distribution.*') ? 'active' : '' }}" data-tooltip="توزيع الأرباح"><span class="nav-icon">💹</span><span class="nav-label">توزيع الأرباح</span></a></li>
                     @if(feature_enabled('expenses'))
-                    <li><a href="{{ route('expenses.index') }}" class="{{ request()->routeIs('expenses.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('expenses', '💸') }}</span> {{ feature_name('expenses', 'المصروفات') }}</a></li>
-                    <li><a href="{{ route('treasury.index') }}" class="{{ request()->routeIs('treasury.*') ? 'active' : '' }}"><span class="nav-icon">🏦</span> الخزنة</a></li>
+                    <li><a href="{{ route('expenses.index') }}" class="{{ request()->routeIs('expenses.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('expenses', 'المصروفات') }}"><span class="nav-icon">{{ feature_icon('expenses', '💸') }}</span><span class="nav-label">{{ feature_name('expenses', 'المصروفات') }}</span></a></li>
+                    <li><a href="{{ route('treasury.index') }}" class="{{ request()->routeIs('treasury.*') ? 'active' : '' }}" data-tooltip="الخزنة"><span class="nav-icon">🏦</span><span class="nav-label">الخزنة</span></a></li>
                     @endif
                     @if(feature_enabled('reports'))
-                    <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('reports', '📈') }}</span> {{ feature_name('reports', 'التقارير') }}</a></li>
+                    <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('reports', 'التقارير') }}"><span class="nav-icon">{{ feature_icon('reports', '📈') }}</span><span class="nav-label">{{ feature_name('reports', 'التقارير') }}</span></a></li>
                     @endif
                     @if(feature_enabled('settings'))
-                    <li><a href="{{ route('settings.index') }}" class="{{ request()->routeIs('settings.index') ? 'active' : '' }}"><span class="nav-icon">{{ feature_icon('settings', '⚙️') }}</span> {{ feature_name('settings', 'الإعدادات') }}</a></li>
-                    <li><a href="{{ route('settings.users') }}" class="{{ request()->routeIs('settings.users*') ? 'active' : '' }}"><span class="nav-icon">👤</span> المستخدمين</a></li>
+                    <li><a href="{{ route('settings.index') }}" class="{{ request()->routeIs('settings.index') ? 'active' : '' }}" data-tooltip="{{ feature_name('settings', 'الإعدادات') }}"><span class="nav-icon">{{ feature_icon('settings', '⚙️') }}</span><span class="nav-label">{{ feature_name('settings', 'الإعدادات') }}</span></a></li>
+                    <li><a href="{{ route('settings.users') }}" class="{{ request()->routeIs('settings.users*') ? 'active' : '' }}" data-tooltip="المستخدمين"><span class="nav-icon">👤</span><span class="nav-label">المستخدمين</span></a></li>
                     @if(auth()->user() && auth()->user()->isSuperAdmin())
-                    <li><a href="{{ route('settings.roles') }}" class="{{ request()->routeIs('settings.roles*') ? 'active' : '' }}"><span class="nav-icon">🔐</span> الأدوار والصلاحيات</a></li>
+                    <li><a href="{{ route('settings.roles') }}" class="{{ request()->routeIs('settings.roles*') ? 'active' : '' }}" data-tooltip="الأدوار والصلاحيات"><span class="nav-icon">🔐</span><span class="nav-label">الأدوار والصلاحيات</span></a></li>
                     @endif
                     @endif
-                    <li><a href="{{ route('portfolio.index') }}" class="{{ request()->routeIs('portfolio.*') ? 'active' : '' }}"><span class="nav-icon">📸</span> معرض الأعمال</a></li>
-                    <li><a href="{{ route('ux-analysis.index') }}" class="{{ request()->routeIs('ux-analysis.*') ? 'active' : '' }}"><span class="nav-icon">🎨</span> تحليل تجربة المستخدم</a></li>
+                    <li><a href="{{ route('portfolio.index') }}" class="{{ request()->routeIs('portfolio.*') ? 'active' : '' }}" data-tooltip="معرض الأعمال"><span class="nav-icon">📸</span><span class="nav-label">معرض الأعمال</span></a></li>
+                    <li><a href="{{ route('ux-analysis.index') }}" class="{{ request()->routeIs('ux-analysis.*') ? 'active' : '' }}" data-tooltip="تحليل تجربة المستخدم"><span class="nav-icon">🎨</span><span class="nav-label">تحليل تجربة المستخدم</span></a></li>
                     @if(auth()->user() && auth()->user()->isSuperAdmin())
-                    <li><a href="{{ route('features.index') }}" class="{{ request()->routeIs('features.*') ? 'active' : '' }}" style="background: rgba(245,158,11,0.2);"><span class="nav-icon">🔧</span> إدارة المميزات</a></li>
+                    <li><a href="{{ route('features.index') }}" class="{{ request()->routeIs('features.*') ? 'active' : '' }}" style="background: rgba(245,158,11,0.2);" data-tooltip="إدارة المميزات"><span class="nav-icon">🔧</span><span class="nav-label">إدارة المميزات</span></a></li>
                     @endif
                 @endif
             </ul>
 
+            <button class="sidebar-collapse-btn" id="sidebarToggle" title="طي القائمة" data-tooltip="طي القائمة">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span class="nav-label">طي القائمة</span>
+            </button>
+
             <div class="sidebar-footer">
-                <a href="{{ route('profile.index') }}" class="profile-btn" style="display: block; text-align: center; padding: 10px; margin-bottom: 10px; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #93c5fd; text-decoration: none;">
-                    <span>👤 {{ auth()->user()->name ?? 'الملف الشخصي' }}</span>
+                <a href="{{ route('profile.index') }}" class="profile-btn" data-tooltip="الملف الشخصي" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 10px; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #93c5fd; text-decoration: none;">
+                    <span class="nav-icon">👤</span><span class="nav-label">{{ auth()->user()->name ?? 'الملف الشخصي' }}</span>
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="logout-btn"><span>🚪 تسجيل الخروج</span></button>
+                    <button type="submit" class="logout-btn" data-tooltip="تسجيل الخروج" style="display: flex; align-items: center; gap: 10px;">
+                        <span class="nav-icon">🚪</span><span class="nav-label">تسجيل الخروج</span>
+                    </button>
                 </form>
             </div>
         </aside>
@@ -753,6 +821,29 @@
             toggle.addEventListener('click', function() {
                 app.classList.toggle('sidebar-collapsed');
                 localStorage.setItem('sidebar-collapsed', app.classList.contains('sidebar-collapsed') ? '1' : '0');
+            });
+
+            // Tooltip for collapsed sidebar
+            var tip = document.createElement('div');
+            tip.className = 'sidebar-tooltip';
+            document.body.appendChild(tip);
+            var hideTimer;
+            document.getElementById('sidebar').addEventListener('mouseover', function(e) {
+                if (!app.classList.contains('sidebar-collapsed')) return;
+                var el = e.target.closest('[data-tooltip]');
+                if (!el) return;
+                clearTimeout(hideTimer);
+                var rect = el.getBoundingClientRect();
+                tip.textContent = el.getAttribute('data-tooltip');
+                tip.style.top = (rect.top + rect.height / 2) + 'px';
+                tip.style.left = (rect.left - 8) + 'px';
+                tip.style.transform = 'translate(-100%, -50%)';
+                tip.classList.add('visible');
+            });
+            document.getElementById('sidebar').addEventListener('mouseout', function(e) {
+                var el = e.target.closest('[data-tooltip]');
+                if (!el) return;
+                hideTimer = setTimeout(function() { tip.classList.remove('visible'); }, 100);
             });
         })();
     </script>

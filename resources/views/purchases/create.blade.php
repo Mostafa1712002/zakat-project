@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/suppliers/${supplierId}/products`)
             .then(r => r.json())
             .then(products => {
-                supplierProducts = products;
+                supplierProducts = products.length > 0 ? products : null;
                 updateAllProductSelects();
             });
     }

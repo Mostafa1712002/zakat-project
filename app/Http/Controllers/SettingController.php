@@ -53,22 +53,59 @@ class SettingController extends Controller
             'invoice_prefix' => 'nullable|string|max:20',
             'invoice_footer' => 'nullable|string',
             'invoice_terms' => 'nullable|string',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'stamp' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        // Store settings
+        // Exclude file fields from text settings
+        $fileFields = ['logo', 'stamp'];
         foreach ($validated as $key => $value) {
-            $this->setSetting($key, $value);
+            if (!in_array($key, $fileFields)) {
+                $this->setSetting($key, $value);
+            }
         }
 
-        // Handle logo upload if present
+        // Handle logo upload
         if ($request->hasFile('logo')) {
-            $request->validate(['logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048']);
+            $oldLogo = $this->getSetting('company_logo');
+            if ($oldLogo && \Storage::disk('public')->exists($oldLogo)) {
+                \Storage::disk('public')->delete($oldLogo);
+            }
             $logoPath = $request->file('logo')->store('settings', 'public');
             $this->setSetting('company_logo', $logoPath);
         }
 
+        // Handle logo removal
+        if ($request->boolean('remove_logo')) {
+            $oldLogo = $this->getSetting('company_logo');
+            if ($oldLogo && \Storage::disk('public')->exists($oldLogo)) {
+                \Storage::disk('public')->delete($oldLogo);
+            }
+            $this->setSetting('company_logo', '');
+        }
+
+        // Handle stamp upload
+        if ($request->hasFile('stamp')) {
+            $oldStamp = $this->getSetting('company_stamp');
+            if ($oldStamp && \Storage::disk('public')->exists($oldStamp)) {
+                \Storage::disk('public')->delete($oldStamp);
+            }
+            $stampPath = $request->file('stamp')->store('settings', 'public');
+            $this->setSetting('company_stamp', $stampPath);
+        }
+
+        // Handle stamp removal
+        if ($request->boolean('remove_stamp')) {
+            $oldStamp = $this->getSetting('company_stamp');
+            if ($oldStamp && \Storage::disk('public')->exists($oldStamp)) {
+                \Storage::disk('public')->delete($oldStamp);
+            }
+            $this->setSetting('company_stamp', '');
+        }
+
         // Clear settings cache
         Cache::forget('company_settings');
+        Cache::forget('sidebar_settings');
 
         return redirect()->route('settings.company')
             ->with('success', 'تم تحديث إعدادات الشركة بنجاح');
@@ -396,6 +433,7 @@ class SettingController extends Controller
                 'currency_symbol' => $this->getSetting('currency_symbol', 'ر.س'),
                 'tax_rate' => $this->getSetting('tax_rate', 15),
                 'company_logo' => $this->getSetting('company_logo', ''),
+                'company_stamp' => $this->getSetting('company_stamp', ''),
                 'invoice_prefix' => $this->getSetting('invoice_prefix', 'INV-'),
                 'invoice_footer' => $this->getSetting('invoice_footer', ''),
                 'invoice_terms' => $this->getSetting('invoice_terms', ''),

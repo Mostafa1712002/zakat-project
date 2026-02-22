@@ -223,7 +223,7 @@ class SaleController extends Controller
                 'sales_rep_id' => $salesRepId,
                 'user_id' => auth()->id(),
                 'invoice_date' => $validated['invoice_date'],
-                'due_date' => $validated['due_date'],
+                'due_date' => $validated['due_date'] ?? null,
                 'payment_type' => $validated['payment_type'],
                 'status' => Sale::STATUS_DRAFT,
                 'payment_status' => Sale::PAYMENT_STATUS_UNPAID,
@@ -376,11 +376,20 @@ class SaleController extends Controller
         $sale->load(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'items.product', 'payments']);
 
         $supervisorPhone = '';
+        $companyName = '';
+        $companyLogo = '';
+        $companyStamp = '';
         try {
-            $supervisorPhone = \DB::table('settings')->where('key', 'supervisor_phone')->value('value') ?? '';
+            $settings = \DB::table('settings')
+                ->whereIn('key', ['supervisor_phone', 'company_name', 'company_logo', 'company_stamp'])
+                ->pluck('value', 'key');
+            $supervisorPhone = $settings['supervisor_phone'] ?? '';
+            $companyName = $settings['company_name'] ?? '';
+            $companyLogo = $settings['company_logo'] ?? '';
+            $companyStamp = $settings['company_stamp'] ?? '';
         } catch (\Exception $e) {}
 
-        return view('sales.show', compact('sale', 'supervisorPhone'));
+        return view('sales.show', compact('sale', 'supervisorPhone', 'companyName', 'companyLogo', 'companyStamp'));
     }
 
     /**
@@ -493,7 +502,7 @@ class SaleController extends Controller
                 'warehouse_id' => $validated['warehouse_id'],
                 'sales_rep_id' => $validated['sales_rep_id'],
                 'invoice_date' => $validated['invoice_date'],
-                'due_date' => $validated['due_date'],
+                'due_date' => $validated['due_date'] ?? null,
                 'payment_type' => $validated['payment_type'],
                 'discount_type' => $validated['discount_type'] ?? 'fixed',
                 'discount_value' => $validated['discount_value'] ?? 0,

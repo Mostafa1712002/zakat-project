@@ -28,7 +28,11 @@
         <div class="print-minimal">
             <div class="print-minimal-header">
                 <div class="print-logo-block">
-                    <img src="{{ asset('logo.png') }}" alt="Rogence" class="print-logo">
+                    @if(!empty($companyLogo))
+                        <img src="{{ asset('storage/' . $companyLogo) }}" alt="{{ $companyName ?: 'الشركة' }}" class="print-logo">
+                    @else
+                        <img src="{{ asset('logo.png') }}" alt="{{ $companyName ?: 'الشركة' }}" class="print-logo">
+                    @endif
                 </div>
                 <div class="print-invoice-meta">
                     <div class="print-invoice-label">فاتورة مبيعات</div>
@@ -99,6 +103,11 @@
                     <span class="print-signature-label">توقيع العميل</span>
                     <div class="print-signature-line"></div>
                 </div>
+                @if(!empty($companyStamp))
+                <div class="print-stamp-box">
+                    <img src="{{ asset('storage/' . $companyStamp) }}" alt="ختم الشركة" class="print-stamp-image">
+                </div>
+                @endif
                 <div class="print-signature-box">
                     <span class="print-signature-label">توقيع المندوب</span>
                     <div class="print-signature-line"></div>
@@ -109,9 +118,7 @@
         <!-- Invoice Header -->
         <div class="invoice-header">
             <div class="company-info">
-                <h1 class="company-name company-name-screen">روجنسي</h1>
-                <h1 class="company-name company-name-print">Laravel للتجارة والتوزيع</h1>
-                <p class="company-slogan">للتجارة والتوزيع</p>
+                <h1 class="company-name">{{ $companyName ?: 'الشركة' }}</h1>
             </div>
             <div class="invoice-title">
                 <div class="invoice-title-main">
@@ -286,6 +293,11 @@
                 <div class="signature-line"></div>
                 <span>توقيع العميل</span>
             </div>
+            @if(!empty($companyStamp))
+            <div class="stamp-box">
+                <img src="{{ asset('storage/' . $companyStamp) }}" alt="ختم الشركة" class="stamp-image">
+            </div>
+            @endif
             <div class="signature-box">
                 <div class="signature-line"></div>
                 <span>توقيع المندوب</span>
@@ -398,16 +410,6 @@
     font-weight: bold;
     color: var(--primary);
     margin: 0;
-}
-
-.company-name-print {
-    display: none;
-}
-
-.company-slogan {
-    font-size: 0.9rem;
-    color: #6b7280;
-    margin: 4px 0 0 0;
 }
 
 .invoice-title {
@@ -654,6 +656,19 @@
 .signature-box span {
     font-size: 0.85rem;
     color: #6b7280;
+}
+
+/* Stamp */
+.stamp-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.stamp-image {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: contain;
+    opacity: 0.85;
 }
 
 /* ========== PRINT STYLES ========== */
@@ -943,6 +958,19 @@
     .print-signature-line {
         height: 8mm;
         border-bottom: 1px solid #475569;
+    }
+
+    .print-stamp-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .print-stamp-image {
+        max-width: 18mm;
+        max-height: 18mm;
+        object-fit: contain;
+        opacity: 0.85;
     }
 
     @page {
