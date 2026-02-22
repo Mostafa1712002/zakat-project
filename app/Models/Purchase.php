@@ -176,8 +176,8 @@ class Purchase extends Model
     {
         $prefix = date('Ym');
         $last = self::withTrashed()
-            ->whereRaw('invoice_number REGEXP ?', ['^[0-9]+$'])
             ->where('invoice_number', 'like', $prefix . '%')
+            ->where('invoice_number', 'not like', '%-%')
             ->orderBy('invoice_number', 'desc')
             ->first();
 
