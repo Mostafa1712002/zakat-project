@@ -150,11 +150,11 @@
         <!-- Service Fee -->
         <div class="card">
             <div class="card-body">
-                <h3 style="margin-bottom: 16px;">💰 الخدمة</h3>
+                <h3 style="margin-bottom: 16px;">💰 الخصم</h3>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="discount_type" class="form-label">نوع الخدمة</label>
+                        <label for="discount_type" class="form-label">نوع الخصم</label>
                         <select name="discount_type" id="discount_type" class="form-control">
                             <option value="fixed">مبلغ ثابت</option>
                             <option value="percentage">نسبة مئوية</option>
@@ -162,7 +162,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="discount_value" class="form-label">قيمة الخدمة</label>
+                        <label for="discount_value" class="form-label">قيمة الخصم</label>
                         <input type="number" step="0.01" name="discount_value" id="discount_value" class="form-control" value="{{ old('discount_value', 0) }}" min="0">
                     </div>
                 </div>
@@ -235,7 +235,7 @@
                     <strong id="subtotal">0.00</strong> ج.م
                 </div>
                 <div class="totals-row">
-                    <span>الخدمة:</span>
+                    <span>الخصم:</span>
                     <strong id="totalDiscount">0.00</strong> ج.م
                 </div>
                 <div class="totals-row total-final">
@@ -366,8 +366,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Products data with prices and min selling price
     const productsData = {!! json_encode($products->mapWithKeys(function($p) {
         return [$p->id => [
-            'retail' => $p->selling_price,
-            'min_price' => $p->min_selling_price ?? 0,
+            'retail' => (float) $p->selling_price,
+            'min_price' => (float) ($p->min_selling_price ?? 0),
             'track' => $p->track_inventory,
             'rep_stock' => $p->rep_stock ?? null
         ]];
@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const response = await fetch(url);
             const data = await response.json();
-            stockCache[cacheKey] = data.available || 0;
+            stockCache[cacheKey] = parseFloat(data.available) || 0;
             return stockCache[cacheKey];
         } catch (error) {
             console.error('Error fetching stock:', error);
@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const hint = document.createElement('small');
             hint.className = 'min-price-hint';
             hint.style.cssText = 'color: #64748b; font-size: 11px; display: block; margin-top: 2px;';
-            hint.textContent = 'أقل سعر: ' + minPrice.toFixed(2) + ' ج.م';
+            hint.textContent = 'أقل سعر: ' + parseFloat(minPrice).toFixed(2) + ' ج.م';
             priceInput.parentNode.appendChild(hint);
         }
     }
@@ -645,11 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Attach events to row
     function attachRowEvents(row) {
-        // Product selection change
-        row.querySelector('.product-select').addEventListener('change', function() {
-            updateRowPrice(row);
-            updateStockDisplay(row);
-        });
+        // Product selection change is handled by Select2 in initProductSelect2()
 
         row.querySelectorAll('.quantity-input, .price-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
@@ -680,13 +676,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     Object.keys(productsData).forEach(key => delete productsData[key]);
                     products.forEach(p => {
                         productsData[p.id] = {
-                            retail: p.selling_price,
-                            min_price: p.min_selling_price || 0,
+                            retail: parseFloat(p.selling_price) || 0,
+                            min_price: parseFloat(p.min_selling_price) || 0,
                             track: p.track_inventory,
                             rep_stock: null
                         };
                         // Pre-fill stock cache
-                        stockCache[`${p.id}_${document.getElementById('warehouse_id').value}`] = p.available;
+                        stockCache[`${p.id}_${document.getElementById('warehouse_id').value}`] = parseFloat(p.available) || 0;
                     });
 
                     // Destroy existing Select2

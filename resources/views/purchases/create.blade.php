@@ -32,9 +32,6 @@
                     @if($suppliers->isEmpty())
                     <p class="form-text text-danger">لا يوجد موردين. <a href="{{ route('suppliers.create') }}">أضف مورد جديد</a> أولاً.</p>
                     @endif
-                    <label style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);">
-                        <input type="checkbox" id="filterBySupplier"> عرض أصناف المورد فقط
-                    </label>
                 </div>
 
                 <div class="form-row">
@@ -153,18 +150,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const allProductsOptions = @json($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'cost_price' => $p->cost_price]));
     let supplierProducts = null; // null = not filtered
     const supplierSelect = document.getElementById('supplier_id');
-    const filterCheckbox = document.getElementById('filterBySupplier');
 
-    // Supplier filter logic
+    // Auto-filter products when supplier is selected
     supplierSelect.addEventListener('change', function() {
-        if (filterCheckbox.checked && this.value) {
+        if (this.value) {
             fetchSupplierProducts(this.value);
-        }
-    });
-
-    filterCheckbox.addEventListener('change', function() {
-        if (this.checked && supplierSelect.value) {
-            fetchSupplierProducts(supplierSelect.value);
         } else {
             supplierProducts = null;
             updateAllProductSelects();
@@ -278,11 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function attachRowEvents(row) {
-        row.querySelector('.product-select').addEventListener('change', function() {
-            const price = allProductsData[this.value] || 0;
-            row.querySelector('.price-input').value = price;
-            calculateTotals();
-        });
+        // Product selection change is handled by Select2 in initPurchaseSelect2()
         row.querySelectorAll('.quantity-input, .price-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
         });
