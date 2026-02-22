@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'لوحة التحكم') - Rogence System</title>
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
@@ -69,6 +69,11 @@
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        img, svg, video, canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
             background: var(--bg);
@@ -77,7 +82,12 @@
             min-height: 100vh;
         }
 
-        .app { display: flex; min-height: 100vh; }
+        .app {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
 
         /* Sidebar */
         .sidebar {
@@ -100,6 +110,7 @@
             margin-right: 260px;
             padding: 20px;
             min-height: 100vh;
+            min-width: 0;
             width: calc(100% - 260px);
             max-width: calc(100% - 260px);
             overflow-x: hidden;
@@ -245,6 +256,7 @@
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             overflow: hidden;
+            min-width: 0;
         }
 
         .card-header {
@@ -256,14 +268,24 @@
         }
 
         .card-title { font-size: 16px; font-weight: 600; }
-        .card-body { padding: 20px; }
+        .card-body {
+            padding: 20px;
+            min-width: 0;
+        }
 
         /* Tables */
-        .table-container {
+        .table-container,
+        .table-container-auto {
             overflow-x: auto !important;
-            overflow-y: visible;
+            overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             width: 100%;
+            scrollbar-width: thin;
+        }
+
+        .table-container > table,
+        .table-container-auto > table {
+            margin-bottom: 0;
         }
 
         .table {
@@ -446,11 +468,12 @@
             .stats-grid { grid-template-columns: 1fr; }
 
             /* Responsive Tables - Enhanced */
-            .table-container {
+            .table-container,
+            .table-container-auto {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 margin: 0 -16px;
-                padding: 0 16px;
+                padding: 0 16px 8px;
                 position: relative;
             }
             .table-container::after {
@@ -462,20 +485,27 @@
                 padding: 8px;
                 background: linear-gradient(to right, rgba(241,245,249,0.9), transparent 20%, transparent 80%, rgba(241,245,249,0.9));
             }
-            .table { min-width: 700px; font-size: 12px; }
+            .table { min-width: 620px; font-size: 12px; }
+            .table-container > table.items-table,
+            .table-container-auto > table.items-table {
+                min-width: 620px;
+            }
+            .table-container > table.info-table,
+            .table-container-auto > table.info-table {
+                min-width: 100%;
+            }
+            .table-container::after,
+            .table-container-auto::after {
+                content: none;
+            }
             .table th, .table td {
                 padding: 10px 8px;
                 white-space: nowrap;
             }
-            .table th:first-child, .table td:first-child {
-                position: sticky;
-                right: 0;
-                background: var(--card);
-                z-index: 1;
-                box-shadow: -2px 0 5px rgba(0,0,0,0.05);
-            }
-            .table tr:hover td:first-child {
-                background: rgba(8,145,178,0.03);
+            .table th:first-child,
+            .table td:first-child {
+                position: static;
+                box-shadow: none;
             }
             .table-actions {
                 flex-wrap: nowrap;
