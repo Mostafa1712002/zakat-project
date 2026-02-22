@@ -73,6 +73,18 @@
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
+
+                <div class="form-group">
+                    <label for="supplier_ids" class="form-label">الموردين</label>
+                    <select name="supplier_ids[]" id="supplier_ids" class="form-control" multiple>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}" {{ collect(old('supplier_ids', $product->suppliers->pluck('id')->toArray()))->contains($supplier->id) ? 'selected' : '' }}>
+                                {{ $supplier->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small style="color: #64748b; font-size: 12px;">اختر مورد أو أكثر (اختياري)</small>
+                </div>
             </div>
 
             <div class="form-group">
@@ -234,6 +246,9 @@
 
 @push('scripts')
 <script>
+$(document).ready(function() {
+    $('#supplier_ids').select2({ placeholder: 'اختر الموردين...', allowClear: true, dir: 'rtl', width: '100%' });
+});
 const existingProducts = @json($existingProducts);
 const nameInput = document.getElementById('name');
 const suggestionsDiv = document.getElementById('nameSuggestions');

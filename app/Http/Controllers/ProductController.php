@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Supplier;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -15,7 +16,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::with(['category', 'unit'])
+        $products = Product::with(['category', 'unit', 'suppliers'])
             ->withSum('inventoryLevels as stock_quantity', 'quantity')
             ->latest()
             ->paginate(15);
@@ -30,9 +31,10 @@ class ProductController extends Controller
     {
         $categories = Category::active()->ordered()->get();
         $units = Unit::active()->get();
+        $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
         $existingProducts = Product::select('id', 'name', 'sku')->orderBy('name')->get();
 
-        return view('products.create', compact('categories', 'units', 'existingProducts'));
+        return view('products.create', compact('categories', 'units', 'suppliers', 'existingProducts'));
     }
 
     /**
@@ -78,7 +80,11 @@ class ProductController extends Controller
             } while (Product::where('barcode', $validated['barcode'])->exists());
         }
 
-        Product::create($validated);
+        $product = Product::create($validated);
+
+        if ($request->has('supplier_ids')) {
+            $product->suppliers()->sync($request->input('supplier_ids', []));
+        }
 
         return redirect()->route('products.index')
             ->with('success', 'تم إضافة المنتج بنجاح');
@@ -99,14 +105,16 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
+        $product->load('suppliers');
         $categories = Category::active()->ordered()->get();
         $units = Unit::active()->get();
+        $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
         $existingProducts = Product::select('id', 'name', 'sku')
             ->where('id', '!=', $product->id)
             ->orderBy('name')
             ->get();
 
-        return view('products.edit', compact('product', 'categories', 'units', 'existingProducts'));
+        return view('products.edit', compact('product', 'categories', 'units', 'suppliers', 'existingProducts'));
     }
 
     /**
@@ -149,6 +157,8 @@ class ProductController extends Controller
         }
 
         $product->update($validated);
+
+        $product->suppliers()->sync($request->input('supplier_ids', []));
 
         return redirect()->route('products.index')
             ->with('success', 'تم تحديث المنتج بنجاح');
