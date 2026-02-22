@@ -43,10 +43,9 @@ class PurchaseController extends Controller
     {
         $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
         $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
-        $products = Product::where('is_active', true)->orderBy('name')->get();
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
-        return view('purchases.create', compact('suppliers', 'warehouses', 'products', 'branches'));
+        return view('purchases.create', compact('suppliers', 'warehouses', 'branches'));
     }
 
     public function store(Request $request)
@@ -125,11 +124,6 @@ class PurchaseController extends Controller
                     );
                 }
             }
-
-            // ربط الأصناف بالمورد تلقائياً
-            $supplier = Supplier::find($validated['supplier_id']);
-            $productIds = collect($validated['items'])->pluck('product_id')->unique()->toArray();
-            $supplier->products()->syncWithoutDetaching($productIds);
 
             $purchase->subtotal = $subtotal;
             $discount = $purchase->discount_type === 'percentage'
