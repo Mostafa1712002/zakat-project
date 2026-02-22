@@ -13,8 +13,8 @@
 
         body {
             font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', 'Tahoma', 'Arial', sans-serif;
-            font-size: 11pt;
-            line-height: 1.6;
+            font-size: 13pt;
+            line-height: 1.7;
             color: #1f2937;
             direction: rtl;
             padding: 15mm;
@@ -51,19 +51,19 @@
         }
 
         .company-name {
-            font-size: 18pt;
+            font-size: 22pt;
             font-weight: bold;
             color: #0891b2;
         }
 
         .invoice-label {
-            font-size: 14pt;
+            font-size: 17pt;
             font-weight: bold;
             color: #374151;
         }
 
         .invoice-number {
-            font-size: 13pt;
+            font-size: 15pt;
             font-weight: bold;
             color: #0891b2;
             margin-top: 4px;
@@ -73,7 +73,7 @@
             display: inline-block;
             padding: 2px 10px;
             border-radius: 12px;
-            font-size: 9pt;
+            font-size: 11pt;
             font-weight: bold;
             margin-top: 4px;
         }
@@ -105,7 +105,7 @@
         }
 
         .info-title {
-            font-size: 10pt;
+            font-size: 13pt;
             font-weight: bold;
             color: #0891b2;
             border-bottom: 1px solid #e5e7eb;
@@ -114,7 +114,7 @@
         }
 
         .info-row {
-            font-size: 9.5pt;
+            font-size: 12pt;
             padding: 3px 0;
         }
 
@@ -138,17 +138,17 @@
         .items-table th {
             background: #0891b2;
             color: white;
-            padding: 8px 6px;
-            font-size: 9.5pt;
+            padding: 10px 8px;
+            font-size: 12pt;
             text-align: center;
             font-weight: 600;
         }
 
         .items-table td {
-            padding: 7px 6px;
+            padding: 9px 8px;
             border-bottom: 1px solid #e5e7eb;
             text-align: center;
-            font-size: 9.5pt;
+            font-size: 12pt;
         }
 
         .items-table td.name {
@@ -174,8 +174,8 @@
         }
 
         .totals-table td {
-            padding: 5px 10px;
-            font-size: 10pt;
+            padding: 6px 12px;
+            font-size: 13pt;
         }
 
         .totals-table .total-label {
@@ -191,7 +191,7 @@
 
         .totals-table .grand-total td {
             border-top: 2px solid #0891b2;
-            font-size: 12pt;
+            font-size: 15pt;
             font-weight: bold;
             color: #0891b2;
             padding-top: 8px;
@@ -232,7 +232,7 @@
         }
 
         .sig-label {
-            font-size: 9pt;
+            font-size: 12pt;
             color: #6b7280;
         }
 
