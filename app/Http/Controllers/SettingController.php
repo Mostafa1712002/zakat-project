@@ -55,10 +55,19 @@ class SettingController extends Controller
             'invoice_terms' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'stamp' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'contacts' => 'nullable|array',
+            'contacts.*.name' => 'required|string|max:255',
+            'contacts.*.phone' => 'required|string|max:20',
         ]);
 
-        // Exclude file fields from text settings
-        $fileFields = ['logo', 'stamp'];
+        // Save invoice contacts as JSON
+        $contacts = $validated['contacts'] ?? [];
+        // Filter out empty rows
+        $contacts = array_values(array_filter($contacts, fn($c) => !empty($c['name']) && !empty($c['phone'])));
+        $this->setSetting('invoice_contacts', json_encode($contacts, JSON_UNESCAPED_UNICODE));
+
+        // Exclude file fields and contacts from text settings
+        $fileFields = ['logo', 'stamp', 'contacts'];
         foreach ($validated as $key => $value) {
             if (!in_array($key, $fileFields)) {
                 $this->setSetting($key, $value);
@@ -437,6 +446,7 @@ class SettingController extends Controller
                 'invoice_prefix' => $this->getSetting('invoice_prefix', 'INV-'),
                 'invoice_footer' => $this->getSetting('invoice_footer', ''),
                 'invoice_terms' => $this->getSetting('invoice_terms', ''),
+                'invoice_contacts' => $this->getSetting('invoice_contacts', '[]'),
             ];
         });
     }

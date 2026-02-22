@@ -176,16 +176,18 @@ class PurchaseController extends Controller
         $companyName = '';
         $companyLogo = '';
         $companyStamp = '';
+        $invoiceContacts = [];
         try {
             $settings = \DB::table('settings')
-                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp'])
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp', 'invoice_contacts'])
                 ->pluck('value', 'key');
             $companyName = $settings['company_name'] ?? '';
             $companyLogo = $settings['company_logo'] ?? '';
             $companyStamp = $settings['company_stamp'] ?? '';
+            $invoiceContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: [];
         } catch (\Exception $e) {}
 
-        return view('purchases.show', compact('purchase', 'companyName', 'companyLogo', 'companyStamp'));
+        return view('purchases.show', compact('purchase', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts'));
     }
 
     public function pdf(Purchase $purchase)
@@ -195,18 +197,20 @@ class PurchaseController extends Controller
         $companyName = '';
         $companyLogo = '';
         $companyStamp = '';
+        $invoiceContacts = [];
         try {
             $settings = \DB::table('settings')
-                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp'])
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp', 'invoice_contacts'])
                 ->pluck('value', 'key');
             $companyName = $settings['company_name'] ?? '';
             $companyName = preg_replace('/[\x{1F000}-\x{1FFFF}|\x{2600}-\x{27FF}|\x{FE00}-\x{FEFF}]/u', '', $companyName);
             $companyName = trim($companyName);
             $companyLogo = $settings['company_logo'] ?? '';
             $companyStamp = $settings['company_stamp'] ?? '';
+            $invoiceContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: [];
         } catch (\Exception $e) {}
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.purchase', compact('purchase', 'companyName', 'companyLogo', 'companyStamp'));
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.purchase', compact('purchase', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts'));
 
         $pdf->setOption('page-size', 'A4');
         $pdf->setOption('encoding', 'UTF-8');

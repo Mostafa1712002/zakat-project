@@ -373,17 +373,19 @@ class SaleController extends Controller
         $companyName = '';
         $companyLogo = '';
         $companyStamp = '';
+        $invoiceContacts = [];
         try {
             $settings = \DB::table('settings')
-                ->whereIn('key', ['supervisor_phone', 'company_name', 'company_logo', 'company_stamp'])
+                ->whereIn('key', ['supervisor_phone', 'company_name', 'company_logo', 'company_stamp', 'invoice_contacts'])
                 ->pluck('value', 'key');
             $supervisorPhone = $settings['supervisor_phone'] ?? '';
             $companyName = $settings['company_name'] ?? '';
             $companyLogo = $settings['company_logo'] ?? '';
             $companyStamp = $settings['company_stamp'] ?? '';
+            $invoiceContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: [];
         } catch (\Exception $e) {}
 
-        return view('sales.show', compact('sale', 'supervisorPhone', 'companyName', 'companyLogo', 'companyStamp'));
+        return view('sales.show', compact('sale', 'supervisorPhone', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts'));
     }
 
     /**
@@ -686,18 +688,20 @@ class SaleController extends Controller
         $companyName = '';
         $companyLogo = '';
         $companyStamp = '';
+        $invoiceContacts = [];
         try {
             $settings = \DB::table('settings')
-                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp'])
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp', 'invoice_contacts'])
                 ->pluck('value', 'key');
             $companyName = $settings['company_name'] ?? '';
             $companyName = preg_replace('/[\x{1F000}-\x{1FFFF}|\x{2600}-\x{27FF}|\x{FE00}-\x{FEFF}]/u', '', $companyName);
             $companyName = trim($companyName);
             $companyLogo = $settings['company_logo'] ?? '';
             $companyStamp = $settings['company_stamp'] ?? '';
+            $invoiceContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: [];
         } catch (\Exception $e) {}
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp'));
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts'));
 
         $pdf->setOption('page-size', 'A4');
         $pdf->setOption('encoding', 'UTF-8');

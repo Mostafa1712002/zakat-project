@@ -241,6 +241,44 @@
             max-height: 80px;
             opacity: 0.85;
         }
+
+        /* Invoice Contacts */
+        .contacts-section {
+            margin-top: 16px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .contacts-title {
+            font-size: 12pt;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .contacts-grid {
+            display: table;
+            width: 100%;
+        }
+
+        .contact-cell {
+            display: table-cell;
+            text-align: center;
+            padding: 4px 10px;
+            font-size: 11pt;
+        }
+
+        .contact-cell .contact-name {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .contact-cell .contact-phone {
+            color: #6b7280;
+            font-size: 10pt;
+            direction: ltr;
+        }
     </style>
 </head>
 <body>
@@ -384,5 +422,20 @@
             <div class="sig-label">توقيع المستلم</div>
         </div>
     </div>
+
+    <!-- Invoice Contacts -->
+    @if(!empty($invoiceContacts))
+    <div class="contacts-section">
+        <div class="contacts-title">جهات الاتصال</div>
+        <div class="contacts-grid">
+            @foreach($invoiceContacts as $contact)
+            <div class="contact-cell">
+                <div class="contact-name">{{ $contact['name'] }}</div>
+                <div class="contact-phone">{{ $contact['phone'] }}</div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 </body>
 </html>

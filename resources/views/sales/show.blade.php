@@ -113,6 +113,20 @@
                     <div class="print-signature-line"></div>
                 </div>
             </div>
+
+            @if(!empty($invoiceContacts))
+            <div class="invoice-contacts-section" style="margin-top: 10px;">
+                <div class="invoice-contacts-title">جهات الاتصال</div>
+                <div class="invoice-contacts-grid">
+                    @foreach($invoiceContacts as $contact)
+                    <div class="invoice-contact-item">
+                        <strong>{{ $contact['name'] }}</strong>
+                        <span dir="ltr">{{ $contact['phone'] }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- Invoice Header -->
@@ -299,6 +313,21 @@
                 <span>توقيع المندوب</span>
             </div>
         </div>
+
+        <!-- Invoice Contact Persons -->
+        @if(!empty($invoiceContacts))
+        <div class="invoice-contacts-section">
+            <div class="invoice-contacts-title">جهات الاتصال</div>
+            <div class="invoice-contacts-grid">
+                @foreach($invoiceContacts as $contact)
+                <div class="invoice-contact-item">
+                    <strong>{{ $contact['name'] }}</strong>
+                    <span dir="ltr">{{ $contact['phone'] }}</span>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- Screen-only sections --}}
@@ -667,6 +696,44 @@
     opacity: 0.85;
 }
 
+/* Invoice Contacts */
+.invoice-contacts-section {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+.invoice-contacts-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    text-align: center;
+}
+.invoice-contacts-grid {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+.invoice-contact-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 16px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+.invoice-contact-item strong {
+    color: #374151;
+}
+.invoice-contact-item span {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
 /* ========== PRINT STYLES ========== */
 @media print {
     * {
@@ -812,6 +879,21 @@
     .stamp-image {
         max-width: 70px;
         max-height: 70px;
+    }
+
+    .invoice-contacts-section {
+        margin-top: 12px;
+        padding-top: 8px;
+    }
+
+    .invoice-contacts-title {
+        font-size: 9pt;
+    }
+
+    .invoice-contact-item {
+        font-size: 8pt;
+        padding: 4px 10px;
+        background: #f8fafc !important;
     }
 
     @page {

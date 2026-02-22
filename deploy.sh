@@ -6,6 +6,10 @@ REMOTE_PATH="/var/www/rogence.newaves-systems.com"
 
 echo "🚀 Deploying to $SERVER..."
 
+# Pull latest changes first
+echo "📥 Pulling latest changes..."
+git pull --rebase origin main
+
 # Push local changes
 echo "📤 Pushing to git..."
 git push origin main

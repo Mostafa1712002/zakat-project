@@ -167,6 +167,29 @@
             </div>
 
             <hr style="margin: 24px 0; border-color: var(--border-color);">
+            <h3 style="margin-bottom: 16px;">📇 جهات اتصال الفاتورة</h3>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 12px;">أشخاص التواصل التي تظهر في أسفل كل فاتورة مبيعات ومشتريات</p>
+
+            <div id="contacts-container">
+                @php $existingContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: []; @endphp
+                @forelse($existingContacts as $index => $contact)
+                <div class="contact-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px;">
+                    <input type="text" name="contacts[{{ $index }}][name]" class="form-control" placeholder="اسم جهة الاتصال" value="{{ $contact['name'] ?? '' }}" style="flex: 1;">
+                    <input type="text" name="contacts[{{ $index }}][phone]" class="form-control" placeholder="رقم الهاتف" value="{{ $contact['phone'] ?? '' }}" style="flex: 1;">
+                    <button type="button" class="btn" onclick="removeContact(this)" style="padding: 8px 12px; color: #dc2626;">✕</button>
+                </div>
+                @empty
+                <div class="contact-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px;">
+                    <input type="text" name="contacts[0][name]" class="form-control" placeholder="اسم جهة الاتصال" style="flex: 1;">
+                    <input type="text" name="contacts[0][phone]" class="form-control" placeholder="رقم الهاتف" style="flex: 1;">
+                    <button type="button" class="btn" onclick="removeContact(this)" style="padding: 8px 12px; color: #dc2626;">✕</button>
+                </div>
+                @endforelse
+            </div>
+
+            <button type="button" class="btn" onclick="addContact()" style="margin-bottom: 16px;">+ إضافة جهة اتصال</button>
+
+            <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">💰 إعدادات مالية</h3>
 
             <div class="form-row">
@@ -282,6 +305,31 @@ function previewFile(input, type) {
             document.getElementById('remove_' + type).value = '0';
         };
         reader.readAsDataURL(input.files[0]);
+    }
+}
+
+var contactIndex = {{ count($existingContacts) ?: 1 }};
+
+function addContact() {
+    var container = document.getElementById('contacts-container');
+    var row = document.createElement('div');
+    row.className = 'contact-row';
+    row.style.cssText = 'display: flex; gap: 12px; align-items: center; margin-bottom: 10px;';
+    row.innerHTML = '<input type="text" name="contacts[' + contactIndex + '][name]" class="form-control" placeholder="اسم جهة الاتصال" style="flex: 1;">' +
+        '<input type="text" name="contacts[' + contactIndex + '][phone]" class="form-control" placeholder="رقم الهاتف" style="flex: 1;">' +
+        '<button type="button" class="btn" onclick="removeContact(this)" style="padding: 8px 12px; color: #dc2626;">✕</button>';
+    container.appendChild(row);
+    contactIndex++;
+}
+
+function removeContact(btn) {
+    var container = document.getElementById('contacts-container');
+    if (container.children.length > 1) {
+        btn.parentElement.remove();
+    } else {
+        // Clear inputs instead of removing last row
+        var inputs = btn.parentElement.querySelectorAll('input');
+        inputs.forEach(function(input) { input.value = ''; });
     }
 }
 
