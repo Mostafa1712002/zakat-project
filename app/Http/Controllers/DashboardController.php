@@ -34,10 +34,25 @@ class DashboardController extends Controller
             ->sum('amount');
         $monthlyProfit = $monthlySales - $monthlyPurchases - $monthlyExpenses;
 
+        // Rep treasury withdrawals this month
+        $repWithdrawals = Payment::where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where('payable_type', SalesRep::class)
+            ->where('payment_date', '>=', $monthStart)
+            ->sum('amount');
+
+        // Add rep withdrawals to profit (money that entered main treasury from reps)
+        $monthlyProfit += $repWithdrawals;
+
         // Cash balance (actual money received - paid out this month)
+        // Collections from customers (excluding rep withdrawals to avoid double-counting)
         $monthlyCollections = Payment::where('type', Payment::TYPE_RECEIVED)
             ->where('status', Payment::STATUS_COMPLETED)
             ->where('payment_date', '>=', $monthStart)
+            ->where(function ($q) {
+                $q->where('payable_type', '!=', SalesRep::class)
+                  ->orWhereNull('payable_type');
+            })
             ->sum('amount');
         $monthlyCashSales = Sale::where('payment_type', 'cash')
             ->where('status', Sale::STATUS_CONFIRMED)
@@ -47,7 +62,7 @@ class DashboardController extends Controller
             ->where('status', Payment::STATUS_COMPLETED)
             ->where('payment_date', '>=', $monthStart)
             ->sum('amount');
-        $monthlyCashBalance = ($monthlyCollections + $monthlyCashSales) - ($monthlyExpenses + $monthlySupplierPayments);
+        $monthlyCashBalance = ($monthlyCollections + $monthlyCashSales + $repWithdrawals) - ($monthlyExpenses + $monthlySupplierPayments);
 
         // Collection stats
         $unpaidInvoices = Sale::where('payment_status', 'unpaid')->count();
