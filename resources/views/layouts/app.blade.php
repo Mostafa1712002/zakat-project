@@ -134,23 +134,32 @@
         .sidebar-collapse-btn {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 10px;
             width: 100%;
-            padding: 10px 14px;
-            margin-top: 8px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7);
-            border-radius: 8px;
+            padding: 11px 12px;
+            margin: 0 0 14px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 10px;
             cursor: pointer;
             font-family: inherit;
             font-size: 13px;
-            transition: all 0.2s;
+            font-weight: 600;
+            order: 2;
+            position: sticky;
+            top: 8px;
+            z-index: 15;
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
         }
         .sidebar-collapse-btn:hover {
-            background: rgba(255,255,255,0.15);
-            color: white;
+            background: rgba(255,255,255,0.24);
+            border-color: rgba(255,255,255,0.42);
         }
+        .sidebar-collapse-btn:active { transform: translateY(1px); }
         .sidebar-collapse-btn svg {
             flex-shrink: 0;
             transition: transform 0.3s ease;
@@ -266,7 +275,7 @@
         .user-name { font-weight: 600; font-size: 14px; }
         .user-role { font-size: 12px; opacity: 0.8; }
 
-        .nav-menu { list-style: none; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .nav-menu { list-style: none; display: flex; flex-direction: column; gap: 4px; flex: 1; order: 3; }
 
         .nav-menu a {
             display: flex;
@@ -290,6 +299,7 @@
         .sidebar-footer {
             padding-top: 20px;
             border-top: 1px solid rgba(255,255,255,0.2);
+            order: 4;
         }
 
         .logout-btn {
@@ -562,7 +572,19 @@
         }
 
         @media (max-width: 768px) {
-            .sidebar-collapse-btn { display: none; }
+            .sidebar-collapse-btn {
+                display: flex;
+                position: sticky;
+                top: 12px;
+                margin-bottom: 12px;
+                z-index: 120;
+                background: rgba(14,116,144,0.9);
+                border-color: rgba(255,255,255,0.28);
+            }
+            .app.sidebar-collapsed .sidebar-collapse-btn {
+                justify-content: space-between;
+                padding: 11px 12px;
+            }
             .app.sidebar-collapsed .sidebar { width: 260px; padding: 20px; }
             .app.sidebar-collapsed .main { margin-right: 0; width: 100%; max-width: 100%; }
             .app.sidebar-collapsed .nav-label { display: inline; }
@@ -570,6 +592,7 @@
             .app.sidebar-collapsed .sidebar-footer .profile-btn { justify-content: flex-start !important; gap: 10px !important; }
             .app.sidebar-collapsed .sidebar-footer .logout-btn { justify-content: flex-start; gap: 10px; }
             .menu-toggle { display: flex; align-items: center; justify-content: center; }
+            .menu-toggle[aria-expanded="true"] { display: none; }
             .sidebar { transform: translateX(100%); transition: transform 0.3s ease; }
             .sidebar.open { transform: translateX(0); }
             .sidebar-overlay.open { display: block; }
@@ -645,7 +668,7 @@
     @stack('styles')
 </head>
 <body>
-    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <button class="menu-toggle" aria-label="فتح القائمة" aria-expanded="false" onclick="toggleSidebar()">☰</button>
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="app">
@@ -806,19 +829,67 @@
     </div>
 
     <script>
+        function setMobileSidebarOpen(isOpen) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const menuToggle = document.querySelector('.menu-toggle');
+
+            if (!sidebar || !overlay || !menuToggle) return;
+
+            sidebar.classList.toggle('open', isOpen);
+            overlay.classList.toggle('open', isOpen);
+            menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.querySelector('.sidebar-overlay').classList.toggle('open');
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            setMobileSidebarOpen(!sidebar.classList.contains('open'));
         }
 
         // Sidebar collapse (desktop)
         (function() {
             const app = document.querySelector('.app');
             const toggle = document.getElementById('sidebarToggle');
-            if (localStorage.getItem('sidebar-collapsed') === '1') {
-                app.classList.add('sidebar-collapsed');
-            }
+            const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+            const applySidebarState = () => {
+                if (isMobile()) {
+                    app.classList.remove('sidebar-collapsed');
+                } else if (localStorage.getItem('sidebar-collapsed') === '1') {
+                    app.classList.add('sidebar-collapsed');
+                } else {
+                    app.classList.remove('sidebar-collapsed');
+                }
+            };
+
+            const updateToggleLabel = () => {
+                const label = toggle.querySelector('.nav-label');
+                if (!label) return;
+
+                if (isMobile()) {
+                    label.textContent = 'اغلاق القائمة';
+                    toggle.setAttribute('title', 'اغلاق القائمة');
+                    toggle.setAttribute('data-tooltip', 'اغلاق القائمة');
+                } else {
+                    label.textContent = 'طي القائمة';
+                    toggle.setAttribute('title', 'طي القائمة');
+                    toggle.setAttribute('data-tooltip', 'طي القائمة');
+                }
+            };
+
+            applySidebarState();
+            updateToggleLabel();
+            window.addEventListener('resize', function() {
+                applySidebarState();
+                updateToggleLabel();
+            });
+
             toggle.addEventListener('click', function() {
+                if (isMobile()) {
+                    setMobileSidebarOpen(false);
+                    return;
+                }
                 app.classList.toggle('sidebar-collapsed');
                 localStorage.setItem('sidebar-collapsed', app.classList.contains('sidebar-collapsed') ? '1' : '0');
             });
