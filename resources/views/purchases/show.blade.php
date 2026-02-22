@@ -6,7 +6,7 @@
 <div class="invoice-wrapper">
     <!-- Action Buttons - Screen Only -->
     <div class="invoice-actions no-print">
-        <a href="{{ route('purchases.pdf', $purchase) }}" class="btn btn-primary btn-lg">
+        <a href="{{ route('purchases.pdf', $purchase) }}" target="_blank" class="btn btn-primary btn-lg">
             <span class="btn-icon">🖨️</span>
             طباعة
         </a>
