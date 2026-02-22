@@ -6,13 +6,9 @@
 <div class="invoice-wrapper">
     <!-- Action Buttons - Screen Only -->
     <div class="invoice-actions no-print">
-        <button onclick="window.print()" class="btn btn-primary btn-lg">
+        <a href="{{ route('purchases.pdf', $purchase) }}" class="btn btn-primary btn-lg">
             <span class="btn-icon">🖨️</span>
-            طباعة الفاتورة
-        </button>
-        <a href="{{ route('purchases.pdf', $purchase) }}" class="btn btn-lg" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white;">
-            <span class="btn-icon">📄</span>
-            تحميل PDF
+            طباعة
         </a>
         <a href="{{ route('purchases.edit', $purchase) }}" class="btn">تعديل</a>
         <a href="{{ route('purchases.index') }}" class="btn">← رجوع للمشتريات</a>
