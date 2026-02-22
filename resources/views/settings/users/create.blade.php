@@ -133,13 +133,18 @@
 </form>
 
 <style>
-.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 1.5rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; }
 .checkbox-item { display: flex; align-items: center; gap: 0.5rem; }
 .card-body h3 { margin-bottom: 1rem; font-size: 1rem; color: var(--primary); }
 .btn-lg { padding: 14px 32px; font-size: 1rem; }
 .text-muted { color: #6b7280; font-size: 12px; display: block; margin-top: 4px; }
+
+@media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; gap: 1rem; }
+    .form-row { grid-template-columns: 1fr; }
+}
 </style>
 
 <script>

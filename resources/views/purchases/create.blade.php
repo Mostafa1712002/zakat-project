@@ -83,10 +83,11 @@
 
     <!-- Items -->
     <div class="card" style="margin-top: 1.5rem;">
-        <div class="card-body  overflow-auto">
+        <div class="card-body">
             <h3>🛒 الأصناف</h3>
 
-            <table class="table text-nowrap" id="itemsTable">
+            <div class="table-container">
+                <table class="table text-nowrap" id="itemsTable">
                 <thead>
                     <tr>
                         <th style="width: 35%;">الصنف</th>
@@ -114,7 +115,8 @@
                         <td colspan="5"><button type="button" class="btn btn-sm" id="addRowBtn">+ إضافة صنف</button></td>
                     </tr>
                 </tfoot>
-            </table>
+                </table>
+            </div>
 
             <div class="totals-section">
                 <div class="totals-row total-final"><span>الإجمالي:</span> <strong id="grandTotal">0.00</strong> ج.م</div>
@@ -131,13 +133,19 @@
 </form>
 
 <style>
-.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 1.5rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .card-body h3 { margin-bottom: 1rem; font-size: 1rem; }
-.totals-section { margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid var(--border-color); max-width: 300px; margin-right: auto; }
+.totals-section { margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid var(--border); max-width: 300px; margin-right: auto; }
 .totals-row { display: flex; justify-content: space-between; padding: 0.5rem 0; }
 .total-final { font-size: 1.25rem; border-top: 2px solid var(--primary); padding-top: 1rem; margin-top: 0.5rem; }
 .btn-lg { padding: 14px 32px; font-size: 1rem; }
+
+@media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; gap: 1rem; }
+    .form-row { grid-template-columns: 1fr; }
+    .totals-section { max-width: 100%; }
+}
 </style>
 
 <script>

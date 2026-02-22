@@ -232,7 +232,8 @@
 
         <!-- Items Table -->
         <div class="items-card">
-            <table class="items-table">
+            <div class="items-table-wrap">
+                <table class="items-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -288,7 +289,8 @@
                     </tr>
                     @endif
                 </tfoot>
-            </table>
+                </table>
+            </div>
         </div>
 
         <!-- Signatures Section -->
@@ -577,6 +579,12 @@
     margin-bottom: 0;
 }
 
+.items-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .items-table {
     width: 100%;
     border-collapse: collapse;
@@ -690,6 +698,10 @@
 .header-contact-item span {
     color: var(--primary);
     font-weight: 600;
+}
+
+.text-left {
+    text-align: right !important;
 }
 
 /* ========== PRINT STYLES ========== */
@@ -856,6 +868,29 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .invoice-wrapper {
+        padding: 8px;
+    }
+
+    .invoice-container {
+        padding: 16px;
+    }
+
+    .invoice-actions {
+        flex-direction: column;
+    }
+
+    .invoice-actions .btn,
+    .invoice-actions .btn-lg,
+    .invoice-actions form {
+        width: 100%;
+    }
+
+    .invoice-actions .btn,
+    .invoice-actions .btn-lg {
+        justify-content: center;
+    }
+
     .invoice-header {
         align-items: flex-start;
         gap: 12px;
@@ -885,7 +920,7 @@
     }
 
     .info-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 12px;
     }
 
@@ -894,7 +929,7 @@
     }
 
     .signatures-section {
-        flex-direction: row;
+        flex-direction: column;
         gap: 12px;
     }
 
@@ -904,6 +939,10 @@
 
     .print-minimal-row {
         grid-template-columns: 1fr;
+    }
+
+    .items-table {
+        min-width: 700px;
     }
 }
 

@@ -136,7 +136,7 @@
 <style>
 .grid-2 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
     gap: 1.5rem;
 }
 .form-row {
@@ -153,7 +153,7 @@
 .form-actions {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border);
 }
 .btn-lg {
     padding: 12px 24px;
@@ -188,6 +188,13 @@
 .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
 .alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
 </style>
 
 <script>

@@ -110,7 +110,7 @@
 </div>
 
 <!-- Three Column Layout (No Bootstrap) -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 20px;">
     <!-- Top Customers -->
     <div class="card">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">

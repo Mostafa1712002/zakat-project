@@ -258,14 +258,14 @@
 <style>
 .grid-2 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
     gap: 1.5rem;
 }
 
 .totals-section {
     margin-top: 1.5rem;
     padding-top: 1rem;
-    border-top: 2px solid var(--border-color);
+    border-top: 2px solid var(--border);
     max-width: 300px;
     margin-right: auto;
 }
@@ -355,6 +355,17 @@
     padding-top: 10px;
     margin-top: 6px;
     font-size: 1.1em;
+}
+
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .totals-section {
+        max-width: 100%;
+    }
 }
 </style>
 
