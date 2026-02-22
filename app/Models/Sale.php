@@ -166,8 +166,11 @@ class Sale extends Model
 
     public function addPayment(float $amount): void
     {
-        $this->increment('paid_amount', $amount);
-        $this->decrement('remaining_amount', $amount);
+        $this->paid_amount += $amount;
+        $this->remaining_amount = $this->total_amount - $this->paid_amount;
+        if ($this->remaining_amount < 0) {
+            $this->remaining_amount = 0;
+        }
         $this->updatePaymentStatus();
         $this->save();
     }

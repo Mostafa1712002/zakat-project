@@ -337,12 +337,10 @@ class SaleController extends Controller
                 }
             }
 
-            // تحديث رصيد العميل للمبيعات الآجلة (المتبقي بعد خصم الدفعة المقدمة)
-            if ($validated['payment_type'] === 'credit' && $sale->remaining_amount > 0) {
-                $customer = Customer::find($validated['customer_id']);
-                if ($customer) {
-                    $customer->increment('current_balance', $sale->remaining_amount);
-                }
+            // إعادة حساب رصيد العميل
+            $customer = Customer::find($validated['customer_id']);
+            if ($customer) {
+                $customer->recalculateBalance();
             }
 
             DB::commit();
@@ -765,10 +763,8 @@ class SaleController extends Controller
                     }
                 }
 
-                // Reverse customer balance if credit sale
-                if ($sale->payment_type === 'credit') {
-                    $sale->customer->updateBalance(-$sale->total_amount);
-                }
+                // إعادة حساب رصيد العميل
+                $sale->customer->recalculateBalance();
 
                 // سحب مبلغ المبيعات النقدية من خزينة المندوب (عكس الإيداع)
                 if ($sale->sales_rep_id && $sale->payment_type === 'cash') {

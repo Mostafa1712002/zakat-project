@@ -43,22 +43,20 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="category_id" class="form-label">القسم *</label>
-                    <select name="category_id" id="category_id" class="form-control" required>
-                        <option value="">اختر القسم</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
+                    <label for="supplier_id" class="form-label">المورد *</label>
+                    <select name="supplier_id" id="supplier_id" class="form-control" required>
+                        <option value="">اختر المورد</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}" {{ old('supplier_id', $product->supplier_id) == $supplier->id ? 'selected' : '' }}>
+                                {{ $supplier->name }}
                             </option>
                         @endforeach
                     </select>
-                    @error('category_id')
+                    @error('supplier_id')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
-            </div>
 
-            <div class="form-row">
                 <div class="form-group">
                     <label for="unit_id" class="form-label">وحدة القياس</label>
                     <select name="unit_id" id="unit_id" class="form-control">
@@ -72,18 +70,6 @@
                     @error('unit_id')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="supplier_ids" class="form-label">الموردين</label>
-                    <select name="supplier_ids[]" id="supplier_ids" class="form-control" multiple>
-                        @foreach($suppliers as $supplier)
-                            <option value="{{ $supplier->id }}" {{ collect(old('supplier_ids', $product->suppliers->pluck('id')->toArray()))->contains($supplier->id) ? 'selected' : '' }}>
-                                {{ $supplier->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <small style="color: #64748b; font-size: 12px;">اختر مورد أو أكثر (اختياري)</small>
                 </div>
             </div>
 
@@ -247,7 +233,7 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    $('#supplier_ids').select2({ placeholder: 'اختر الموردين...', allowClear: true, dir: 'rtl', width: '100%' });
+    $('#supplier_id').select2({ placeholder: 'اختر المورد...', allowClear: true, dir: 'rtl', width: '100%' });
 });
 const existingProducts = @json($existingProducts);
 const nameInput = document.getElementById('name');

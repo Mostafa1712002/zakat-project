@@ -16,7 +16,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::with(['category', 'unit', 'suppliers'])
+        $products = Product::with(['supplier', 'unit'])
             ->withSum('inventoryLevels as stock_quantity', 'quantity')
             ->latest()
             ->paginate(15);
@@ -29,12 +29,11 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $categories = Category::active()->ordered()->get();
         $units = Unit::active()->get();
         $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
         $existingProducts = Product::select('id', 'name', 'sku')->orderBy('name')->get();
 
-        return view('products.create', compact('categories', 'units', 'suppliers', 'existingProducts'));
+        return view('products.create', compact('units', 'suppliers', 'existingProducts'));
     }
 
     /**
@@ -46,7 +45,7 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:100|unique:products,sku',
             'barcode' => 'nullable|string|max:100|unique:products,barcode',
-            'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'required|exists:suppliers,id',
             'unit_id' => 'nullable|exists:units,id',
             'description' => 'nullable|string',
             'cost_price' => 'required|numeric|min:0',
@@ -61,6 +60,12 @@ class ProductController extends Controller
             'track_inventory' => 'boolean',
             'notes' => 'nullable|string',
         ]);
+
+        // Set category_id from supplier's category
+        $supplier = Supplier::find($validated['supplier_id']);
+        if ($supplier && $supplier->category_id) {
+            $validated['category_id'] = $supplier->category_id;
+        }
 
         $validated['is_taxable'] = $request->boolean('is_taxable');
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -82,10 +87,6 @@ class ProductController extends Controller
 
         $product = Product::create($validated);
 
-        if ($request->has('supplier_ids')) {
-            $product->suppliers()->sync($request->input('supplier_ids', []));
-        }
-
         return redirect()->route('products.index')
             ->with('success', 'تم إضافة المنتج بنجاح');
     }
@@ -95,7 +96,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load(['category', 'unit', 'inventoryLevels.warehouse']);
+        $product->load(['supplier', 'unit', 'inventoryLevels.warehouse']);
 
         return view('products.show', compact('product'));
     }
@@ -105,8 +106,6 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $product->load('suppliers');
-        $categories = Category::active()->ordered()->get();
         $units = Unit::active()->get();
         $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
         $existingProducts = Product::select('id', 'name', 'sku')
@@ -114,7 +113,7 @@ class ProductController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('products.edit', compact('product', 'categories', 'units', 'suppliers', 'existingProducts'));
+        return view('products.edit', compact('product', 'units', 'suppliers', 'existingProducts'));
     }
 
     /**
@@ -126,7 +125,7 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:100|unique:products,sku,' . $product->id,
             'barcode' => 'nullable|string|max:100|unique:products,barcode,' . $product->id,
-            'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'required|exists:suppliers,id',
             'unit_id' => 'nullable|exists:units,id',
             'description' => 'nullable|string',
             'cost_price' => 'required|numeric|min:0',
@@ -141,6 +140,12 @@ class ProductController extends Controller
             'track_inventory' => 'boolean',
             'notes' => 'nullable|string',
         ]);
+
+        // Set category_id from supplier's category
+        $supplier = Supplier::find($validated['supplier_id']);
+        if ($supplier && $supplier->category_id) {
+            $validated['category_id'] = $supplier->category_id;
+        }
 
         $validated['is_taxable'] = $request->boolean('is_taxable');
         $validated['is_active'] = $request->boolean('is_active');
@@ -157,8 +162,6 @@ class ProductController extends Controller
         }
 
         $product->update($validated);
-
-        $product->suppliers()->sync($request->input('supplier_ids', []));
 
         return redirect()->route('products.index')
             ->with('success', 'تم تحديث المنتج بنجاح');

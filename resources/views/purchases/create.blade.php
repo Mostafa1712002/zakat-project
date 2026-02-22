@@ -99,11 +99,8 @@
                 <tbody id="itemsBody">
                     <tr class="item-row" data-index="0">
                         <td>
-                            <select name="items[0][product_id]" class="form-control product-select" required>
-                                <option value="">اختر الصنف</option>
-                                @foreach($products as $product)
-                                <option value="{{ $product->id }}" data-price="{{ $product->cost_price }}">{{ $product->name }} - {{ number_format($product->cost_price, 2) }} ج.م</option>
-                                @endforeach
+                            <select name="items[0][product_id]" class="form-control product-select" required disabled>
+                                <option value="">اختر المورد أولاً</option>
                             </select>
                         </td>
                         <td><input type="number" name="items[0][quantity]" class="form-control quantity-input" value="1" min="0.001" step="0.001" required></td>
@@ -146,18 +143,21 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let rowIndex = 1;
-    const allProductsData = @json($products->mapWithKeys(fn($p) => [$p->id => $p->cost_price]));
-    const allProductsOptions = @json($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'cost_price' => $p->cost_price]));
-    let supplierProducts = null; // null = not filtered
-    const supplierSelect = document.getElementById('supplier_id');
+    let supplierProducts = []; // products for selected supplier
+    let productsLoaded = false;
 
-    // Auto-filter products when supplier is selected
-    supplierSelect.addEventListener('change', function() {
+    // Init Select2 for supplier FIRST
+    $('#supplier_id').select2({ placeholder: 'ابحث عن المورد...', allowClear: true, dir: 'rtl', width: '100%' });
+
+    // Supplier change handler via jQuery (compatible with Select2)
+    $('#supplier_id').on('change', function() {
         if (this.value) {
             fetchSupplierProducts(this.value);
         } else {
-            supplierProducts = null;
+            supplierProducts = [];
+            productsLoaded = false;
             updateAllProductSelects();
+            setProductSelectsDisabled(true);
         }
     });
 
@@ -166,19 +166,27 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(r => r.json())
             .then(products => {
                 supplierProducts = products;
+                productsLoaded = true;
+                setProductSelectsDisabled(false);
                 updateAllProductSelects();
             });
+    }
+
+    function setProductSelectsDisabled(disabled) {
+        document.querySelectorAll('.product-select').forEach(select => {
+            select.disabled = disabled;
+        });
     }
 
     function initPurchaseSelect2() {
         $('.product-select').each(function() {
             if (!$(this).hasClass('select2-hidden-accessible')) {
-                $(this).select2({ placeholder: 'ابحث عن الصنف...', allowClear: true, dir: 'rtl', width: '100%' })
+                $(this).select2({ placeholder: productsLoaded ? 'ابحث عن الصنف...' : 'اختر المورد أولاً', allowClear: true, dir: 'rtl', width: '100%' })
                 .on('change', function() {
                     const row = this.closest('.item-row');
                     if (row) {
-                        const price = allProductsData[this.value] || 0;
-                        row.querySelector('.price-input').value = price;
+                        const product = supplierProducts.find(p => p.id == this.value);
+                        row.querySelector('.price-input').value = product ? product.cost_price : 0;
                         calculateTotals();
                     }
                 });
@@ -193,24 +201,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        const source = supplierProducts !== null ? supplierProducts : allProductsOptions;
         document.querySelectorAll('.product-select').forEach(select => {
             const currentVal = select.value;
-            select.innerHTML = '<option value="">اختر الصنف</option>';
-            source.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.id;
-                opt.textContent = p.name + ' - ' + parseFloat(p.cost_price).toFixed(2) + ' ج.م';
-                opt.dataset.price = p.cost_price;
-                if (p.id == currentVal) opt.selected = true;
-                select.appendChild(opt);
-            });
+            select.innerHTML = productsLoaded
+                ? '<option value="">اختر الصنف</option>'
+                : '<option value="">اختر المورد أولاً</option>';
+
+            if (productsLoaded) {
+                supplierProducts.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name + ' - ' + parseFloat(p.cost_price).toFixed(2) + ' ج.م';
+                    opt.dataset.price = p.cost_price;
+                    if (p.id == currentVal) opt.selected = true;
+                    select.appendChild(opt);
+                });
+            }
         });
 
         initPurchaseSelect2();
     }
 
     document.getElementById('addRowBtn').addEventListener('click', function() {
+        if (!productsLoaded) {
+            alert('اختر المورد أولاً');
+            return;
+        }
+
         const tbody = document.getElementById('itemsBody');
         const firstRow = document.querySelector('.item-row');
 
@@ -234,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
         rowIndex++;
         updateRemoveButtons();
         attachRowEvents(newRow);
-        // Re-init Select2 for all rows
         initPurchaseSelect2();
     });
 
@@ -268,17 +284,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function attachRowEvents(row) {
-        // Product selection change is handled by Select2 in initPurchaseSelect2()
         row.querySelectorAll('.quantity-input, .price-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
         });
     }
 
     attachRowEvents(document.querySelector('.item-row'));
-
-    // Init Select2 for supplier and product selects
     initPurchaseSelect2();
-    $('#supplier_id').select2({ placeholder: 'ابحث عن المورد...', allowClear: true, dir: 'rtl', width: '100%' });
 });
 </script>
 @endsection

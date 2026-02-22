@@ -122,6 +122,18 @@ class Customer extends Model
     }
 
     /**
+     * إعادة حساب الرصيد المستحق من الفواتير الفعلية
+     */
+    public function recalculateBalance(): void
+    {
+        $this->current_balance = $this->sales()
+            ->where('status', '!=', 'cancelled')
+            ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
+            ->sum('remaining_amount');
+        $this->save();
+    }
+
+    /**
      * إجمالي مشتريات العميل (الفواتير المؤكدة فقط)
      */
     public function getTotalPurchasesAttribute(): float

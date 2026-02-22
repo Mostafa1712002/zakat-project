@@ -53,6 +53,11 @@ class Supplier extends Model
         return $this->belongsToMany(Product::class)->withTimestamps();
     }
 
+    public function suppliedProducts(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'payable_id')

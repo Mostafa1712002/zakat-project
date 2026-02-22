@@ -18,7 +18,7 @@
     <div class="card">
         <div class="card-body">
             <h3>بيانات الصنف</h3>
-            <p><strong>القسم:</strong> {{ $product->category->name ?? '-' }}</p>
+            <p><strong>المورد:</strong> {{ $product->supplier->name ?? '-' }}</p>
             <p><strong>الوحدة:</strong> {{ $product->unit->name ?? '-' }}</p>
             <p><strong>SKU:</strong> {{ $product->sku ?? '-' }}</p>
             <p><strong>الوصف:</strong> {{ $product->description ?? '-' }}</p>
