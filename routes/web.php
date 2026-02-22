@@ -32,6 +32,25 @@ use App\Http\Controllers\ProfitDistributionController;
 use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\SalesRepAccountController;
 
+// Dynamic favicon from company logo
+Route::get('/favicon.ico', function () {
+    try {
+        $logo = \DB::table('settings')->where('key', 'company_logo')->value('value');
+        if ($logo) {
+            $path = storage_path('app/public/' . $logo);
+            if (file_exists($path)) {
+                $mime = mime_content_type($path);
+                return response()->file($path, ['Content-Type' => $mime, 'Cache-Control' => 'public, max-age=86400']);
+            }
+        }
+    } catch (\Exception $e) {}
+    $fallback = public_path('logo.png');
+    if (file_exists($fallback)) {
+        return response()->file($fallback, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=86400']);
+    }
+    abort(404);
+});
+
 // Authentication Routes
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('guest');
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('guest');
@@ -81,6 +100,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Sales (المبيعات)
     Route::get('sales/get-stock', [SaleController::class, 'getStock'])->name('sales.get-stock');
+    Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])->name('sales.pdf');
     Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
     Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
     Route::resource('sales', SaleController::class);
@@ -90,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
 
     // Purchases (المشتريات)
+    Route::get('purchases/{purchase}/pdf', [PurchaseController::class, 'pdf'])->name('purchases.pdf');
     Route::resource('purchases', PurchaseController::class);
 
     // Suppliers (الموردين)

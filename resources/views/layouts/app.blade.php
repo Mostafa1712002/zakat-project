@@ -17,8 +17,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'لوحة التحكم') - {{ $__sidebarName }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ !empty($__sidebarLogo) ? asset('storage/' . $__sidebarLogo) : asset('logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ !empty($__sidebarLogo) ? asset('storage/' . $__sidebarLogo) : asset('logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">

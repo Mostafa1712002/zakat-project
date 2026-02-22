@@ -328,12 +328,6 @@ class SaleController extends Controller
                     : Sale::PAYMENT_STATUS_PARTIAL;
                 $sale->save();
 
-                // تحديث رصيد العميل (فقط المتبقي)
-                $customer = Customer::find($validated['customer_id']);
-                if ($customer) {
-                    $customer->increment('current_balance', $sale->remaining_amount);
-                }
-
                 // إضافة للخزينة إذا كان مندوب
                 if ($salesRepId) {
                     $salesRep = SalesRep::find($salesRepId);
@@ -341,11 +335,13 @@ class SaleController extends Controller
                         $salesRep->recordCollection($advancePayment, 'دفعة مقدمة - فاتورة ' . $sale->invoice_number, $payment->id);
                     }
                 }
-            } elseif ($validated['payment_type'] === 'credit') {
-                // فاتورة آجلة بدون دفعة مقدمة - إضافة كامل المبلغ لرصيد العميل
+            }
+
+            // تحديث رصيد العميل للمبيعات الآجلة (المتبقي بعد خصم الدفعة المقدمة)
+            if ($validated['payment_type'] === 'credit' && $sale->remaining_amount > 0) {
                 $customer = Customer::find($validated['customer_id']);
                 if ($customer) {
-                    $customer->increment('current_balance', $sale->total_amount);
+                    $customer->increment('current_balance', $sale->remaining_amount);
                 }
             }
 
@@ -651,10 +647,7 @@ class SaleController extends Controller
             // Update sale status
             $sale->update(['status' => Sale::STATUS_CONFIRMED]);
 
-            // Update customer balance if credit sale
-            if ($sale->payment_type === 'credit') {
-                $sale->customer->updateBalance($sale->total_amount);
-            }
+            // رصيد العميل تم تحديثه بالفعل عند إنشاء الفاتورة في store()
 
             // إيداع مبلغ المبيعات النقدية في خزينة المندوب
             if ($sale->sales_rep_id && $sale->payment_type === 'cash') {
@@ -679,6 +672,44 @@ class SaleController extends Controller
 
             return back()->with('error', 'حدث خطأ أثناء تأكيد الفاتورة: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Generate PDF for a sale.
+     */
+    public function pdf(Sale $sale)
+    {
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
+        }
+
+        $sale->load(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'items.product']);
+
+        $companyName = '';
+        $companyLogo = '';
+        $companyStamp = '';
+        try {
+            $settings = \DB::table('settings')
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp'])
+                ->pluck('value', 'key');
+            $companyName = $settings['company_name'] ?? '';
+            $companyName = preg_replace('/[\x{1F000}-\x{1FFFF}|\x{2600}-\x{27FF}|\x{FE00}-\x{FEFF}]/u', '', $companyName);
+            $companyName = trim($companyName);
+            $companyLogo = $settings['company_logo'] ?? '';
+            $companyStamp = $settings['company_stamp'] ?? '';
+        } catch (\Exception $e) {}
+
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp'));
+
+        $pdf->setOption('page-size', 'A4');
+        $pdf->setOption('encoding', 'UTF-8');
+        $pdf->setOption('margin-top', 0);
+        $pdf->setOption('margin-bottom', 0);
+        $pdf->setOption('margin-left', 0);
+        $pdf->setOption('margin-right', 0);
+        $pdf->setOption('enable-local-file-access', true);
+
+        return $pdf->inline($sale->invoice_number . '.pdf');
     }
 
     /**
