@@ -337,6 +337,14 @@ class SaleController extends Controller
                 }
             }
 
+            // تحديث رصيد العميل للمبيعات الآجلة (المتبقي بعد خصم الدفعة المقدمة)
+            if ($validated['payment_type'] === 'credit' && $sale->remaining_amount > 0) {
+                $customer = Customer::find($validated['customer_id']);
+                if ($customer) {
+                    $customer->increment('current_balance', $sale->remaining_amount);
+                }
+            }
+
             DB::commit();
 
             return redirect()->route('sales.show', $sale)
@@ -639,10 +647,7 @@ class SaleController extends Controller
             // Update sale status
             $sale->update(['status' => Sale::STATUS_CONFIRMED]);
 
-            // Update customer balance if credit sale (only remaining after any advance payment)
-            if ($sale->payment_type === 'credit' && $sale->remaining_amount > 0) {
-                $sale->customer->updateBalance($sale->remaining_amount);
-            }
+            // رصيد العميل تم تحديثه بالفعل عند إنشاء الفاتورة في store()
 
             // إيداع مبلغ المبيعات النقدية في خزينة المندوب
             if ($sale->sales_rep_id && $sale->payment_type === 'cash') {
