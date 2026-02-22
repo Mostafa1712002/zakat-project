@@ -328,24 +328,12 @@ class SaleController extends Controller
                     : Sale::PAYMENT_STATUS_PARTIAL;
                 $sale->save();
 
-                // تحديث رصيد العميل (فقط المتبقي)
-                $customer = Customer::find($validated['customer_id']);
-                if ($customer) {
-                    $customer->increment('current_balance', $sale->remaining_amount);
-                }
-
                 // إضافة للخزينة إذا كان مندوب
                 if ($salesRepId) {
                     $salesRep = SalesRep::find($salesRepId);
                     if ($salesRep) {
                         $salesRep->recordCollection($advancePayment, 'دفعة مقدمة - فاتورة ' . $sale->invoice_number, $payment->id);
                     }
-                }
-            } elseif ($validated['payment_type'] === 'credit') {
-                // فاتورة آجلة بدون دفعة مقدمة - إضافة كامل المبلغ لرصيد العميل
-                $customer = Customer::find($validated['customer_id']);
-                if ($customer) {
-                    $customer->increment('current_balance', $sale->total_amount);
                 }
             }
 
@@ -651,9 +639,9 @@ class SaleController extends Controller
             // Update sale status
             $sale->update(['status' => Sale::STATUS_CONFIRMED]);
 
-            // Update customer balance if credit sale
-            if ($sale->payment_type === 'credit') {
-                $sale->customer->updateBalance($sale->total_amount);
+            // Update customer balance if credit sale (only remaining after any advance payment)
+            if ($sale->payment_type === 'credit' && $sale->remaining_amount > 0) {
+                $sale->customer->updateBalance($sale->remaining_amount);
             }
 
             // إيداع مبلغ المبيعات النقدية في خزينة المندوب
