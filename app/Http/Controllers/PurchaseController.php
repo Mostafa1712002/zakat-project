@@ -194,6 +194,34 @@ class PurchaseController extends Controller
         return view('purchases.show', compact('purchase', 'companyName', 'companyLogo', 'companyStamp'));
     }
 
+    public function pdf(Purchase $purchase)
+    {
+        $purchase->load(['supplier', 'items.product', 'warehouse']);
+
+        $companyName = '';
+        $companyLogo = '';
+        $companyStamp = '';
+        try {
+            $settings = \DB::table('settings')
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp'])
+                ->pluck('value', 'key');
+            $companyName = $settings['company_name'] ?? '';
+            $companyLogo = $settings['company_logo'] ?? '';
+            $companyStamp = $settings['company_stamp'] ?? '';
+        } catch (\Exception $e) {}
+
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.purchase', compact('purchase', 'companyName', 'companyLogo', 'companyStamp'));
+
+        $pdf->setOption('page-size', 'A4');
+        $pdf->setOption('encoding', 'UTF-8');
+        $pdf->setOption('margin-top', 0);
+        $pdf->setOption('margin-bottom', 0);
+        $pdf->setOption('margin-left', 0);
+        $pdf->setOption('margin-right', 0);
+
+        return $pdf->inline($purchase->invoice_number . '.pdf');
+    }
+
     public function edit(Purchase $purchase)
     {
         $purchase->load('items');

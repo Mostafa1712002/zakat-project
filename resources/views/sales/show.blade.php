@@ -10,6 +10,10 @@
             <span class="btn-icon">🖨️</span>
             طباعة الفاتورة
         </button>
+        <a href="{{ route('sales.pdf', $sale) }}" class="btn btn-lg" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white;">
+            <span class="btn-icon">📄</span>
+            تحميل PDF
+        </a>
         @if($sale->status === 'draft')
             <form action="{{ route('sales.confirm', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تأكيد الفاتورة؟ سيتم خصم الكميات من المخزون.')">
                 @csrf

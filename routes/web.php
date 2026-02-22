@@ -81,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Sales (المبيعات)
     Route::get('sales/get-stock', [SaleController::class, 'getStock'])->name('sales.get-stock');
+    Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])->name('sales.pdf');
     Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
     Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
     Route::resource('sales', SaleController::class);
@@ -90,6 +91,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
 
     // Purchases (المشتريات)
+    Route::get('purchases/{purchase}/pdf', [PurchaseController::class, 'pdf'])->name('purchases.pdf');
     Route::resource('purchases', PurchaseController::class);
 
     // Suppliers (الموردين)

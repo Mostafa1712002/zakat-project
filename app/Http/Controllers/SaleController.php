@@ -682,6 +682,41 @@ class SaleController extends Controller
     }
 
     /**
+     * Generate PDF for a sale.
+     */
+    public function pdf(Sale $sale)
+    {
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
+        }
+
+        $sale->load(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'items.product']);
+
+        $companyName = '';
+        $companyLogo = '';
+        $companyStamp = '';
+        try {
+            $settings = \DB::table('settings')
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp'])
+                ->pluck('value', 'key');
+            $companyName = $settings['company_name'] ?? '';
+            $companyLogo = $settings['company_logo'] ?? '';
+            $companyStamp = $settings['company_stamp'] ?? '';
+        } catch (\Exception $e) {}
+
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp'));
+
+        $pdf->setOption('page-size', 'A4');
+        $pdf->setOption('encoding', 'UTF-8');
+        $pdf->setOption('margin-top', 0);
+        $pdf->setOption('margin-bottom', 0);
+        $pdf->setOption('margin-left', 0);
+        $pdf->setOption('margin-right', 0);
+
+        return $pdf->inline($sale->invoice_number . '.pdf');
+    }
+
+    /**
      * Cancel a sale.
      */
     public function cancel(Sale $sale)
