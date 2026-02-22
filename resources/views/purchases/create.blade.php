@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/suppliers/${supplierId}/products`)
             .then(r => r.json())
             .then(products => {
-                supplierProducts = products.length > 0 ? products : null;
+                supplierProducts = products;
                 updateAllProductSelects();
             });
     }
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        const source = supplierProducts || allProductsOptions;
+        const source = supplierProducts !== null ? supplierProducts : allProductsOptions;
         document.querySelectorAll('.product-select').forEach(select => {
             const currentVal = select.value;
             select.innerHTML = '<option value="">اختر الصنف</option>';
