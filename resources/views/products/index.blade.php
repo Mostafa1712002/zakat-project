@@ -20,7 +20,7 @@
                 <tr>
                     <th>#</th>
                     <th>الصنف</th>
-                    <th>القسم</th>
+                    <th>المورد</th>
                     <th>الكود</th>
                     <th>سعر البيع</th>
                     <th>المخزون</th>
@@ -32,7 +32,7 @@
                 <tr>
                     <td>{{ $product->id }}</td>
                     <td><strong>{{ $product->name }}</strong></td>
-                    <td>{{ $product->category->name ?? '-' }}</td>
+                    <td>{{ $product->supplier->name ?? '-' }}</td>
                     <td><code>{{ $product->sku ?? '-' }}</code></td>
                     <td>{{ number_format($product->selling_price, 2) }} ج.م</td>
                     <td>

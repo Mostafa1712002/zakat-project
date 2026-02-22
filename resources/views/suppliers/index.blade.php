@@ -33,7 +33,7 @@
                     <td>{{ $supplier->phone ?? $supplier->mobile ?? '-' }}</td>
                     <td>{{ number_format($supplier->current_balance, 2) }} ج.م</td>
                     <td>
-                        <span class="badge badge-primary">{{ $supplier->products_count ?? 0 }}</span>
+                        <span class="badge badge-primary">{{ $supplier->supplied_products_count ?? 0 }}</span>
                     </td>
                     <td>
                         @if($supplier->is_active)

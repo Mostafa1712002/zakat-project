@@ -11,7 +11,7 @@ class SupplierController extends Controller
 {
     public function index()
     {
-        $suppliers = Supplier::withCount('products')->orderBy('name')->paginate(20);
+        $suppliers = Supplier::withCount('suppliedProducts')->orderBy('name')->paginate(20);
         return view('suppliers.index', compact('suppliers'));
     }
 
@@ -96,26 +96,21 @@ class SupplierController extends Controller
     }
 
     /**
-     * AJAX: Get products associated with a supplier (by category).
+     * AJAX: Get products associated with a supplier.
      */
     public function products(Supplier $supplier)
     {
-        $query = Product::where('is_active', true);
-
-        if ($supplier->category_id) {
-            $query->where('category_id', $supplier->category_id);
-        } else {
-            // Fallback to pivot table if no category linked
-            $query->whereIn('id', $supplier->products()->pluck('products.id'));
-        }
-
-        $products = $query->orderBy('name')->get()->map(function ($product) {
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'cost_price' => $product->cost_price,
-            ];
-        });
+        $products = Product::where('is_active', true)
+            ->where('supplier_id', $supplier->id)
+            ->orderBy('name')
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'cost_price' => $product->cost_price,
+                ];
+            });
 
         return response()->json($products);
     }

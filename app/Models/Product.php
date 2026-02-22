@@ -19,6 +19,7 @@ class Product extends Model
         'sku',
         'barcode',
         'category_id',
+        'supplier_id',
         'unit_id',
         'description',
         'image',
@@ -49,6 +50,11 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function unit(): BelongsTo
