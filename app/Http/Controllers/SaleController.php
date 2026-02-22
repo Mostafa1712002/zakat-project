@@ -700,6 +700,7 @@ class SaleController extends Controller
         $pdf->setOption('margin-bottom', 0);
         $pdf->setOption('margin-left', 0);
         $pdf->setOption('margin-right', 0);
+        $pdf->setOption('enable-local-file-access', true);
 
         return $pdf->inline($sale->invoice_number . '.pdf');
     }

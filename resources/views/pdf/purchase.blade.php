@@ -247,8 +247,8 @@
     <!-- Header -->
     <div class="header">
         <div class="header-right">
-            @if(!empty($companyLogo))
-                <img src="{{ public_path('storage/' . $companyLogo) }}" alt="{{ $companyName }}" class="company-logo"><br>
+            @if(!empty($companyLogo) && file_exists(public_path('storage/' . $companyLogo)))
+                <img src="file://{{ public_path('storage/' . $companyLogo) }}" alt="{{ $companyName }}" class="company-logo"><br>
             @endif
             <div class="company-name">{{ $companyName ?: 'الشركة' }}</div>
         </div>
@@ -372,8 +372,8 @@
             <div class="sig-label">توقيع المورد</div>
         </div>
         <div class="sig-box">
-            @if(!empty($companyStamp))
-                <img src="{{ public_path('storage/' . $companyStamp) }}" alt="ختم الشركة" class="stamp-img">
+            @if(!empty($companyStamp) && file_exists(public_path('storage/' . $companyStamp)))
+                <img src="file://{{ public_path('storage/' . $companyStamp) }}" alt="ختم الشركة" class="stamp-img">
             @else
                 <div class="sig-line"></div>
                 <div class="sig-label">ختم الشركة</div>

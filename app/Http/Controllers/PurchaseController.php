@@ -218,6 +218,7 @@ class PurchaseController extends Controller
         $pdf->setOption('margin-bottom', 0);
         $pdf->setOption('margin-left', 0);
         $pdf->setOption('margin-right', 0);
+        $pdf->setOption('enable-local-file-access', true);
 
         return $pdf->inline($purchase->invoice_number . '.pdf');
     }
