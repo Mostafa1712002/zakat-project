@@ -28,12 +28,11 @@
     </div>
 </div>
 
-<!-- الرصيد الإجمالي -->
+<!-- الرصيد الفعلي الحالي -->
 <div class="card mb-4" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color: white;">
     <div class="card-body" style="text-align: center; padding: 30px;">
-        <div style="font-size: 18px; opacity: 0.9; margin-bottom: 8px;">💰 الرصيد الإجمالي للخزنة</div>
+        <div style="font-size: 18px; opacity: 0.9; margin-bottom: 8px;">💰 الرصيد الفعلي الحالي</div>
         <div style="font-size: 42px; font-weight: 700;">{{ number_format($overallBalance, 2) }} ج.م</div>
-        <div style="font-size: 14px; opacity: 0.8; margin-top: 8px;">من بداية النظام حتى الآن</div>
     </div>
 </div>
 
@@ -61,12 +60,11 @@
     </div>
 
     <div class="stat-card" style="border-right: 4px solid var(--primary);">
-        <div class="stat-icon" style="color: var(--primary);">💵</div>
-        <div class="stat-value" style="color: {{ $balance >= 0 ? 'var(--success)' : 'var(--danger)' }};">{{ number_format($balance, 2) }} ج.م</div>
-        <div class="stat-label">صافي الفترة</div>
+        <div class="stat-icon" style="color: var(--primary);">📈</div>
+        <div class="stat-value" style="color: {{ $profit >= 0 ? 'var(--success)' : 'var(--danger)' }};">{{ number_format($profit, 2) }} ج.م</div>
+        <div class="stat-label">الربح</div>
         <div style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
-            من {{ \Carbon\Carbon::parse($startDate)->format('Y/m/d') }}
-            إلى {{ \Carbon\Carbon::parse($endDate)->format('Y/m/d') }}
+            أرباح المبيعات في الفترة
         </div>
     </div>
 </div>

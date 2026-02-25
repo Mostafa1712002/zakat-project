@@ -58,8 +58,18 @@ class TreasuryController extends Controller
 
         $totalExpenses = $expenses + $supplierPayments;
 
-        // === الرصيد ===
-        $balance = $totalIncome - $totalExpenses;
+        // === الربح (من المبيعات المؤكدة في الفترة) ===
+        $periodSales = Sale::with('items')
+            ->where('status', Sale::STATUS_CONFIRMED)
+            ->where('is_quotation', false)
+            ->whereBetween('invoice_date', [$startDate, $endDate])
+            ->get();
+
+        $profit = $periodSales->sum(function ($sale) {
+            return $sale->items->sum(function ($item) {
+                return ($item->unit_price - ($item->cost_price ?? 0)) * $item->quantity;
+            });
+        });
 
         // === تفاصيل المصروفات حسب الفئة ===
         $expensesByCategory = Expense::with('category')
@@ -215,7 +225,7 @@ class TreasuryController extends Controller
             'expenses',
             'supplierPayments',
             'totalExpenses',
-            'balance',
+            'profit',
             'expensesByCategory',
             'recentTransactions',
             'overallBalance',

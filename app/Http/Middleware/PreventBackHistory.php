@@ -16,6 +16,10 @@ class PreventBackHistory
     {
         $response = $next($request);
 
+        if ($response instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse) {
+            return $response;
+        }
+
         return $response->withHeaders([
             'Cache-Control' => 'no-cache, no-store, max-age=0, must-revalidate',
             'Pragma' => 'no-cache',
