@@ -161,7 +161,6 @@
                             <th style="width: 8%;">المتاح</th>
                             <th style="width: 10%;">الكمية</th>
                             <th style="width: 12%;">سعر الوحدة</th>
-                            <th style="width: 10%;">أقل سعر</th>
                             @if(feature_enabled('per_item_discount'))
                             <th style="width: 10%;">الخصم</th>
                             @endif
@@ -207,9 +206,6 @@
                             </td>
                             <td>
                                 <input type="number" name="items[{{ $index }}][unit_price]" class="form-control price-input" value="{{ $item['unit_price'] ?? 0 }}" min="0" step="0.01" required>
-                            </td>
-                            <td>
-                                <span class="min-price-display badge badge-secondary">-</span>
                             </td>
                             @if(feature_enabled('per_item_discount'))
                             <td>
@@ -448,10 +444,6 @@ document.addEventListener('DOMContentLoaded', function() {
         newRow.querySelector('.row-total').textContent = '0.00';
         newRow.querySelector('.remove-row').style.display = 'inline-block';
 
-        const minPriceDisplay = newRow.querySelector('.min-price-display');
-        minPriceDisplay.textContent = '-';
-        minPriceDisplay.className = 'min-price-display badge badge-secondary';
-
         const stockDisplay = newRow.querySelector('.stock-display');
         stockDisplay.textContent = '-';
         stockDisplay.className = 'stock-display badge badge-secondary';
@@ -487,27 +479,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const productId = row.querySelector('.product-select').value;
         const product = productsData[productId];
         const priceInput = row.querySelector('.price-input');
-        const minPriceDisplay = row.querySelector('.min-price-display');
 
         if (!product) {
             if (!skipPriceUpdate) priceInput.value = 0;
             priceInput.min = 0;
-            minPriceDisplay.textContent = '-';
-            minPriceDisplay.className = 'min-price-display badge badge-secondary';
             return;
         }
 
         if (!skipPriceUpdate) priceInput.value = product.retail;
-        const minPrice = product.min_price || 0;
-        priceInput.min = minPrice;
-
-        // Always show the min price value
-        minPriceDisplay.textContent = minPrice.toFixed(2);
-        if (minPrice > 0) {
-            minPriceDisplay.className = 'min-price-display badge badge-warning';
-        } else {
-            minPriceDisplay.className = 'min-price-display badge badge-secondary';
-        }
 
         validatePrice(row);
         calculateTotals();
