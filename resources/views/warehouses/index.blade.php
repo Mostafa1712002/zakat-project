@@ -6,7 +6,7 @@
 <div class="page-header">
     <div>
         <h1>🏭 المخازن</h1>
-        <p>إدارة المخازن والمستودعات</p>
+        <p>إدارة المخازن والمخازن</p>
     </div>
     <div class="header-actions">
         <a href="{{ route('warehouses.transfer') }}" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; margin-left: 10px;">🔄 ترحيل الأصناف</a>

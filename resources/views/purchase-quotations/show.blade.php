@@ -77,7 +77,7 @@
                     <table class="info-table text-nowrap">
                         <tr><td class="info-label">التاريخ:</td><td class="info-value"><strong>{{ $purchase->invoice_date?->format('Y-m-d') ?? '-' }}</strong></td></tr>
                         <tr><td class="info-label">صالحة حتى:</td><td class="info-value">{{ $purchase->due_date?->format('Y-m-d') ?? '-' }}</td></tr>
-                        <tr><td class="info-label">المستودع:</td><td class="info-value">{{ $purchase->warehouse->name ?? '-' }}</td></tr>
+                        <tr><td class="info-label">المخزن:</td><td class="info-value">{{ $purchase->warehouse->name ?? '-' }}</td></tr>
                         <tr><td class="info-label">نوع الدفع:</td><td class="info-value">{{ ($purchase->payment_type ?? 'credit') === 'credit' ? 'آجل' : 'نقدي' }}</td></tr>
                     </table>
                 </div>

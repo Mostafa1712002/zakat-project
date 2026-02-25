@@ -86,7 +86,7 @@ class FeatureSeeder extends Seeder
                 'name' => 'warehouses',
                 'name_ar' => 'المخازن',
                 'description' => 'Warehouse management',
-                'description_ar' => 'إدارة المخازن والمستودعات',
+                'description_ar' => 'إدارة المخازن والمخازن',
                 'icon' => '🏭',
                 'route_name' => 'warehouses.index',
                 'group' => 'inventory',

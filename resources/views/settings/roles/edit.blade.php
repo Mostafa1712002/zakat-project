@@ -43,7 +43,7 @@
                         'sales' => 'المبيعات',
                         'purchases' => 'المشتريات',
                         'products' => 'الأصناف',
-                        'warehouses' => 'المستودعات',
+                        'warehouses' => 'المخازن',
                         'inventory' => 'المخزون',
                         'transfers' => 'التحويلات',
                         'customers' => 'العملاء',

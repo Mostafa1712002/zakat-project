@@ -85,7 +85,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="warehouse_id" class="form-label">المستودع *</label>
+                        <label for="warehouse_id" class="form-label">المخزن *</label>
                         <select name="warehouse_id" id="warehouse_id" class="form-control" required>
                             @foreach($warehouses as $warehouse)
                                 <option value="{{ $warehouse->id }}" {{ old('warehouse_id', $sale->warehouse_id) == $warehouse->id ? 'selected' : '' }}>

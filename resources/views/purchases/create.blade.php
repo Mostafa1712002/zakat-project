@@ -36,7 +36,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">تاريخ الفاتورة *</label>
+                        <label class="form-label">تاريخ التوريد *</label>
                         <input type="date" name="invoice_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="form-group">
@@ -54,7 +54,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">المستودع *</label>
+                        <label class="form-label">المخزن *</label>
                         <select name="warehouse_id" class="form-control" required>
                             @foreach($warehouses as $warehouse)
                             <option value="{{ $warehouse->id }}" {{ $warehouse->is_default ? 'selected' : '' }}>{{ $warehouse->name }}</option>

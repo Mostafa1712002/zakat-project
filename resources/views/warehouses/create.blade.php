@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'إضافة مستودع')
+@section('title', 'إضافة مخزن')
 
 @section('content')
 <div class="page-header">
     <div>
-        <h1>➕ إضافة مستودع جديد</h1>
-        <p>أضف مستودع جديد للمخزون</p>
+        <h1>➕ إضافة مخزن جديد</h1>
+        <p>أضف مخزن جديد للمخزون</p>
     </div>
     <div class="header-actions">
-        <a href="{{ route('warehouses.index') }}" class="btn">← رجوع للمستودعات</a>
+        <a href="{{ route('warehouses.index') }}" class="btn">← رجوع للمخازن</a>
     </div>
 </div>
 
@@ -20,15 +20,15 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="name" class="form-label">اسم المستودع *</label>
-                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required placeholder="مثال: المستودع الرئيسي">
+                    <label for="name" class="form-label">اسم المخزن *</label>
+                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required placeholder="مثال: المخزن الرئيسي">
                     @error('name')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="code" class="form-label">كود المستودع</label>
+                    <label for="code" class="form-label">كود المخزن</label>
                     <input type="text" name="code" id="code" class="form-control" value="{{ old('code') }}" placeholder="سيتم توليده تلقائياً" style="background: rgba(0,0,0,0.05);">
                     <small style="color: #64748b; font-size: 12px;">⚡ يتم توليده تلقائياً إذا تُرك فارغاً</small>
                     @error('code')
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="manager_name" class="form-label">مدير المستودع</label>
+                    <label for="manager_name" class="form-label">مدير المخزن</label>
                     <input type="text" name="manager_name" id="manager_name" class="form-control" value="{{ old('manager_name') }}" placeholder="اسم المدير">
                     @error('manager_name')
                         <div class="form-error">{{ $message }}</div>
@@ -74,7 +74,7 @@
 
             <div class="form-group">
                 <label for="address" class="form-label">العنوان</label>
-                <textarea name="address" id="address" class="form-control" rows="2" placeholder="عنوان المستودع">{{ old('address') }}</textarea>
+                <textarea name="address" id="address" class="form-control" rows="2" placeholder="عنوان المخزن">{{ old('address') }}</textarea>
                 @error('address')
                     <div class="form-error">{{ $message }}</div>
                 @enderror
@@ -84,7 +84,7 @@
                 <div class="form-group">
                     <label class="checkbox-label">
                         <input type="checkbox" name="is_default" value="1" {{ old('is_default') ? 'checked' : '' }}>
-                        <span>مستودع افتراضي</span>
+                        <span>مخزن افتراضي</span>
                     </label>
                 </div>
 
@@ -102,7 +102,7 @@
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-primary">💾 حفظ المستودع</button>
+                <button type="submit" class="btn btn-primary">💾 حفظ المخزن</button>
                 <a href="{{ route('warehouses.index') }}" class="btn">إلغاء</a>
             </div>
         </form>

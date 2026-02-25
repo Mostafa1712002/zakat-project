@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل مستودع')
+@section('title', 'تعديل مخزن')
 
 @section('content')
 <div class="page-header">
     <div>
-        <h1>✏️ تعديل مستودع: {{ $warehouse->name }}</h1>
-        <p>تعديل بيانات المستودع</p>
+        <h1>✏️ تعديل مخزن: {{ $warehouse->name }}</h1>
+        <p>تعديل بيانات المخزن</p>
     </div>
     <div class="header-actions">
-        <a href="{{ route('warehouses.index') }}" class="btn">← رجوع للمستودعات</a>
+        <a href="{{ route('warehouses.index') }}" class="btn">← رجوع للمخازن</a>
     </div>
 </div>
 
@@ -21,7 +21,7 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="name" class="form-label">اسم المستودع *</label>
+                    <label for="name" class="form-label">اسم المخزن *</label>
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $warehouse->name) }}" required>
                     @error('name')
                         <div class="form-error">{{ $message }}</div>
@@ -29,7 +29,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="code" class="form-label">كود المستودع</label>
+                    <label for="code" class="form-label">كود المخزن</label>
                     <input type="text" name="code" id="code" class="form-control" value="{{ old('code', $warehouse->code) }}">
                     @error('code')
                         <div class="form-error">{{ $message }}</div>
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="manager_name" class="form-label">مدير المستودع</label>
+                    <label for="manager_name" class="form-label">مدير المخزن</label>
                     <input type="text" name="manager_name" id="manager_name" class="form-control" value="{{ old('manager_name', $warehouse->manager_name) }}">
                     @error('manager_name')
                         <div class="form-error">{{ $message }}</div>
@@ -84,7 +84,7 @@
                 <div class="form-group">
                     <label class="checkbox-label">
                         <input type="checkbox" name="is_default" value="1" {{ old('is_default', $warehouse->is_default) ? 'checked' : '' }}>
-                        <span>مستودع افتراضي</span>
+                        <span>مخزن افتراضي</span>
                     </label>
                 </div>
 

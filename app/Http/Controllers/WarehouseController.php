@@ -74,7 +74,7 @@ class WarehouseController extends Controller
         Warehouse::create($validated);
 
         return redirect()->route('warehouses.index')
-            ->with('success', 'تم إضافة المستودع بنجاح');
+            ->with('success', 'تم إضافة المخزن بنجاح');
     }
 
     /**
@@ -141,7 +141,7 @@ class WarehouseController extends Controller
         $warehouse->update($validated);
 
         return redirect()->route('warehouses.index')
-            ->with('success', 'تم تحديث بيانات المستودع بنجاح');
+            ->with('success', 'تم تحديث بيانات المخزن بنجاح');
     }
 
     /**
@@ -151,18 +151,18 @@ class WarehouseController extends Controller
     {
         // Check if warehouse has inventory
         if ($warehouse->inventoryLevels()->where('quantity', '>', 0)->exists()) {
-            return back()->with('error', 'لا يمكن حذف المستودع لأنه يحتوي على مخزون');
+            return back()->with('error', 'لا يمكن حذف المخزن لأنه يحتوي على مخزون');
         }
 
         // Check if warehouse is default
         if ($warehouse->is_default) {
-            return back()->with('error', 'لا يمكن حذف المستودع الافتراضي');
+            return back()->with('error', 'لا يمكن حذف المخزن الافتراضي');
         }
 
         $warehouse->delete();
 
         return redirect()->route('warehouses.index')
-            ->with('success', 'تم حذف المستودع بنجاح');
+            ->with('success', 'تم حذف المخزن بنجاح');
     }
 
     /**

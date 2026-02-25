@@ -318,7 +318,7 @@
                 <span class="info-row-value">{{ $purchase->due_date?->format('Y-m-d') ?? '-' }}</span>
             </div>
             <div class="info-row">
-                <span class="info-row-label">المستودع: </span>
+                <span class="info-row-label">المخزن: </span>
                 <span class="info-row-value">{{ $purchase->warehouse->name ?? '-' }}</span>
             </div>
             @if($purchase->supplier_invoice_number)

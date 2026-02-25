@@ -163,7 +163,7 @@ return [
         'supplier_id' => 'المورد',
         'product_id' => 'المنتج',
         'category_id' => 'التصنيف',
-        'warehouse_id' => 'المستودع',
+        'warehouse_id' => 'المخزن',
         'branch_id' => 'الفرع',
         'employee_id' => 'الموظف',
         'invoice_date' => 'تاريخ الفاتورة',

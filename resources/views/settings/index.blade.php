@@ -76,7 +76,7 @@
         <div class="settings-card-icon">📦</div>
         <div class="settings-card-content">
             <h3>المخازن</h3>
-            <p>إدارة المخازن والمستودعات</p>
+            <p>إدارة المخازن والمخازن</p>
         </div>
         <div class="settings-card-action">
             <a href="{{ route('warehouses.index') }}" class="btn btn-primary">إدارة</a>

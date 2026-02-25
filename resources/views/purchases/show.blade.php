@@ -44,7 +44,7 @@
 
             <div class="print-minimal-row">
                 <div class="print-info-cell">
-                    <span class="print-info-label">المستودع</span>
+                    <span class="print-info-label">المخزن</span>
                     <span class="print-info-value">{{ $purchase->warehouse->name ?? '-' }}</span>
                 </div>
                 @if($purchase->supplier_invoice_number)
@@ -176,7 +176,7 @@
                             <td class="info-value">{{ $purchase->due_date?->format('Y-m-d') ?? '-' }}</td>
                         </tr>
                         <tr>
-                            <td class="info-label">المستودع:</td>
+                            <td class="info-label">المخزن:</td>
                             <td class="info-value">{{ $purchase->warehouse->name ?? '-' }}</td>
                         </tr>
                         @if($purchase->supplier_invoice_number)
