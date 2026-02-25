@@ -627,23 +627,9 @@ document.addEventListener('DOMContentLoaded', function() {
         calculateTotals();
     }
 
-    // Show min price hint below price input
-    function showMinPriceHint(row, minPrice) {
-        removeMinPriceHint(row);
-        if (minPrice > 0) {
-            const priceInput = row.querySelector('.price-input');
-            const hint = document.createElement('small');
-            hint.className = 'min-price-hint';
-            hint.style.cssText = 'color: #64748b; font-size: 11px; display: block; margin-top: 2px;';
-            hint.textContent = 'أقل سعر: ' + parseFloat(minPrice).toFixed(2) + ' ج.م';
-            priceInput.parentNode.appendChild(hint);
-        }
-    }
-
-    function removeMinPriceHint(row) {
-        const hint = row.querySelector('.min-price-hint');
-        if (hint) hint.remove();
-    }
+    // Show min price hint below price input (disabled)
+    function showMinPriceHint(row, minPrice) {}
+    function removeMinPriceHint(row) {}
 
     // Validate price against min_selling_price
     function validateMinPrice(row) {
