@@ -65,6 +65,7 @@ class PurchaseController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.discount_amount' => 'nullable|numeric|min:0|max:100',
             // Advance payment for credit purchases
             'advance_payment' => 'nullable|numeric|min:0',
             'advance_payment_method' => 'nullable|in:cash,bank_transfer,instapay,vodafone_cash,card',
@@ -109,6 +110,9 @@ class PurchaseController extends Controller
             foreach ($validated['items'] as $item) {
                 $product = Product::find($item['product_id']);
                 $itemSubtotal = $item['quantity'] * $item['unit_price'];
+                $discountPercent = min(100, max(0, $item['discount_amount'] ?? 0));
+                $discountAmount = $itemSubtotal * $discountPercent / 100;
+                $itemTotal = $itemSubtotal - $discountAmount;
 
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
@@ -117,10 +121,12 @@ class PurchaseController extends Controller
                     'product_sku' => $product->sku,
                     'quantity' => $item['quantity'],
                     'unit_cost' => $item['unit_price'],
+                    'discount_amount' => $discountPercent,
                     'subtotal' => $itemSubtotal,
+                    'total' => $itemTotal,
                 ]);
 
-                $subtotal += $itemSubtotal;
+                $subtotal += $itemTotal;
 
                 // إضافة للمخزن إذا كانت الحالة "مستلم"
                 if ($isReceived && $product->track_inventory) {

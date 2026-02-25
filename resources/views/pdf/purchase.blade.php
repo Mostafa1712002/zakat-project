@@ -335,10 +335,13 @@
         <thead>
             <tr>
                 <th style="width: 7%;">#</th>
-                <th style="width: 43%;">الصنف</th>
-                <th style="width: 15%;">الكمية</th>
-                <th style="width: 17%;">سعر الوحدة</th>
-                <th style="width: 18%;">الإجمالي</th>
+                <th style="width: {{ feature_enabled('per_item_discount') ? '33%' : '43%' }};">الصنف</th>
+                <th style="width: 13%;">الكمية</th>
+                <th style="width: 15%;">سعر الوحدة</th>
+                @if(feature_enabled('per_item_discount'))
+                <th style="width: 12%;">الخصم %</th>
+                @endif
+                <th style="width: {{ feature_enabled('per_item_discount') ? '15%' : '18%' }};">الإجمالي</th>
             </tr>
         </thead>
         <tbody>
@@ -348,7 +351,10 @@
                 <td class="name">{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
                 <td>{{ number_format($item->quantity, 2) }}</td>
                 <td>{{ number_format($item->unit_cost ?? $item->unit_price, 2) }}</td>
-                <td>{{ number_format($item->subtotal, 2) }}</td>
+                @if(feature_enabled('per_item_discount'))
+                <td>{{ $item->discount_amount > 0 ? number_format($item->discount_amount, 1) . '%' : '-' }}</td>
+                @endif
+                <td>{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
             </tr>
             @endforeach
         </tbody>

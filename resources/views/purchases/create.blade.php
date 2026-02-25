@@ -111,10 +111,13 @@
                 <table class="table text-nowrap" id="itemsTable">
                 <thead>
                     <tr>
-                        <th style="width: 35%;">الصنف</th>
-                        <th style="width: 15%;">الكمية</th>
-                        <th style="width: 15%;">سعر الشراء</th>
-                        <th style="width: 15%;">الإجمالي</th>
+                        <th style="width: {{ feature_enabled('per_item_discount') ? '28%' : '35%' }};">الصنف</th>
+                        <th style="width: 12%;">الكمية</th>
+                        <th style="width: 12%;">سعر الشراء</th>
+                        @if(feature_enabled('per_item_discount'))
+                        <th style="width: 10%;">الخصم %</th>
+                        @endif
+                        <th style="width: 12%;">الإجمالي</th>
                         <th style="width: 5%;"></th>
                     </tr>
                 </thead>
@@ -124,23 +127,31 @@
                             <select name="items[0][product_id]" class="form-control product-select" required disabled>
                                 <option value="">اختر المورد أولاً</option>
                             </select>
+                            @unless(feature_enabled('per_item_discount'))
+                            <input type="hidden" name="items[0][discount_amount]" class="discount-input" value="0">
+                            @endunless
                         </td>
                         <td><input type="number" name="items[0][quantity]" class="form-control quantity-input" value="1" min="0.001" step="0.001" required></td>
                         <td><input type="number" name="items[0][unit_price]" class="form-control price-input" value="0" min="0" step="0.01" required></td>
+                        @if(feature_enabled('per_item_discount'))
+                        <td><input type="number" name="items[0][discount_amount]" class="form-control discount-input" value="0" min="0" max="100" step="0.01"></td>
+                        @endif
                         <td><span class="row-total">0.00</span> ج.م</td>
                         <td><button type="button" class="btn btn-sm btn-danger remove-row" style="display: none;">×</button></td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5"><button type="button" class="btn btn-sm" id="addRowBtn">+ إضافة صنف</button></td>
+                        <td colspan="{{ feature_enabled('per_item_discount') ? 6 : 5 }}"><button type="button" class="btn btn-sm" id="addRowBtn">+ إضافة صنف</button></td>
                     </tr>
                 </tfoot>
                 </table>
             </div>
 
             <div class="totals-section">
-                <div class="totals-row total-final"><span>الإجمالي:</span> <strong id="grandTotal">0.00</strong> ج.م</div>
+                <div class="totals-row"><span>الإجمالي الفرعي:</span> <strong id="subtotal">0.00</strong> ج.م</div>
+                <div class="totals-row"><span>الخصم:</span> <strong id="totalDiscount">0.00</strong> ج.م</div>
+                <div class="totals-row total-final"><span>الإجمالي النهائي:</span> <strong id="grandTotal">0.00</strong> ج.م</div>
             </div>
         </div>
     </div>
@@ -315,19 +326,33 @@ document.addEventListener('DOMContentLoaded', function() {
     function calculateRowTotal(row) {
         const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
         const price = parseFloat(row.querySelector('.price-input').value) || 0;
-        const total = qty * price;
-        row.querySelector('.row-total').textContent = total.toFixed(2);
-        return total;
+        const discountInput = row.querySelector('.discount-input');
+        let discountPercent = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
+        if (discountPercent > 100) { discountPercent = 100; discountInput.value = 100; }
+        if (discountPercent < 0) { discountPercent = 0; discountInput.value = 0; }
+        const lineTotal = qty * price;
+        const total = lineTotal - (lineTotal * discountPercent / 100);
+        row.querySelector('.row-total').textContent = Math.max(0, total).toFixed(2);
+        return Math.max(0, total);
     }
 
     function calculateTotals() {
-        let total = 0;
-        document.querySelectorAll('.item-row').forEach(row => { total += calculateRowTotal(row); });
-        document.getElementById('grandTotal').textContent = total.toFixed(2);
+        let itemsTotal = 0;
+        let itemsSubtotal = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const price = parseFloat(row.querySelector('.price-input').value) || 0;
+            itemsSubtotal += qty * price;
+            itemsTotal += calculateRowTotal(row);
+        });
+        const discount = itemsSubtotal - itemsTotal;
+        document.getElementById('subtotal').textContent = itemsSubtotal.toFixed(2);
+        document.getElementById('totalDiscount').textContent = discount.toFixed(2);
+        document.getElementById('grandTotal').textContent = itemsTotal.toFixed(2);
     }
 
     function attachRowEvents(row) {
-        row.querySelectorAll('.quantity-input, .price-input').forEach(input => {
+        row.querySelectorAll('.quantity-input, .price-input, .discount-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
         });
     }

@@ -131,7 +131,7 @@ class Purchase extends Model
 
     public function calculateTotals(): void
     {
-        $this->subtotal = $this->items->sum('subtotal');
+        $this->subtotal = $this->items->sum('total') ?: $this->items->sum('subtotal');
 
         if ($this->discount_type === 'percentage') {
             $this->discount_amount = $this->subtotal * ($this->discount_value / 100);

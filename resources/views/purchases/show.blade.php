@@ -62,6 +62,9 @@
                         <th>الصنف</th>
                         <th>الكمية</th>
                         <th>سعر الوحدة</th>
+                        @if(feature_enabled('per_item_discount'))
+                        <th>الخصم %</th>
+                        @endif
                         <th>الإجمالي</th>
                     </tr>
                 </thead>
@@ -72,7 +75,10 @@
                         <td>{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
                         <td>{{ number_format($item->quantity, 2) }}</td>
                         <td>{{ number_format($item->unit_cost ?? $item->unit_price, 2) }}</td>
-                        <td>{{ number_format($item->subtotal, 2) }}</td>
+                        @if(feature_enabled('per_item_discount'))
+                        <td>{{ $item->discount_amount > 0 ? number_format($item->discount_amount, 1) . '%' : '-' }}</td>
+                        @endif
+                        <td>{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -206,6 +212,7 @@
         </div>
 
         <!-- Items Table -->
+        @php $colCount = feature_enabled('per_item_discount') ? 6 : 5; @endphp
         <div class="items-card">
             <table class="items-table">
                 <thead>
@@ -214,6 +221,9 @@
                         <th>الصنف</th>
                         <th>الكمية</th>
                         <th>سعر الوحدة</th>
+                        @if(feature_enabled('per_item_discount'))
+                        <th>الخصم %</th>
+                        @endif
                         <th>الإجمالي</th>
                     </tr>
                 </thead>
@@ -224,38 +234,41 @@
                         <td class="item-name">{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
                         <td>{{ number_format($item->quantity, 2) }}</td>
                         <td>{{ number_format($item->unit_cost ?? $item->unit_price, 2) }} ج.م</td>
-                        <td class="item-total">{{ number_format($item->subtotal, 2) }} ج.م</td>
+                        @if(feature_enabled('per_item_discount'))
+                        <td>{{ $item->discount_amount > 0 ? number_format($item->discount_amount, 1) . '%' : '-' }}</td>
+                        @endif
+                        <td class="item-total">{{ number_format($item->total ?? $item->subtotal, 2) }} ج.م</td>
                     </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr class="subtotal-row">
-                        <td colspan="4" class="text-left"><strong>الإجمالي الفرعي</strong></td>
+                        <td colspan="{{ $colCount - 1 }}" class="text-left"><strong>الإجمالي الفرعي</strong></td>
                         <td><strong>{{ number_format($purchase->subtotal, 2) }} ج.م</strong></td>
                     </tr>
                     @if($purchase->discount_amount > 0)
                     <tr>
-                        <td colspan="4" class="text-left">الخصم</td>
+                        <td colspan="{{ $colCount - 1 }}" class="text-left">الخصم</td>
                         <td class="discount">- {{ number_format($purchase->discount_amount, 2) }} ج.م</td>
                     </tr>
                     @endif
                     @if($purchase->shipping_amount > 0)
                     <tr>
-                        <td colspan="4" class="text-left">الشحن</td>
+                        <td colspan="{{ $colCount - 1 }}" class="text-left">الشحن</td>
                         <td>{{ number_format($purchase->shipping_amount, 2) }} ج.م</td>
                     </tr>
                     @endif
                     <tr class="grand-total-row">
-                        <td colspan="4" class="text-left"><strong>الإجمالي النهائي</strong></td>
+                        <td colspan="{{ $colCount - 1 }}" class="text-left"><strong>الإجمالي النهائي</strong></td>
                         <td class="grand-total"><strong>{{ number_format($purchase->total_amount, 2) }} ج.م</strong></td>
                     </tr>
                     @if($purchase->paid_amount > 0)
                     <tr>
-                        <td colspan="4" class="text-left">المدفوع</td>
+                        <td colspan="{{ $colCount - 1 }}" class="text-left">المدفوع</td>
                         <td class="paid">{{ number_format($purchase->paid_amount, 2) }} ج.م</td>
                     </tr>
                     <tr>
-                        <td colspan="4" class="text-left"><strong>المتبقي</strong></td>
+                        <td colspan="{{ $colCount - 1 }}" class="text-left"><strong>المتبقي</strong></td>
                         <td class="remaining"><strong>{{ number_format($purchase->remaining_amount, 2) }} ج.م</strong></td>
                     </tr>
                     @endif
