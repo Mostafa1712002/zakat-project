@@ -103,7 +103,8 @@ class QuotationController extends Controller
             foreach ($validated['items'] as $item) {
                 $product = Product::find($item['product_id']);
                 $subtotal = $item['quantity'] * $item['unit_price'];
-                $discount = $item['discount_amount'] ?? 0;
+                $discountPercent = min(100, max(0, $item['discount_amount'] ?? 0));
+                $discount = $subtotal * $discountPercent / 100;
                 $taxAmount = $product->is_taxable ? ($subtotal - $discount) * ($product->tax_rate / 100) : 0;
                 $total = $subtotal - $discount + $taxAmount;
 
@@ -249,7 +250,8 @@ class QuotationController extends Controller
             foreach ($validated['items'] as $item) {
                 $product = Product::find($item['product_id']);
                 $subtotal = $item['quantity'] * $item['unit_price'];
-                $discount = $item['discount_amount'] ?? 0;
+                $discountPercent = min(100, max(0, $item['discount_amount'] ?? 0));
+                $discount = $subtotal * $discountPercent / 100;
                 $taxAmount = $product->is_taxable ? ($subtotal - $discount) * ($product->tax_rate / 100) : 0;
                 $total = $subtotal - $discount + $taxAmount;
 

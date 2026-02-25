@@ -247,7 +247,8 @@ class SaleController extends Controller
                 $product = Product::find($item['product_id']);
 
                 $subtotal = $item['quantity'] * $item['unit_price'];
-                $discount = $item['discount_amount'] ?? 0;
+                $discountPercent = min(100, max(0, $item['discount_amount'] ?? 0));
+                $discount = $subtotal * $discountPercent / 100;
                 $taxAmount = $product->is_taxable ? ($subtotal - $discount) * ($product->tax_rate / 100) : 0;
                 $total = $subtotal - $discount + $taxAmount;
 
@@ -259,7 +260,7 @@ class SaleController extends Controller
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'cost_price' => $product->cost_price,
-                    'discount_amount' => $discount,
+                    'discount_amount' => $discountPercent,
                     'tax_rate' => $product->is_taxable ? $product->tax_rate : 0,
                     'tax_amount' => $taxAmount,
                     'subtotal' => $subtotal,
@@ -584,7 +585,8 @@ class SaleController extends Controller
                 $product = Product::find($item['product_id']);
 
                 $subtotal = $item['quantity'] * $item['unit_price'];
-                $discount = $item['discount_amount'] ?? 0;
+                $discountPercent = min(100, max(0, $item['discount_amount'] ?? 0));
+                $discount = $subtotal * $discountPercent / 100;
                 $taxAmount = $product->is_taxable ? ($subtotal - $discount) * ($product->tax_rate / 100) : 0;
                 $total = $subtotal - $discount + $taxAmount;
 
@@ -596,7 +598,7 @@ class SaleController extends Controller
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'cost_price' => $product->cost_price,
-                    'discount_amount' => $discount,
+                    'discount_amount' => $discountPercent,
                     'tax_rate' => $product->is_taxable ? $product->tax_rate : 0,
                     'tax_amount' => $taxAmount,
                     'subtotal' => $subtotal,

@@ -183,11 +183,10 @@
                             @if(feature_enabled('grade_system'))
                             <th style="width: 10%;">الفرز</th>
                             @endif
-                            <th style="width: 8%;">المتاح</th>
                             <th style="width: 10%;">الكمية</th>
                             <th style="width: 12%;">سعر الوحدة</th>
                             @if(feature_enabled('per_item_discount'))
-                            <th style="width: 10%;">الخصم</th>
+                            <th style="width: 10%;">الخصم %</th>
                             @endif
                             @if(feature_enabled('tile_area_tracking'))
                             <th style="width: 10%;">المساحة</th>
@@ -223,17 +222,15 @@
                             </td>
                             @endif
                             <td>
-                                <span class="stock-display badge badge-secondary">-</span>
-                            </td>
-                            <td>
                                 <input type="number" name="items[0][quantity]" class="form-control quantity-input" value="1" min="0.001" step="0.001" required>
+                                <small class="stock-hint">المتاح: <span class="stock-display">-</span></small>
                             </td>
                             <td>
                                 <input type="number" name="items[0][unit_price]" class="form-control price-input" value="0" min="0" step="0.01" required>
                             </td>
                             @if(feature_enabled('per_item_discount'))
                             <td>
-                                <input type="number" name="items[0][discount_amount]" class="form-control discount-input" value="0" min="0" step="0.01">
+                                <input type="number" name="items[0][discount_amount]" class="form-control discount-input" value="0" min="0" max="100" step="0.01">
                             </td>
                             @endif
                             @if(feature_enabled('tile_area_tracking'))
@@ -252,7 +249,7 @@
                     <tfoot>
                         <tr>
                             @php
-                                $colCount = 6;
+                                $colCount = 5;
                                 if (feature_enabled('per_item_discount')) $colCount++;
                                 if (feature_enabled('grade_system')) $colCount++;
                                 if (feature_enabled('tile_area_tracking')) $colCount++;
@@ -325,12 +322,16 @@
     font-size: 1rem;
 }
 
+.stock-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #6b7280;
+}
 .stock-display {
     display: inline-block;
-    min-width: 50px;
-    text-align: center;
     font-size: 11px;
-    padding: 4px 8px;
+    font-weight: 600;
 }
 
 .stock-warning {
@@ -339,17 +340,14 @@
 }
 
 .stock-ok {
-    background: #dcfce7 !important;
     color: #166534 !important;
 }
 
 .stock-low {
-    background: #fef3c7 !important;
     color: #92400e !important;
 }
 
 .stock-out {
-    background: #fee2e2 !important;
     color: #991b1b !important;
 }
 
@@ -461,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!productId) {
             stockDisplay.textContent = '-';
-            stockDisplay.className = 'stock-display badge badge-secondary';
+            stockDisplay.className = 'stock-display';
             stockDisplay.dataset.stock = '0';
             return;
         }
@@ -469,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // If product doesn't track inventory, show unlimited
         if (product && !product.track) {
             stockDisplay.textContent = '∞';
-            stockDisplay.className = 'stock-display badge badge-success';
+            stockDisplay.className = 'stock-display stock-ok';
             stockDisplay.dataset.stock = '999999';
             return;
         }
@@ -481,11 +479,11 @@ document.addEventListener('DOMContentLoaded', function() {
             stockDisplay.textContent = Math.floor(stock);
 
             if (stock <= 0) {
-                stockDisplay.className = 'stock-display badge stock-out';
+                stockDisplay.className = 'stock-display stock-out';
             } else if (stock < 10) {
-                stockDisplay.className = 'stock-display badge stock-low';
+                stockDisplay.className = 'stock-display stock-low';
             } else {
-                stockDisplay.className = 'stock-display badge stock-ok';
+                stockDisplay.className = 'stock-display stock-ok';
             }
             validateQuantity(row);
             return;
@@ -493,18 +491,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // For admin: fetch stock from warehouse (or all warehouses if none selected)
         stockDisplay.textContent = '...';
-        stockDisplay.className = 'stock-display badge badge-secondary';
+        stockDisplay.className = 'stock-display';
 
         const stock = await fetchStock(productId, warehouseId || '');
         stockDisplay.dataset.stock = stock;
         stockDisplay.textContent = stock.toFixed(0);
 
         if (stock <= 0) {
-            stockDisplay.className = 'stock-display badge stock-out';
+            stockDisplay.className = 'stock-display stock-out';
         } else if (stock < 10) {
-            stockDisplay.className = 'stock-display badge stock-low';
+            stockDisplay.className = 'stock-display stock-low';
         } else {
-            stockDisplay.className = 'stock-display badge stock-ok';
+            stockDisplay.className = 'stock-display stock-ok';
         }
 
         validateQuantity(row);
@@ -579,7 +577,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reset stock display
         const stockDisplay = newRow.querySelector('.stock-display');
         stockDisplay.textContent = '-';
-        stockDisplay.className = 'stock-display badge badge-secondary';
+        stockDisplay.className = 'stock-display';
         stockDisplay.dataset.stock = '0';
 
         // Reset warnings
@@ -661,8 +659,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
         const price = parseFloat(row.querySelector('.price-input').value) || 0;
         const discountInput = row.querySelector('.discount-input');
-        const discount = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
-        const total = (qty * price) - discount;
+        let discountPercent = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
+        if (discountPercent > 100) { discountPercent = 100; discountInput.value = 100; }
+        if (discountPercent < 0) { discountPercent = 0; discountInput.value = 0; }
+        const lineTotal = qty * price;
+        const total = lineTotal - (lineTotal * discountPercent / 100);
         row.querySelector('.row-total').textContent = Math.max(0, total).toFixed(2);
 
         // Update area display
