@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Payment;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
@@ -242,6 +244,32 @@ class PaymentController extends Controller
                     $purchase->addPayment($validated['amount']);
                 }
             }
+
+            // تسجيل مصروف لدفعة المورد
+            $purchaseCategory = ExpenseCategory::where('code', 'PURCHASE')->first()
+                ?? ExpenseCategory::where('name', 'like', '%مشتريات%')->first();
+
+            $purchaseRef = $validated['purchase_id']
+                ? \App\Models\Purchase::find($validated['purchase_id'])
+                : null;
+
+            Expense::create([
+                'expense_number' => Expense::generateExpenseNumber(),
+                'expense_category_id' => $purchaseCategory?->id,
+                'branch_id' => $user->branch_id,
+                'user_id' => $user->id,
+                'expense_date' => $validated['payment_date'],
+                'title' => 'دفع للمورد: ' . $supplier->name,
+                'description' => $purchaseRef
+                    ? 'دفعة فاتورة شراء رقم ' . $purchaseRef->invoice_number
+                    : 'دفعة للمورد ' . $supplier->name,
+                'amount' => $validated['amount'],
+                'total_amount' => $validated['amount'],
+                'payment_method' => $validated['method'],
+                'vendor_name' => $supplier->name,
+                'reference_number' => $payment->payment_number,
+                'status' => 'paid',
+            ]);
 
             DB::commit();
 

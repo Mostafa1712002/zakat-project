@@ -44,6 +44,10 @@
                     </td>
                     <td>
                         <div class="btn-group">
+                            <a href="{{ route('suppliers.show', $supplier) }}" class="btn btn-sm btn-primary">عرض</a>
+                            @if($supplier->current_balance > 0)
+                            <a href="{{ route('suppliers.pay.form', $supplier) }}" class="btn btn-sm btn-success">💰 دفع</a>
+                            @endif
                             <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-sm">تعديل</a>
                             <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
                                 @csrf

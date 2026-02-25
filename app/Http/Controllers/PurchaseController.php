@@ -200,6 +200,26 @@ class PurchaseController extends Controller
 
                     // خصم الدفعة المقدمة من رصيد المورد
                     $supplier->decrement('current_balance', $advancePayment);
+
+                    // تسجيل مصروف للدفعة المقدمة
+                    $advanceCategory = ExpenseCategory::where('code', 'PURCHASE')->first()
+                        ?? ExpenseCategory::where('name', 'like', '%مشتريات%')->first();
+
+                    Expense::create([
+                        'expense_number' => Expense::generateExpenseNumber(),
+                        'expense_category_id' => $advanceCategory?->id,
+                        'branch_id' => $branchId,
+                        'user_id' => auth()->id(),
+                        'expense_date' => $validated['invoice_date'],
+                        'title' => 'دفعة مقدمة للمورد: ' . ($supplier->name ?? 'غير محدد'),
+                        'description' => 'دفعة مقدمة - فاتورة شراء رقم ' . $purchase->invoice_number,
+                        'amount' => $advancePayment,
+                        'total_amount' => $advancePayment,
+                        'payment_method' => $paymentMethod,
+                        'vendor_name' => $supplier->name ?? null,
+                        'reference_number' => $purchase->invoice_number,
+                        'status' => 'paid',
+                    ]);
                 }
             }
 

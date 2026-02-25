@@ -18,51 +18,38 @@ class DashboardController extends Controller
     public function index()
     {
         $today = Carbon::today();
-        $monthStart = Carbon::now()->startOfMonth();
 
         // Daily stats
         $todaySales = Sale::whereDate('invoice_date', $today)->sum('total_amount');
         $todayPurchases = Purchase::whereDate('invoice_date', $today)->sum('total_amount');
 
-        // Monthly stats - only confirmed sales count in profit
-        $monthlySales = Sale::where('invoice_date', '>=', $monthStart)
-            ->where('status', Sale::STATUS_CONFIRMED)
-            ->sum('total_amount');
-        $monthlyPurchases = Purchase::where('invoice_date', '>=', $monthStart)->sum('total_amount');
-        $monthlyExpenses = Expense::where('expense_date', '>=', $monthStart)
-            ->where('status', 'paid')
-            ->sum('amount');
-        $monthlyProfit = $monthlySales - $monthlyPurchases - $monthlyExpenses;
+        // Treasury balance (same logic as TreasuryController)
+        $openingBalance = floatval(\DB::table('settings')->where('key', 'treasury_opening_balance')->value('value') ?? 0);
 
-        // Rep treasury withdrawals this month
-        $repWithdrawals = Payment::where('type', Payment::TYPE_RECEIVED)
+        $totalCollections = Payment::where('type', Payment::TYPE_RECEIVED)
             ->where('status', Payment::STATUS_COMPLETED)
-            ->where('payable_type', SalesRep::class)
-            ->where('payment_date', '>=', $monthStart)
-            ->sum('amount');
-
-        // Add rep withdrawals to profit (money that entered main treasury from reps)
-        $monthlyProfit += $repWithdrawals;
-
-        // Cash balance (actual money received - paid out this month)
-        // Collections from customers (excluding rep withdrawals to avoid double-counting)
-        $monthlyCollections = Payment::where('type', Payment::TYPE_RECEIVED)
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->where('payment_date', '>=', $monthStart)
             ->where(function ($q) {
                 $q->where('payable_type', '!=', SalesRep::class)
                   ->orWhereNull('payable_type');
             })
             ->sum('amount');
-        $monthlyCashSales = Sale::where('payment_type', 'cash')
+
+        $totalCashSales = Sale::where('payment_type', 'cash')
             ->where('status', Sale::STATUS_CONFIRMED)
-            ->where('invoice_date', '>=', $monthStart)
             ->sum('total_amount');
-        $monthlySupplierPayments = Payment::where('type', Payment::TYPE_PAID)
+
+        $totalRepWithdrawals = Payment::where('type', Payment::TYPE_RECEIVED)
             ->where('status', Payment::STATUS_COMPLETED)
-            ->where('payment_date', '>=', $monthStart)
+            ->where('payable_type', SalesRep::class)
             ->sum('amount');
-        $monthlyCashBalance = ($monthlyCollections + $monthlyCashSales + $repWithdrawals) - ($monthlyExpenses + $monthlySupplierPayments);
+
+        $totalExpenses = Expense::where('status', 'paid')->sum('amount');
+
+        $totalSupplierPayments = Payment::where('type', Payment::TYPE_PAID)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->sum('amount');
+
+        $treasuryBalance = $openingBalance + ($totalCollections + $totalCashSales + $totalRepWithdrawals) - ($totalExpenses + $totalSupplierPayments);
 
         // Collection stats
         $unpaidInvoices = Sale::where('payment_status', 'unpaid')->count();
@@ -81,8 +68,7 @@ class DashboardController extends Controller
             'total_sales' => $todaySales,
             'total_purchases' => $todayPurchases,
             'low_stock_count' => $lowStockCount,
-            'monthly_profit' => $monthlyProfit,
-            'monthly_cash_balance' => $monthlyCashBalance,
+            'treasury_balance' => $treasuryBalance,
             'customers_count' => Customer::count(),
             'products_count' => Product::count(),
             'categories_count' => Category::count(),
