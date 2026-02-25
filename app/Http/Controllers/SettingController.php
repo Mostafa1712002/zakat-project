@@ -59,9 +59,7 @@ class SettingController extends Controller
             'contacts.*.name' => 'nullable|string|max:255',
             'contacts.*.phone' => 'nullable|string|max:20',
             // Color palette
-            'color_primary' => 'nullable|string|max:20',
-            'color_primary_dark' => 'nullable|string|max:20',
-            'color_primary_light' => 'nullable|string|max:20',
+            'color_palette' => 'nullable|string|in:cyan,blue,indigo,purple,rose,emerald,amber,slate',
             // Invoice customization
             'invoice_note' => 'nullable|string|max:1000',
             'show_customer_balance' => 'nullable|boolean',
@@ -471,9 +469,7 @@ class SettingController extends Controller
                 'invoice_footer' => $this->getSetting('invoice_footer', ''),
                 'invoice_terms' => $this->getSetting('invoice_terms', ''),
                 'invoice_contacts' => $this->getSetting('invoice_contacts', '[]'),
-                'color_primary' => $this->getSetting('color_primary', '#0891b2'),
-                'color_primary_dark' => $this->getSetting('color_primary_dark', '#0e7490'),
-                'color_primary_light' => $this->getSetting('color_primary_light', '#06b6d4'),
+                'color_palette' => $this->getSetting('color_palette', 'cyan'),
                 'invoice_note' => $this->getSetting('invoice_note', ''),
                 'show_customer_balance' => $this->getSetting('show_customer_balance', '0'),
                 'customer_item_types' => $this->getSetting('customer_item_types', ''),

@@ -2,16 +2,25 @@
     $__siteSettings = \Illuminate\Support\Facades\Cache::remember('sidebar_settings', 3600, function() {
         try {
             return \DB::table('settings')
-                ->whereIn('key', ['company_name', 'company_logo', 'color_primary', 'color_primary_dark', 'color_primary_light'])
+                ->whereIn('key', ['company_name', 'company_logo', 'color_palette'])
                 ->pluck('value', 'key')
                 ->toArray();
         } catch (\Exception $e) { return []; }
     });
     $__sidebarLogo = $__siteSettings['company_logo'] ?? '';
     $__sidebarName = $__siteSettings['company_name'] ?? config('app.name', 'CRM');
-    $__colorPrimary = $__siteSettings['color_primary'] ?? '#0891b2';
-    $__colorPrimaryDark = $__siteSettings['color_primary_dark'] ?? '#0e7490';
-    $__colorPrimaryLight = $__siteSettings['color_primary_light'] ?? '#06b6d4';
+    $__palettes = [
+        'cyan'    => ['primary' => '#0891b2', 'dark' => '#0e7490', 'light' => '#06b6d4'],
+        'blue'    => ['primary' => '#2563eb', 'dark' => '#1d4ed8', 'light' => '#3b82f6'],
+        'indigo'  => ['primary' => '#6366f1', 'dark' => '#4f46e5', 'light' => '#818cf8'],
+        'purple'  => ['primary' => '#7c3aed', 'dark' => '#6d28d9', 'light' => '#8b5cf6'],
+        'rose'    => ['primary' => '#e11d48', 'dark' => '#be123c', 'light' => '#f43f5e'],
+        'emerald' => ['primary' => '#059669', 'dark' => '#047857', 'light' => '#10b981'],
+        'amber'   => ['primary' => '#d97706', 'dark' => '#b45309', 'light' => '#f59e0b'],
+        'slate'   => ['primary' => '#475569', 'dark' => '#334155', 'light' => '#64748b'],
+    ];
+    $__activePalette = $__siteSettings['color_palette'] ?? 'cyan';
+    $__colors = $__palettes[$__activePalette] ?? $__palettes['cyan'];
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -65,9 +74,9 @@
     </style>
     <style>
         :root {
-            --primary: {{ $__colorPrimary }};
-            --primary-dark: {{ $__colorPrimaryDark }};
-            --primary-light: {{ $__colorPrimaryLight }};
+            --primary: {{ $__colors['primary'] }};
+            --primary-dark: {{ $__colors['dark'] }};
+            --primary-light: {{ $__colors['light'] }};
             --success: #059669;
             --warning: #f59e0b;
             --danger: #dc2626;

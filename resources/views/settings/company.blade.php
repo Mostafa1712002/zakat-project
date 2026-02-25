@@ -186,31 +186,29 @@
             @if(feature_enabled('color_palette'))
             <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">🎨 ألوان الموقع</h3>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 16px;">اختر لوحة الألوان المفضلة للموقع</p>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="color_primary" class="form-label">اللون الأساسي</label>
-                    <input type="color" name="color_primary" id="color_primary" class="form-control" value="{{ old('color_primary', $settings['color_primary'] ?? '#0891b2') }}" style="height: 46px; padding: 4px;">
-                    @error('color_primary')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="color_primary_dark" class="form-label">اللون الأساسي (داكن)</label>
-                    <input type="color" name="color_primary_dark" id="color_primary_dark" class="form-control" value="{{ old('color_primary_dark', $settings['color_primary_dark'] ?? '#0e7490') }}" style="height: 46px; padding: 4px;">
-                    @error('color_primary_dark')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="color_primary_light" class="form-label">اللون الأساسي (فاتح)</label>
-                    <input type="color" name="color_primary_light" id="color_primary_light" class="form-control" value="{{ old('color_primary_light', $settings['color_primary_light'] ?? '#06b6d4') }}" style="height: 46px; padding: 4px;">
-                    @error('color_primary_light')
-                        <div class="form-error">{{ $message }}</div>
-                    @enderror
-                </div>
+            <div class="palette-picker" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                @php
+                    $palettes = [
+                        'cyan'    => ['label' => 'سماوي',  'primary' => '#0891b2', 'dark' => '#0e7490', 'light' => '#06b6d4'],
+                        'blue'    => ['label' => 'أزرق',   'primary' => '#2563eb', 'dark' => '#1d4ed8', 'light' => '#3b82f6'],
+                        'indigo'  => ['label' => 'نيلي',   'primary' => '#6366f1', 'dark' => '#4f46e5', 'light' => '#818cf8'],
+                        'purple'  => ['label' => 'بنفسجي', 'primary' => '#7c3aed', 'dark' => '#6d28d9', 'light' => '#8b5cf6'],
+                        'rose'    => ['label' => 'وردي',   'primary' => '#e11d48', 'dark' => '#be123c', 'light' => '#f43f5e'],
+                        'emerald' => ['label' => 'أخضر',   'primary' => '#059669', 'dark' => '#047857', 'light' => '#10b981'],
+                        'amber'   => ['label' => 'ذهبي',   'primary' => '#d97706', 'dark' => '#b45309', 'light' => '#f59e0b'],
+                        'slate'   => ['label' => 'رمادي',  'primary' => '#475569', 'dark' => '#334155', 'light' => '#64748b'],
+                    ];
+                    $activePalette = $settings['color_palette'] ?? 'cyan';
+                @endphp
+                @foreach($palettes as $key => $palette)
+                <label class="palette-swatch {{ $activePalette === $key ? 'palette-active' : '' }}" onclick="selectPalette('{{ $key }}', '{{ $palette['primary'] }}', '{{ $palette['dark'] }}', '{{ $palette['light'] }}')">
+                    <input type="radio" name="color_palette" value="{{ $key }}" {{ $activePalette === $key ? 'checked' : '' }} hidden>
+                    <div class="swatch-circle" style="background: {{ $palette['primary'] }};"></div>
+                    <span class="swatch-label">{{ $palette['label'] }}</span>
+                </label>
+                @endforeach
             </div>
             @endif
 
@@ -378,6 +376,40 @@
     line-height: 1;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
+.palette-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+    min-width: 70px;
+}
+.palette-swatch:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.palette-active {
+    border-color: var(--primary) !important;
+    background: var(--bg-light);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 8, 145, 178), 0.15);
+}
+.swatch-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.swatch-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
 </style>
 @endpush
 
@@ -442,6 +474,19 @@ function removeFile(type) {
     // Clear file input
     var fileInput = document.getElementById(type + 'UploadBtn').querySelector('input[type="file"]');
     if (fileInput) fileInput.value = '';
+}
+
+function selectPalette(key, primary, dark, light) {
+    // Update active state
+    document.querySelectorAll('.palette-swatch').forEach(function(s) {
+        s.classList.remove('palette-active');
+    });
+    event.currentTarget.classList.add('palette-active');
+
+    // Live preview - update CSS variables
+    document.documentElement.style.setProperty('--primary', primary);
+    document.documentElement.style.setProperty('--primary-dark', dark);
+    document.documentElement.style.setProperty('--primary-light', light);
 }
 </script>
 @endpush
