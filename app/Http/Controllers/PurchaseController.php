@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\Partner;
+use App\Models\PartnerTransaction;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
+use App\Models\Sale;
+use App\Models\SalesRep;
 use App\Models\Supplier;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
@@ -138,6 +142,15 @@ class PurchaseController extends Controller
             $purchase->remaining_amount = $isCash ? 0 : $purchase->total_amount;
             $purchase->paid_amount = $isCash ? $purchase->total_amount : 0;
             $purchase->save();
+
+            // التحقق من رصيد الخزنة قبل الدفع
+            $amountToPayNow = $isCash ? $purchase->total_amount : floatval($validated['advance_payment'] ?? 0);
+            if ($amountToPayNow > 0) {
+                $treasuryBalance = $this->getTreasuryBalance();
+                if ($amountToPayNow > $treasuryBalance) {
+                    throw new \Exception('رصيد الخزنة غير كافي. الرصيد الحالي: ' . number_format($treasuryBalance, 2) . ' ج.م، المطلوب دفعه: ' . number_format($amountToPayNow, 2) . ' ج.م');
+                }
+            }
 
             // إنشاء مصروف تلقائي للمشتريات النقدية
             if ($isCash && $purchase->total_amount > 0) {
@@ -370,5 +383,33 @@ class PurchaseController extends Controller
         $purchase->items()->delete();
         $purchase->delete();
         return redirect()->route('purchases.index')->with('success', 'تم حذف فاتورة المشتريات بنجاح');
+    }
+
+    private function getTreasuryBalance(): float
+    {
+        $openingBalance = Partner::sum('initial_investment')
+            + PartnerTransaction::where('type', PartnerTransaction::TYPE_INVESTMENT)->sum('amount')
+            - PartnerTransaction::where('type', PartnerTransaction::TYPE_RETURN)->sum('amount');
+
+        $totalCollections = Payment::where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where(function ($q) {
+                $q->where('payable_type', '!=', SalesRep::class)
+                  ->orWhereNull('payable_type');
+            })
+            ->sum('amount');
+
+        $totalCashSales = Sale::where('payment_type', 'cash')
+            ->where('status', Sale::STATUS_CONFIRMED)
+            ->sum('total_amount');
+
+        $totalRepWithdrawals = Payment::where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where('payable_type', SalesRep::class)
+            ->sum('amount');
+
+        $totalExpenses = Expense::where('status', 'paid')->sum('amount');
+
+        return $openingBalance + ($totalCollections + $totalCashSales + $totalRepWithdrawals) - $totalExpenses;
     }
 }

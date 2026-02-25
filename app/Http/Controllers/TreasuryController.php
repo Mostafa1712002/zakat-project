@@ -46,19 +46,10 @@ class TreasuryController extends Controller
         $totalIncome = $collections + $cashSales + $repWithdrawals;
 
         // === الصادر (المدفوعات) ===
-
-        // 1. المصروفات (شاملة المرتبات والسلف)
-        $expenses = Expense::where('status', 'paid')
+        // المصروفات تشمل: مصروفات عامة + مشتريات نقدية + مدفوعات موردين (كلها Expense records)
+        $totalExpenses = Expense::where('status', 'paid')
             ->whereBetween('expense_date', [$startDate, $endDate])
             ->sum('amount');
-
-        // 2. المدفوعات للموردين
-        $supplierPayments = Payment::where('type', Payment::TYPE_PAID)
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->whereBetween('payment_date', [$startDate, $endDate])
-            ->sum('amount');
-
-        $totalExpenses = $expenses + $supplierPayments;
 
         // === الربح (من المبيعات المؤكدة في الفترة) ===
         $periodSales = Sale::with('items')
@@ -182,16 +173,12 @@ class TreasuryController extends Controller
 
         $totalExpensesAll = Expense::where('status', 'paid')->sum('amount');
 
-        $totalSupplierPaymentsAll = Payment::where('type', Payment::TYPE_PAID)
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->sum('amount');
-
         // رأس المال من الشركاء (الاستثمار المبدئي + استثمارات إضافية - مرتجعات رأس مال)
         $openingBalance = Partner::sum('initial_investment')
             + PartnerTransaction::where('type', PartnerTransaction::TYPE_INVESTMENT)->sum('amount')
             - PartnerTransaction::where('type', PartnerTransaction::TYPE_RETURN)->sum('amount');
 
-        $overallBalance = $openingBalance + ($totalCollectionsAll + $totalCashSalesAll + $totalRepWithdrawalsAll) - ($totalExpensesAll + $totalSupplierPaymentsAll);
+        $overallBalance = $openingBalance + ($totalCollectionsAll + $totalCashSalesAll + $totalRepWithdrawalsAll) - $totalExpensesAll;
 
         // === الفواتير المستحقة والمتأخرة ===
         $overdueInvoices = Sale::with('customer')
@@ -229,8 +216,6 @@ class TreasuryController extends Controller
             'cashSales',
             'repWithdrawals',
             'totalIncome',
-            'expenses',
-            'supplierPayments',
             'totalExpenses',
             'profit',
             'expensesByCategory',

@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\Partner;
+use App\Models\PartnerTransaction;
 use App\Models\Payment;
+use App\Models\Sale;
+use App\Models\SalesRep;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -211,6 +215,12 @@ class PaymentController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
+        // التحقق من رصيد الخزنة
+        $treasuryBalance = $this->getTreasuryBalance();
+        if ($validated['amount'] > $treasuryBalance) {
+            return back()->withInput()->with('error', 'رصيد الخزنة غير كافي. الرصيد الحالي: ' . number_format($treasuryBalance, 2) . ' ج.م، المطلوب دفعه: ' . number_format($validated['amount'], 2) . ' ج.م');
+        }
+
         DB::beginTransaction();
 
         try {
@@ -298,5 +308,33 @@ class PaymentController extends Controller
         $payment->load(['payable', 'user', 'salesRep', 'branch', 'sale', 'purchase']);
 
         return view('payments.show', compact('payment'));
+    }
+
+    private function getTreasuryBalance(): float
+    {
+        $openingBalance = Partner::sum('initial_investment')
+            + PartnerTransaction::where('type', PartnerTransaction::TYPE_INVESTMENT)->sum('amount')
+            - PartnerTransaction::where('type', PartnerTransaction::TYPE_RETURN)->sum('amount');
+
+        $totalCollections = Payment::where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where(function ($q) {
+                $q->where('payable_type', '!=', SalesRep::class)
+                  ->orWhereNull('payable_type');
+            })
+            ->sum('amount');
+
+        $totalCashSales = Sale::where('payment_type', 'cash')
+            ->where('status', Sale::STATUS_CONFIRMED)
+            ->sum('total_amount');
+
+        $totalRepWithdrawals = Payment::where('type', Payment::TYPE_RECEIVED)
+            ->where('status', Payment::STATUS_COMPLETED)
+            ->where('payable_type', SalesRep::class)
+            ->sum('amount');
+
+        $totalExpenses = Expense::where('status', 'paid')->sum('amount');
+
+        return $openingBalance + ($totalCollections + $totalCashSales + $totalRepWithdrawals) - $totalExpenses;
     }
 }

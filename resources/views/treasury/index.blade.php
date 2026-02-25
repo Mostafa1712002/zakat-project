@@ -57,8 +57,7 @@
         <div class="stat-value" style="color: var(--danger);">{{ number_format($totalExpenses, 2) }} ج.م</div>
         <div class="stat-label">إجمالي الصادر</div>
         <div style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
-            <div>مصروفات: {{ number_format($expenses, 2) }} ج.م</div>
-            <div>مدفوعات موردين: {{ number_format($supplierPayments, 2) }} ج.م</div>
+            شامل مشتريات ومصروفات ومدفوعات موردين
         </div>
     </div>
 

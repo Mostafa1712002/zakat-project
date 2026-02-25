@@ -50,11 +50,7 @@ class DashboardController extends Controller
 
         $totalExpenses = Expense::where('status', 'paid')->sum('amount');
 
-        $totalSupplierPayments = Payment::where('type', Payment::TYPE_PAID)
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->sum('amount');
-
-        $treasuryBalance = $openingBalance + ($totalCollections + $totalCashSales + $totalRepWithdrawals) - ($totalExpenses + $totalSupplierPayments);
+        $treasuryBalance = $openingBalance + ($totalCollections + $totalCashSales + $totalRepWithdrawals) - $totalExpenses;
 
         // Collection stats
         $unpaidInvoices = Sale::where('payment_status', 'unpaid')->count();
