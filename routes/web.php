@@ -8,8 +8,9 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SalesRepController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\SaleController;
-use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\PurchaseQuotationController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExpenseController;
@@ -107,13 +108,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
     Route::resource('sales', SaleController::class);
 
-    // Invoices (الفواتير)
-    Route::resource('invoices', InvoiceController::class);
-    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+    // Sales Quotations (تسعيرات المبيعات)
+    Route::get('quotations/{sale}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
+    Route::post('quotations/{sale}/confirm', [QuotationController::class, 'confirm'])->name('quotations.confirm');
+    Route::resource('quotations', QuotationController::class);
 
     // Purchases (المشتريات)
     Route::get('purchases/{purchase}/pdf', [PurchaseController::class, 'pdf'])->name('purchases.pdf');
     Route::resource('purchases', PurchaseController::class);
+
+    // Purchase Quotations (تسعيرات المشتريات)
+    Route::get('purchase-quotations/{purchase}/pdf', [PurchaseQuotationController::class, 'pdf'])->name('purchase-quotations.pdf');
+    Route::post('purchase-quotations/{purchase}/confirm', [PurchaseQuotationController::class, 'confirm'])->name('purchase-quotations.confirm');
+    Route::resource('purchase-quotations', PurchaseQuotationController::class);
 
     // Suppliers (الموردين)
     Route::get('suppliers/{supplier}/products', [SupplierController::class, 'products'])->name('suppliers.products');

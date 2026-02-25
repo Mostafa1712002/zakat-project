@@ -20,6 +20,8 @@ class SiteFeatureSeeder extends Seeder
             'color_palette'          => false,
             'invoice_customization'  => false,
             'simple_invoice_numbers' => false,
+            'quotations'             => true,
+            'purchase_quotations'    => true,
         ],
         'syramik' => [
             'customer_target'        => false,
@@ -30,6 +32,8 @@ class SiteFeatureSeeder extends Seeder
             'color_palette'          => true,
             'invoice_customization'  => true,
             'simple_invoice_numbers' => true,
+            'quotations'             => true,
+            'purchase_quotations'    => true,
         ],
         'demo-sibakuh' => [
             'customer_target'        => false,
@@ -40,6 +44,8 @@ class SiteFeatureSeeder extends Seeder
             'color_palette'          => true,
             'invoice_customization'  => true,
             'simple_invoice_numbers' => true,
+            'quotations'             => true,
+            'purchase_quotations'    => true,
         ],
     ];
 

@@ -23,6 +23,7 @@ class PurchaseController extends Controller
     public function index(Request $request)
     {
         $query = Purchase::with(['supplier', 'warehouse'])
+            ->where('is_quotation', false)
             ->orderBy('invoice_date', 'desc');
 
         if ($request->search) {

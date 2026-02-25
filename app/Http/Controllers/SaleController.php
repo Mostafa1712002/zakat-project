@@ -26,6 +26,7 @@ class SaleController extends Controller
     public function index()
     {
         $sales = Sale::with(['customer', 'branch', 'warehouse', 'user', 'salesRep'])
+            ->where('is_quotation', false)
             ->forSalesRep()
             ->latest()
             ->paginate(15);

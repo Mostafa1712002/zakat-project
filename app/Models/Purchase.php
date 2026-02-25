@@ -50,10 +50,12 @@ class Purchase extends Model
         'shipping_address',
         'notes',
         'terms',
+        'is_quotation',
     ];
 
     protected $casts = [
         'invoice_date' => 'date',
+        'is_quotation' => 'boolean',
         'due_date' => 'date',
         'received_date' => 'date',
         'subtotal' => 'decimal:2',
