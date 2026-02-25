@@ -37,8 +37,8 @@ class SiteFeatureSeeder extends Seeder
         ],
         'demo-sibakuh' => [
             'customer_target'        => false,
-            'tile_area_tracking'     => true,
-            'grade_system'           => true,
+            'tile_area_tracking'     => false,
+            'grade_system'           => false,
             'per_item_discount'      => true,
             'auto_cash_payment'      => true,
             'color_palette'          => true,
