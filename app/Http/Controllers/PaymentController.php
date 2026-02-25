@@ -248,14 +248,32 @@ class PaymentController extends Controller
                 'notes' => $validated['notes'],
             ]);
 
-            // تحديث رصيد المورد
-            $supplier->decrement('current_balance', $validated['amount']);
-
-            // تحديث حالة الدفع لفاتورة الشراء إذا تم تحديدها
+            // تحديث حالة الدفع للفواتير
             if ($validated['purchase_id']) {
+                // دفع على فاتورة محددة
                 $purchase = \App\Models\Purchase::find($validated['purchase_id']);
-                if ($purchase && method_exists($purchase, 'addPayment')) {
+                if ($purchase) {
                     $purchase->addPayment($validated['amount']);
+                }
+            } else {
+                // دفع عام - توزيع المبلغ على الفواتير المستحقة (الأقدم أولاً)
+                $remainingAmount = $validated['amount'];
+                $unpaidPurchases = $supplier->purchases()
+                    ->whereIn('payment_status', ['unpaid', 'partial'])
+                    ->where('status', '!=', 'cancelled')
+                    ->where('remaining_amount', '>', 0)
+                    ->orderBy('due_date')
+                    ->orderBy('invoice_date')
+                    ->get();
+
+                foreach ($unpaidPurchases as $purchase) {
+                    if ($remainingAmount <= 0) break;
+
+                    $applyAmount = min($remainingAmount, $purchase->remaining_amount);
+                    if ($applyAmount > 0) {
+                        $purchase->addPayment($applyAmount);
+                        $remainingAmount -= $applyAmount;
+                    }
                 }
             }
 
