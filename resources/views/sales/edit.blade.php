@@ -357,7 +357,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const stockCache = {};
 
     // Products data with prices and min selling price
-    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'min_price' => $p->min_selling_price ?? 0, 'track' => $p->track_inventory, 'area_per_unit' => (float) ($p->area_per_unit ?? 0)]]));
+    @php
+        $productsMap = $products->mapWithKeys(function($p) {
+            return [$p->id => [
+                'retail' => $p->selling_price,
+                'min_price' => $p->min_selling_price ?? 0,
+                'track' => $p->track_inventory,
+                'area_per_unit' => (float) ($p->area_per_unit ?? 0),
+            ]];
+        });
+    @endphp
+    const productsData = @json($productsMap);
 
     // Get stock API URL
     const getStockUrl = '{{ route("sales.get-stock") }}';
