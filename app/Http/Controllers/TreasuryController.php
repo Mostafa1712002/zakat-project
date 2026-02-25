@@ -184,7 +184,10 @@ class TreasuryController extends Controller
             ->where('status', Payment::STATUS_COMPLETED)
             ->sum('amount');
 
-        $overallBalance = ($totalCollectionsAll + $totalCashSalesAll + $totalRepWithdrawalsAll) - ($totalExpensesAll + $totalSupplierPaymentsAll);
+        // رأس المال / الرصيد الافتتاحي
+        $openingBalance = floatval(\DB::table('settings')->where('key', 'treasury_opening_balance')->value('value') ?? 0);
+
+        $overallBalance = $openingBalance + ($totalCollectionsAll + $totalCashSalesAll + $totalRepWithdrawalsAll) - ($totalExpensesAll + $totalSupplierPaymentsAll);
 
         // === الفواتير المستحقة والمتأخرة ===
         $overdueInvoices = Sale::with('customer')
@@ -229,6 +232,7 @@ class TreasuryController extends Controller
             'expensesByCategory',
             'recentTransactions',
             'overallBalance',
+            'openingBalance',
             'overdueInvoices',
             'totalOverdueAmount',
             'upcomingDueInvoices'

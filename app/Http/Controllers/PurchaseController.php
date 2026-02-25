@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
@@ -59,6 +60,9 @@ class PurchaseController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
+            // Advance payment for credit purchases
+            'advance_payment' => 'nullable|numeric|min:0',
+            'advance_payment_method' => 'nullable|in:cash,bank_transfer,instapay,vodafone_cash,card',
         ]);
 
         DB::beginTransaction();
@@ -157,6 +161,46 @@ class PurchaseController extends Controller
                     'status' => 'paid',
                     'notes' => $request->notes,
                 ]);
+            }
+
+            // تحديث رصيد المورد عند الشراء الآجل
+            if (!$isCash) {
+                $supplier = Supplier::find($validated['supplier_id']);
+                if ($supplier) {
+                    $supplier->increment('current_balance', $purchase->total_amount);
+                }
+
+                // إضافة دفعة مقدمة إن وجدت
+                $advancePayment = floatval($validated['advance_payment'] ?? 0);
+                if ($advancePayment > 0 && $advancePayment <= $purchase->total_amount) {
+                    $paymentMethod = $validated['advance_payment_method'] ?? 'cash';
+
+                    Payment::create([
+                        'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_PAID),
+                        'payable_type' => Supplier::class,
+                        'payable_id' => $validated['supplier_id'],
+                        'purchase_id' => $purchase->id,
+                        'type' => Payment::TYPE_PAID,
+                        'amount' => $advancePayment,
+                        'method' => $paymentMethod,
+                        'payment_date' => $validated['invoice_date'],
+                        'branch_id' => $branchId,
+                        'user_id' => auth()->id(),
+                        'status' => Payment::STATUS_COMPLETED,
+                        'notes' => 'دفعة مقدمة - فاتورة شراء رقم ' . $purchase->invoice_number,
+                    ]);
+
+                    // تحديث المبلغ المدفوع في الفاتورة
+                    $purchase->paid_amount = $advancePayment;
+                    $purchase->remaining_amount = $purchase->total_amount - $advancePayment;
+                    $purchase->payment_status = $advancePayment >= $purchase->total_amount
+                        ? Purchase::PAYMENT_STATUS_PAID
+                        : Purchase::PAYMENT_STATUS_PARTIAL;
+                    $purchase->save();
+
+                    // خصم الدفعة المقدمة من رصيد المورد
+                    $supplier->decrement('current_balance', $advancePayment);
+                }
             }
 
             DB::commit();

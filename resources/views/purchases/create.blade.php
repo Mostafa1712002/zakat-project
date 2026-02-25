@@ -73,6 +73,27 @@
                     <small class="text-muted">⚠️ اختر "مستلم" إذا كانت البضاعة موجودة الآن لإضافتها للمخزن مباشرة</small>
                 </div>
 
+                {{-- حقول الدفعة المقدمة (تظهر فقط عند اختيار آجل) --}}
+                <div id="advance-payment-section" style="display: block;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">دفعة مقدمة</label>
+                            <input type="number" name="advance_payment" id="advance_payment" class="form-control" value="0" min="0" step="0.01" placeholder="0.00">
+                            <small class="text-muted">مبلغ يُدفع مقدماً من إجمالي الفاتورة</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">طريقة الدفع</label>
+                            <select name="advance_payment_method" id="advance_payment_method" class="form-control">
+                                <option value="cash">نقدي</option>
+                                <option value="bank_transfer">تحويل بنكي</option>
+                                <option value="instapay">انستاباي</option>
+                                <option value="vodafone_cash">فودافون كاش</option>
+                                <option value="card">بطاقة</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">ملاحظات</label>
                     <textarea name="notes" class="form-control" rows="2"></textarea>
@@ -153,6 +174,20 @@ document.addEventListener('DOMContentLoaded', function() {
     let rowIndex = 1;
     let supplierProducts = []; // products for selected supplier
     let productsLoaded = false;
+
+    // Toggle advance payment section based on payment type
+    const paymentTypeSelect = document.querySelector('select[name="payment_type"]');
+    const advanceSection = document.getElementById('advance-payment-section');
+    function toggleAdvancePayment() {
+        if (paymentTypeSelect.value === 'credit') {
+            advanceSection.style.display = 'block';
+        } else {
+            advanceSection.style.display = 'none';
+            document.getElementById('advance_payment').value = 0;
+        }
+    }
+    paymentTypeSelect.addEventListener('change', toggleAdvancePayment);
+    toggleAdvancePayment();
 
     // Init Select2 for supplier FIRST
     $('#supplier_id').select2({ placeholder: 'ابحث عن المورد...', allowClear: true, dir: 'rtl', width: '100%' });

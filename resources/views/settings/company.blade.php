@@ -272,6 +272,15 @@
             <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">💰 إعدادات مالية</h3>
 
+            <div class="form-group">
+                <label for="treasury_opening_balance" class="form-label">رأس المال / الرصيد الافتتاحي للخزنة</label>
+                <input type="number" step="0.01" name="treasury_opening_balance" id="treasury_opening_balance" class="form-control" value="{{ old('treasury_opening_balance', $settings['treasury_opening_balance'] ?? 0) }}" min="0">
+                <small style="color: #64748b; font-size: 12px;">المبلغ الذي بدأت به الشركة (رأس مال الشركاء) - يُضاف لرصيد الخزنة</small>
+                @error('treasury_opening_balance')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="currency" class="form-label">العملة</label>

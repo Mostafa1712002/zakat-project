@@ -282,6 +282,45 @@ class SaleController extends Controller
             $sale->calculateTotals();
             $sale->save();
 
+            // تأكيد تلقائي وخصم المخزون فوراً
+            if (!$sale->is_quotation) {
+                if ($salesRepId) {
+                    // خصم من مخزون المندوب
+                    foreach ($sale->items as $item) {
+                        SalesRepStockMovement::record(
+                            $salesRepId,
+                            $item->product_id,
+                            SalesRepStockMovement::TYPE_SALE,
+                            $item->quantity,
+                            $sale->warehouse_id,
+                            $sale->id,
+                            'بيع - فاتورة ' . $sale->invoice_number
+                        );
+                    }
+                } else {
+                    // خصم من مخزون المخزن
+                    $warehouse = Warehouse::find($validated['warehouse_id']);
+                    foreach ($sale->items as $item) {
+                        $product = Product::find($item->product_id);
+                        if ($product && $product->track_inventory && $warehouse) {
+                            StockMovement::recordMovement([
+                                'product_id' => $item->product_id,
+                                'warehouse_id' => $sale->warehouse_id,
+                                'type' => StockMovement::TYPE_OUT,
+                                'quantity' => $item->quantity,
+                                'unit_cost' => $item->cost_price,
+                                'reference_type' => Sale::class,
+                                'reference_id' => $sale->id,
+                                'reference_number' => $sale->invoice_number,
+                                'user_id' => auth()->id(),
+                                'reason' => 'بيع',
+                            ]);
+                        }
+                    }
+                }
+                $sale->update(['status' => Sale::STATUS_CONFIRMED]);
+            }
+
             // إنشاء تحصيل تلقائي للمبيعات النقدية
             if (feature_enabled('auto_cash_payment') && $validated['payment_type'] === 'cash' && $sale->total_amount > 0) {
                 $payment = Payment::create([

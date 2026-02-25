@@ -33,6 +33,9 @@
     <div class="card-body" style="text-align: center; padding: 30px;">
         <div style="font-size: 18px; opacity: 0.9; margin-bottom: 8px;">💰 الرصيد الفعلي الحالي</div>
         <div style="font-size: 42px; font-weight: 700;">{{ number_format($overallBalance, 2) }} ج.م</div>
+        @if($openingBalance > 0)
+        <div style="font-size: 14px; opacity: 0.8; margin-top: 8px;">رأس المال: {{ number_format($openingBalance, 2) }} ج.م</div>
+        @endif
     </div>
 </div>
 

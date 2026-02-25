@@ -69,6 +69,8 @@ class SettingController extends Controller
             'customer_item_types' => 'nullable|array',
             'customer_item_types.*.value' => 'nullable|string|max:50',
             'customer_item_types.*.label' => 'nullable|string|max:100',
+            // Treasury
+            'treasury_opening_balance' => 'nullable|numeric|min:0',
         ]);
 
         // Save invoice contacts as JSON
@@ -475,6 +477,7 @@ class SettingController extends Controller
                 'invoice_note' => $this->getSetting('invoice_note', ''),
                 'show_customer_balance' => $this->getSetting('show_customer_balance', '0'),
                 'customer_item_types' => $this->getSetting('customer_item_types', ''),
+                'treasury_opening_balance' => $this->getSetting('treasury_opening_balance', '0'),
             ];
         });
     }
