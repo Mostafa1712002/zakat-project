@@ -30,7 +30,7 @@
             </div>
             <div>
                 <span class="text-muted">الرصيد المستحق:</span>
-                <strong class="text-danger">{{ number_format($supplier->current_balance) }} ج.م</strong>
+                <strong class="text-danger">{{ number_format($totalRemaining, 2) }} ج.م</strong>
             </div>
             <div>
                 <span class="text-muted">الهاتف:</span>
@@ -112,7 +112,7 @@
                 <div class="form-group">
                     <label for="amount" class="form-label">المبلغ *</label>
                     <input type="number" step="0.01" name="amount" id="amount" class="form-control"
-                           value="{{ old('amount', $supplier->current_balance) }}" min="0.01" required>
+                           value="{{ old('amount', $totalRemaining) }}" min="0.01" required>
                     @error('amount')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
@@ -282,7 +282,7 @@ function selectPurchase(row) {
 function clearSelectedPurchase() {
     document.querySelectorAll('.purchase-row').forEach(r => r.classList.remove('selected'));
     document.getElementById('purchase_id').value = '';
-    document.getElementById('amount').value = '{{ $supplier->current_balance }}';
+    document.getElementById('amount').value = '{{ $totalRemaining }}';
     document.getElementById('selectedPurchaseInfo').style.display = 'none';
 }
 

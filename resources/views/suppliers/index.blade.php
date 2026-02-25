@@ -31,7 +31,13 @@
                 <tr>
                     <td><strong>{{ $supplier->name }}</strong></td>
                     <td>{{ $supplier->phone ?? $supplier->mobile ?? '-' }}</td>
-                    <td>{{ number_format($supplier->current_balance, 2) }} ج.م</td>
+                    <td>
+                        @if(($supplier->total_remaining ?? 0) > 0)
+                            <strong class="text-danger">{{ number_format($supplier->total_remaining, 2) }} ج.م</strong>
+                        @else
+                            <span class="text-muted">0.00 ج.م</span>
+                        @endif
+                    </td>
                     <td>
                         <span class="badge badge-primary">{{ $supplier->supplied_products_count ?? 0 }}</span>
                     </td>
@@ -45,7 +51,7 @@
                     <td>
                         <div class="btn-group">
                             <a href="{{ route('suppliers.show', $supplier) }}" class="btn btn-sm btn-primary">عرض</a>
-                            @if($supplier->current_balance > 0)
+                            @if(($supplier->total_remaining ?? 0) > 0)
                             <a href="{{ route('suppliers.pay.form', $supplier) }}" class="btn btn-sm btn-success">💰 دفع</a>
                             @endif
                             <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-sm">تعديل</a>

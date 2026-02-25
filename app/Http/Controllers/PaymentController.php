@@ -180,15 +180,19 @@ class PaymentController extends Controller
             abort(403, 'ليس لديك صلاحية للدفع للموردين');
         }
 
-        // الفواتير غير المدفوعة بالكامل
+        // الفواتير غير المدفوعة بالكامل (فقط اللي عليها مبلغ متبقي)
         $unpaidPurchases = $supplier->purchases()
             ->whereIn('payment_status', ['unpaid', 'partial'])
             ->where('status', '!=', 'cancelled')
+            ->where('remaining_amount', '>', 0)
             ->orderBy('due_date')
             ->orderBy('invoice_date')
             ->get();
 
-        return view('payments.pay-to-supplier', compact('supplier', 'unpaidPurchases'));
+        // إجمالي الرصيد المستحق الفعلي
+        $totalRemaining = $unpaidPurchases->sum('remaining_amount');
+
+        return view('payments.pay-to-supplier', compact('supplier', 'unpaidPurchases', 'totalRemaining'));
     }
 
     /**

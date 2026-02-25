@@ -11,7 +11,14 @@ class SupplierController extends Controller
 {
     public function index()
     {
-        $suppliers = Supplier::withCount('suppliedProducts')->orderBy('name')->paginate(20);
+        $suppliers = Supplier::withCount('suppliedProducts')
+            ->withSum(['purchases as total_remaining' => function ($q) {
+                $q->whereIn('payment_status', ['unpaid', 'partial'])
+                  ->where('status', '!=', 'cancelled')
+                  ->where('remaining_amount', '>', 0);
+            }], 'remaining_amount')
+            ->orderBy('name')
+            ->paginate(20);
         return view('suppliers.index', compact('suppliers'));
     }
 
