@@ -19,6 +19,11 @@ class CustomerController extends Controller
     public function index()
     {
         $customers = Customer::with(['branch', 'salesRep'])
+            ->withSum(['sales as total_remaining' => function ($q) {
+                $q->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
+                  ->where('status', '!=', 'cancelled')
+                  ->where('remaining_amount', '>', 0);
+            }], 'remaining_amount')
             ->forSalesRep()
             ->latest()
             ->paginate(15);
@@ -114,7 +119,14 @@ class CustomerController extends Controller
             $query->latest()->take(10);
         }]);
 
-        return view('customers.show', compact('customer'));
+        // الرصيد المستحق الفعلي من الفواتير
+        $totalRemaining = $customer->sales()
+            ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
+            ->where('status', '!=', 'cancelled')
+            ->where('remaining_amount', '>', 0)
+            ->sum('remaining_amount');
+
+        return view('customers.show', compact('customer', 'totalRemaining'));
     }
 
     /**

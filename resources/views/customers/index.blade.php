@@ -22,6 +22,7 @@
                     <th>الاسم</th>
                     <th>الهاتف</th>
                     <th>الصنف</th>
+                    <th>الرصيد المستحق</th>
                     @if(feature_enabled('customer_target'))
                     <th>التارجت</th>
                     @endif
@@ -45,6 +46,13 @@
                             <span class="badge {{ $itemTypeClass }}">{{ $itemTypeLabel }}</span>
                         @else
                             <span class="text-muted">{{ $itemTypeLabel }}</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if(($customer->total_remaining ?? 0) > 0)
+                            <strong class="text-danger">{{ number_format($customer->total_remaining, 2) }} ج.م</strong>
+                        @else
+                            <span class="text-muted">0.00 ج.م</span>
                         @endif
                     </td>
                     @if(feature_enabled('customer_target'))
@@ -74,6 +82,9 @@
                     <td>
                         <div class="table-actions">
                             <a href="{{ route('customers.show', $customer) }}" class="btn btn-sm">عرض</a>
+                            @if(($customer->total_remaining ?? 0) > 0)
+                            <a href="{{ route('customers.collect.form', $customer) }}" class="btn btn-sm btn-success">💰 تحصيل</a>
+                            @endif
                             <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm">تعديل</a>
                             @if(feature_enabled('customer_target') && $customer->hasAchievedTarget() && $customer->withdrawable_target_amount > 0)
                                 <a href="{{ route('customers.withdraw-target.form', $customer) }}" class="btn btn-sm btn-success" title="سحب التارجت">🎯 سحب</a>
@@ -88,7 +99,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="{{ feature_enabled('customer_target') ? 6 : 5 }}">
+                    <td colspan="{{ feature_enabled('customer_target') ? 7 : 6 }}">
                         <div class="empty-state">
                             <div class="empty-state-icon">👥</div>
                             <h3>لا يوجد عملاء</h3>

@@ -9,7 +9,7 @@
         <p>بيانات العميل وآخر تعاملات</p>
     </div>
     <div class="header-actions">
-        @if($customer->current_balance > 0)
+        @if(($totalRemaining ?? 0) > 0)
             <a href="{{ route('customers.collect.form', $customer) }}" class="btn btn-primary">💰 تحصيل</a>
         @endif
         <a href="{{ route('customers.edit', $customer) }}" class="btn">تعديل</a>
@@ -41,7 +41,7 @@
             @endphp
             <p><strong>نوع العميل:</strong> {{ $typeLabel }}</p>
             <p><strong>سقف الائتمان:</strong> {{ number_format($customer->credit_limit ?? 0, 2) }} ج.م</p>
-            <p><strong>الرصيد الحالي:</strong> {{ number_format($customer->current_balance ?? 0, 2) }} ج.م</p>
+            <p><strong>الرصيد المستحق:</strong> <strong class="text-danger">{{ number_format($totalRemaining ?? 0, 2) }} ج.م</strong></p>
             <p><strong>مدة السداد:</strong> {{ $customer->payment_terms_days ?? '-' }} يوم</p>
             <p><strong>الحالة:</strong>
                 @if($customer->is_active)

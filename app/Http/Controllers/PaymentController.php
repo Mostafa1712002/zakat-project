@@ -57,10 +57,11 @@ class PaymentController extends Controller
             abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
         }
 
-        // الفواتير غير المدفوعة بالكامل
+        // الفواتير غير المدفوعة بالكامل (فقط اللي عليها مبلغ متبقي)
         $unpaidSales = $customer->sales()
             ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
             ->where('status', '!=', 'cancelled')
+            ->where('remaining_amount', '>', 0)
             ->orderBy('due_date')
             ->orderBy('invoice_date')
             ->get();
