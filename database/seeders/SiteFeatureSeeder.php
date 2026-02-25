@@ -33,13 +33,13 @@ class SiteFeatureSeeder extends Seeder
         ],
         'demo-sibakuh' => [
             'customer_target'        => false,
-            'tile_area_tracking'     => false,
-            'grade_system'           => false,
-            'per_item_discount'      => false,
-            'auto_cash_payment'      => false,
-            'color_palette'          => false,
-            'invoice_customization'  => false,
-            'simple_invoice_numbers' => false,
+            'tile_area_tracking'     => true,
+            'grade_system'           => true,
+            'per_item_discount'      => true,
+            'auto_cash_payment'      => true,
+            'color_palette'          => true,
+            'invoice_customization'  => true,
+            'simple_invoice_numbers' => true,
         ],
     ];
 

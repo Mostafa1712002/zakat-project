@@ -64,7 +64,7 @@
 | **المسار على السيرفر** | `/var/www/demo-sibakuh.newaves-systems.com` |
 | **SITE_PROFILE** | `demo-sibakuh` |
 | **النشاط** | ديمو / عرض |
-| **الميزات الخاصة** | grades (OFF), tile_area (OFF), pallet_option (OFF) |
+| **الميزات الخاصة** | نفس ميزات Syramik (tile_area, grades, per_item_discount, auto_cash, color_palette, invoice_customization, simple_numbers: ON) |
 
 ---
 
@@ -128,13 +128,13 @@
 | الميزة | الوصف | Rogence | Syramik | Demo Sibakuh |
 |--------|-------|:-------:|:-------:|:------------:|
 | `customer_target` | نظام تارجت العملاء | ON | OFF | OFF |
-| `tile_area_tracking` | تتبع المساحة/البلاط | OFF | ON | OFF |
-| `grade_system` | نظام الفرز | OFF | ON | OFF |
-| `per_item_discount` | خصم على مستوى الصنف | OFF | ON | OFF |
-| `auto_cash_payment` | تحصيل نقدي تلقائي | OFF | ON | OFF |
-| `color_palette` | ألوان مخصصة | OFF | ON | OFF |
-| `invoice_customization` | تخصيص الفواتير | OFF | ON | OFF |
-| `simple_invoice_numbers` | أرقام فواتير تسلسلية | OFF | ON | OFF |
+| `tile_area_tracking` | تتبع المساحة/البلاط | OFF | ON | ON |
+| `grade_system` | نظام الفرز | OFF | ON | ON |
+| `per_item_discount` | خصم على مستوى الصنف | OFF | ON | ON |
+| `auto_cash_payment` | تحصيل نقدي تلقائي | OFF | ON | ON |
+| `color_palette` | ألوان مخصصة | OFF | ON | ON |
+| `invoice_customization` | تخصيص الفواتير | OFF | ON | ON |
+| `simple_invoice_numbers` | أرقام فواتير تسلسلية | OFF | ON | ON |
 
 ---
 
