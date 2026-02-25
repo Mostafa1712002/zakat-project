@@ -308,6 +308,16 @@
 
         .nav-icon { font-size: 18px; width: 24px; text-align: center; }
 
+        .nav-menu .nav-sub-item a {
+            padding-right: 38px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+        }
+        .nav-menu .nav-sub-item a:hover, .nav-menu .nav-sub-item a.active {
+            color: white;
+        }
+        .app.sidebar-collapsed .nav-sub-item { display: none; }
+
         .sidebar-footer {
             padding-top: 20px;
             border-top: 1px solid rgba(255,255,255,0.2);
@@ -732,13 +742,13 @@
                     <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('sales', 'المبيعات') }}"><span class="nav-icon">{{ feature_icon('sales', '💰') }}</span><span class="nav-label">{{ feature_name('sales', 'المبيعات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('quotations'))
-                    <li><a href="{{ route('quotations.index') }}" class="{{ request()->routeIs('quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('quotations', 'تسعيرات المبيعات') }}"><span class="nav-icon">{{ feature_icon('quotations', '📋') }}</span><span class="nav-label">{{ feature_name('quotations', 'تسعيرات المبيعات') }}</span></a></li>
+                    <li class="nav-sub-item"><a href="{{ route('quotations.index') }}" class="{{ request()->routeIs('quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('quotations', 'تسعيرات المبيعات') }}"><span class="nav-icon">{{ feature_icon('quotations', '📋') }}</span><span class="nav-label">{{ feature_name('quotations', 'تسعيرات المبيعات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('purchases'))
                     <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchases', 'المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchases', '🛒') }}</span><span class="nav-label">{{ feature_name('purchases', 'المشتريات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('purchase_quotations'))
-                    <li><a href="{{ route('purchase-quotations.index') }}" class="{{ request()->routeIs('purchase-quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchase_quotations', '📝') }}</span><span class="nav-label">{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}</span></a></li>
+                    <li class="nav-sub-item"><a href="{{ route('purchase-quotations.index') }}" class="{{ request()->routeIs('purchase-quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchase_quotations', '📝') }}</span><span class="nav-label">{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('products'))
                     <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('products', 'الأصناف') }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span><span class="nav-label">{{ feature_name('products', 'الأصناف') }}</span></a></li>
@@ -761,17 +771,17 @@
                     @if(feature_enabled('sales'))
                     <li><a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('sales', 'المبيعات') }}"><span class="nav-icon">{{ feature_icon('sales', '💰') }}</span><span class="nav-label">{{ feature_name('sales', 'المبيعات') }}</span></a></li>
                     @endif
+                    @if(feature_enabled('quotations'))
+                    <li class="nav-sub-item"><a href="{{ route('quotations.index') }}" class="{{ request()->routeIs('quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('quotations', 'تسعيرات المبيعات') }}"><span class="nav-icon">{{ feature_icon('quotations', '📋') }}</span><span class="nav-label">{{ feature_name('quotations', 'تسعيرات المبيعات') }}</span></a></li>
+                    @endif
                     @if(feature_enabled('purchases'))
                     <li><a href="{{ route('purchases.index') }}" class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchases', 'المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchases', '🛒') }}</span><span class="nav-label">{{ feature_name('purchases', 'المشتريات') }}</span></a></li>
                     @endif
+                    @if(feature_enabled('purchase_quotations'))
+                    <li class="nav-sub-item"><a href="{{ route('purchase-quotations.index') }}" class="{{ request()->routeIs('purchase-quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchase_quotations', '📝') }}</span><span class="nav-label">{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}</span></a></li>
+                    @endif
                     @if(feature_enabled('suppliers'))
                     <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('suppliers', 'الموردين') }}"><span class="nav-icon">{{ feature_icon('suppliers', '🏢') }}</span><span class="nav-label">{{ feature_name('suppliers', 'الموردين') }}</span></a></li>
-                    @endif
-                    @if(feature_enabled('quotations'))
-                    <li><a href="{{ route('quotations.index') }}" class="{{ request()->routeIs('quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('quotations', 'تسعيرات المبيعات') }}"><span class="nav-icon">{{ feature_icon('quotations', '📋') }}</span><span class="nav-label">{{ feature_name('quotations', 'تسعيرات المبيعات') }}</span></a></li>
-                    @endif
-                    @if(feature_enabled('purchase_quotations'))
-                    <li><a href="{{ route('purchase-quotations.index') }}" class="{{ request()->routeIs('purchase-quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchase_quotations', '📝') }}</span><span class="nav-label">{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('warehouses'))
                     <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('warehouses', 'المخازن') }}"><span class="nav-icon">{{ feature_icon('warehouses', '🏭') }}</span><span class="nav-label">{{ feature_name('warehouses', 'المخازن') }}</span></a></li>
