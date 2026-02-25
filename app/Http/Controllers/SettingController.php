@@ -599,12 +599,11 @@ class SettingController extends Controller
             // Reset customer balances
             DB::table('customers')->update([
                 'current_balance' => 0,
-                'total_paid' => 0,
             ]);
 
             // Reset supplier balances
             try {
-                DB::table('suppliers')->update(['total_paid' => 0]);
+                DB::table('suppliers')->update(['current_balance' => 0]);
             } catch (\Exception $e) {}
 
             // Reset employee balances
