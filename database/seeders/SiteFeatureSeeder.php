@@ -20,8 +20,8 @@ class SiteFeatureSeeder extends Seeder
             'color_palette'          => false,
             'invoice_customization'  => false,
             'simple_invoice_numbers' => false,
-            'quotations'             => true,
-            'purchase_quotations'    => true,
+            'quotations'             => false,
+            'purchase_quotations'    => false,
         ],
         'syramik' => [
             'customer_target'        => false,
