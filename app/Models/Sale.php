@@ -139,7 +139,8 @@ class Sale extends Model
 
     public function calculateTotals(): void
     {
-        $this->subtotal = $this->items->sum('subtotal');
+        // Use sum of items' total (already includes per-item discounts and per-item tax)
+        $this->subtotal = $this->items->sum('total');
 
         if ($this->discount_type === 'percentage') {
             $this->discount_amount = $this->subtotal * ($this->discount_value / 100);
@@ -148,7 +149,7 @@ class Sale extends Model
         }
 
         $this->tax_amount = $this->items->sum('tax_amount');
-        $this->total_amount = $this->subtotal - $this->discount_amount + $this->tax_amount + $this->shipping_amount;
+        $this->total_amount = $this->subtotal - $this->discount_amount + $this->shipping_amount;
         $this->remaining_amount = $this->total_amount - $this->paid_amount;
 
         $this->updatePaymentStatus();
