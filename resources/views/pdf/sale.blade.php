@@ -404,7 +404,7 @@
 
     @if(!empty($sale->notes))
     <div style="margin-bottom: 12px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11pt; color: #374151;">
-        <strong>ملاحظات:</strong> {{ $sale->notes }}
+        {{ $sale->notes }}
     </div>
     @endif
 

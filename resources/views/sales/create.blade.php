@@ -283,6 +283,10 @@
     <!-- Submit -->
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-body">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="notes" class="form-label">ملاحظات</label>
+                <textarea name="notes" id="notes" class="form-control" rows="2">{{ old('notes') }}</textarea>
+            </div>
             <button type="submit" class="btn btn-primary btn-lg">💾 حفظ الفاتورة</button>
             <a href="{{ route('sales.index') }}" class="btn btn-lg">إلغاء</a>
         </div>
