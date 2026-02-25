@@ -97,7 +97,14 @@
                         @if(feature_enabled('tile_area_tracking'))
                         <td>{{ $item->total_area ? number_format($item->total_area, 2) . ' م²' : '-' }}</td>
                         @endif
-                        <td>{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
+                        <td>
+                            @if($item->discount_amount > 0)
+                            <span class="price-before">{{ number_format($item->subtotal, 2) }}</span>
+                            <span class="price-after">{{ number_format($item->total, 2) }}</span>
+                            @else
+                            {{ number_format($item->total ?? $item->subtotal, 2) }}
+                            @endif
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -284,7 +291,14 @@
                             @if(feature_enabled('tile_area_tracking'))
                             <td>{{ $item->total_area ? number_format($item->total_area, 2) . ' م²' : '-' }}</td>
                             @endif
-                            <td class="item-total">{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
+                            <td class="item-total">
+                                @if($item->discount_amount > 0)
+                                <span class="price-before">{{ number_format($item->subtotal, 2) }}</span>
+                                <span class="price-after">{{ number_format($item->total, 2) }}</span>
+                                @else
+                                {{ number_format($item->total ?? $item->subtotal, 2) }}
+                                @endif
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -709,6 +723,21 @@
     .item-total {
         font-weight: 700;
         color: var(--primary);
+        font-size: 0.95rem;
+    }
+
+    .price-before {
+        display: block;
+        text-decoration: line-through;
+        color: #9ca3af;
+        font-weight: 400;
+        font-size: 0.8rem;
+    }
+
+    .price-after {
+        display: block;
+        color: #059669;
+        font-weight: 700;
         font-size: 0.95rem;
     }
 
