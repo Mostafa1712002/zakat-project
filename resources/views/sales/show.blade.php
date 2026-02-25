@@ -73,7 +73,7 @@
                         <th>الكمية</th>
                         <th>سعر الوحدة</th>
                         @if(feature_enabled('per_item_discount'))
-                        <th>الخصم</th>
+                        <th>الخصم %</th>
                         @endif
                         @if(feature_enabled('tile_area_tracking'))
                         <th>المساحة</th>
@@ -92,7 +92,7 @@
                         <td>{{ number_format($item->quantity, 2) }}</td>
                         <td>{{ number_format($item->unit_price, 2) }}</td>
                         @if(feature_enabled('per_item_discount'))
-                        <td>{{ number_format($item->discount_amount, 2) }}</td>
+                        <td>{{ $item->discount_amount > 0 ? number_format($item->discount_amount, 2) . '%' : '-' }}</td>
                         @endif
                         @if(feature_enabled('tile_area_tracking'))
                         <td>{{ $item->total_area ? number_format($item->total_area, 2) . ' م²' : '-' }}</td>
@@ -151,10 +151,10 @@
                 </div>
                 <div class="invoice-status no-print">
                     @switch($sale->status)
-                    @case('draft') مسودة @break
-                    @case('confirmed') مؤكدة @break
-                    @case('delivered') تم التسليم @break
-                    @case('cancelled') ملغاة @break
+                    @case('draft') <span class="status-badge status-draft">⏳ مسودة - في انتظار التأكيد</span> @break
+                    @case('confirmed') <span class="status-badge status-confirmed">✅ مؤكدة</span> @break
+                    @case('delivered') <span class="status-badge status-delivered">📦 تم التسليم</span> @break
+                    @case('cancelled') <span class="status-badge status-cancelled">❌ ملغاة</span> @break
                     @endswitch
                 </div>
             </div>
@@ -252,21 +252,20 @@
                 <table class="items-table">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th style="width: 40px;">#</th>
                             <th>الصنف</th>
                             @if(feature_enabled('grade_system'))
-                            <th>الفرز</th>
+                            <th style="width: 90px;">الفرز</th>
                             @endif
-                            <th>الكمية</th>
-                            <th>سعر الوحدة</th>
+                            <th style="width: 90px;">الكمية</th>
+                            <th style="width: 110px;">سعر الوحدة</th>
                             @if(feature_enabled('per_item_discount'))
-                            <th>الخصم</th>
+                            <th style="width: 80px;">الخصم %</th>
                             @endif
                             @if(feature_enabled('tile_area_tracking'))
-                            <th>المساحة</th>
+                            <th style="width: 90px;">المساحة</th>
                             @endif
-                            <th class="no-print">الضريبة</th>
-                            <th>الإجمالي</th>
+                            <th style="width: 120px;">الإجمالي</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -280,18 +279,17 @@
                             <td>{{ number_format($item->quantity, 2) }}</td>
                             <td>{{ number_format($item->unit_price, 2) }}</td>
                             @if(feature_enabled('per_item_discount'))
-                            <td>{{ number_format($item->discount_amount, 2) }}</td>
+                            <td>{{ $item->discount_amount > 0 ? number_format($item->discount_amount, 2) . '%' : '-' }}</td>
                             @endif
                             @if(feature_enabled('tile_area_tracking'))
                             <td>{{ $item->total_area ? number_format($item->total_area, 2) . ' م²' : '-' }}</td>
                             @endif
-                            <td class="no-print">{{ number_format($item->tax_amount, 2) }}</td>
                             <td class="item-total">{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                     @php
-                        $showColCount = 5;
+                        $showColCount = 4;
                         if (feature_enabled('grade_system')) $showColCount++;
                         if (feature_enabled('per_item_discount')) $showColCount++;
                         if (feature_enabled('tile_area_tracking')) $showColCount++;
@@ -299,30 +297,25 @@
                     <tfoot>
                         <tr class="subtotal-row">
                             <td colspan="{{ $showColCount }}" class="text-left"><strong>الإجمالي الفرعي</strong></td>
-                            <td class="no-print"></td>
                             <td><strong>{{ number_format($sale->subtotal, 2) }} ج.م</strong></td>
                         </tr>
                         @if($sale->discount_amount > 0)
                         <tr>
                             <td colspan="{{ $showColCount }}" class="text-left">الخصم</td>
-                            <td class="no-print"></td>
                             <td class="discount">- {{ number_format($sale->discount_amount, 2) }} ج.م</td>
                         </tr>
                         @endif
                         <tr class="grand-total-row">
                             <td colspan="{{ $showColCount }}" class="text-left"><strong>الإجمالي النهائي</strong></td>
-                            <td class="no-print"></td>
                             <td class="grand-total"><strong>{{ number_format($sale->total_amount, 2) }} ج.م</strong></td>
                         </tr>
                         @if($sale->paid_amount > 0)
                         <tr>
                             <td colspan="{{ $showColCount }}" class="text-left">المدفوع</td>
-                            <td class="no-print"></td>
                             <td class="paid">{{ number_format($sale->paid_amount, 2) }} ج.م</td>
                         </tr>
                         <tr>
                             <td colspan="{{ $showColCount }}" class="text-left"><strong>المتبقي</strong></td>
-                            <td class="no-print"></td>
                             <td class="remaining"><strong>{{ number_format($sale->remaining_amount, 2) }} ج.م</strong></td>
                         </tr>
                         @endif
@@ -496,23 +489,27 @@
     }
 
     .status-draft {
-        background: #f3f4f6;
-        color: #6b7280;
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #f59e0b;
     }
 
     .status-confirmed {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #10b981;
     }
 
     .status-delivered {
-        background: #d1fae5;
-        color: #059669;
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #3b82f6;
     }
 
     .status-cancelled {
         background: #fee2e2;
-        color: #dc2626;
+        color: #991b1b;
+        border: 1px solid #ef4444;
     }
 
     .btn-success {
@@ -663,6 +660,9 @@
     /* Items Table */
     .items-card {
         margin-bottom: 0;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
     }
 
     .items-table-wrap {
@@ -679,29 +679,26 @@
     .items-table th {
         background: var(--primary);
         color: white;
-        padding: 10px 8px;
+        padding: 12px 10px;
         font-size: 0.9rem;
         text-align: center;
         font-weight: 600;
-    }
-
-    .items-table th:first-child {
-        border-radius: 8px 0 0 0;
-    }
-
-    .items-table th:last-child {
-        border-radius: 0 8px 0 0;
+        white-space: nowrap;
     }
 
     .items-table td {
-        padding: 10px 8px;
-        border-bottom: 1px solid #e5e7eb;
+        padding: 12px 10px;
+        border-bottom: 1px solid #f0f0f0;
         text-align: center;
         font-size: 0.9rem;
     }
 
+    .items-table tbody tr:nth-child(even) {
+        background: #fafbfc;
+    }
+
     .items-table tbody tr:hover {
-        background: #f9fafb;
+        background: #f0f7ff;
     }
 
     .item-name {
@@ -710,13 +707,15 @@
     }
 
     .item-total {
-        font-weight: 600;
+        font-weight: 700;
         color: var(--primary);
+        font-size: 0.95rem;
     }
 
     .items-table tfoot td {
-        padding: 8px;
+        padding: 10px 10px;
         border-bottom: 1px solid #e5e7eb;
+        font-size: 0.9rem;
     }
 
     .discount {

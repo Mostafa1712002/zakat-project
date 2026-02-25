@@ -284,121 +284,8 @@ class SaleController extends Controller
             $sale->calculateTotals();
             $sale->save();
 
-            // تأكيد تلقائي وخصم المخزون فوراً
-            if (!$sale->is_quotation) {
-                if ($salesRepId) {
-                    // خصم من مخزون المندوب
-                    foreach ($sale->items as $item) {
-                        SalesRepStockMovement::record(
-                            $salesRepId,
-                            $item->product_id,
-                            SalesRepStockMovement::TYPE_SALE,
-                            $item->quantity,
-                            $sale->warehouse_id,
-                            $sale->id,
-                            'بيع - فاتورة ' . $sale->invoice_number
-                        );
-                    }
-                } else {
-                    // خصم من مخزون المخزن
-                    $warehouse = Warehouse::find($validated['warehouse_id']);
-                    foreach ($sale->items as $item) {
-                        $product = Product::find($item->product_id);
-                        if ($product && $product->track_inventory && $warehouse) {
-                            StockMovement::recordMovement([
-                                'product_id' => $item->product_id,
-                                'warehouse_id' => $sale->warehouse_id,
-                                'type' => StockMovement::TYPE_OUT,
-                                'quantity' => $item->quantity,
-                                'unit_cost' => $item->cost_price,
-                                'reference_type' => Sale::class,
-                                'reference_id' => $sale->id,
-                                'reference_number' => $sale->invoice_number,
-                                'user_id' => auth()->id(),
-                                'reason' => 'بيع',
-                            ]);
-                        }
-                    }
-                }
-                $sale->update(['status' => Sale::STATUS_CONFIRMED]);
-            }
-
-            // إنشاء تحصيل تلقائي للمبيعات النقدية
-            if (feature_enabled('auto_cash_payment') && $validated['payment_type'] === 'cash' && $sale->total_amount > 0) {
-                $payment = Payment::create([
-                    'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
-                    'payable_type' => Sale::class,
-                    'payable_id' => $sale->id,
-                    'sale_id' => $sale->id,
-                    'type' => Payment::TYPE_RECEIVED,
-                    'amount' => $sale->total_amount,
-                    'method' => Payment::METHOD_CASH,
-                    'payment_date' => $validated['invoice_date'],
-                    'branch_id' => $branchId,
-                    'user_id' => auth()->id(),
-                    'sales_rep_id' => $salesRepId,
-                    'status' => Payment::STATUS_COMPLETED,
-                    'notes' => 'تحصيل نقدي تلقائي - فاتورة رقم ' . $sale->invoice_number,
-                ]);
-
-                // تحديث المبلغ المدفوع في الفاتورة
-                $sale->paid_amount = $sale->total_amount;
-                $sale->remaining_amount = 0;
-                $sale->payment_status = Sale::PAYMENT_STATUS_PAID;
-                $sale->save();
-
-                // إضافة للخزينة إذا كان مندوب
-                if ($salesRepId) {
-                    $salesRep = SalesRep::find($salesRepId);
-                    if ($salesRep) {
-                        $salesRep->recordCollection($sale->total_amount, 'تحصيل نقدي - فاتورة ' . $sale->invoice_number, $payment->id);
-                    }
-                }
-            }
-
-            // إنشاء تحصيل للدفعة المقدمة في المبيعات الآجلة
-            $advancePayment = floatval($validated['advance_payment'] ?? 0);
-            if ($validated['payment_type'] === 'credit' && $advancePayment > 0 && $advancePayment <= $sale->total_amount) {
-                $paymentMethod = $validated['advance_payment_method'] ?? 'cash';
-
-                $payment = Payment::create([
-                    'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
-                    'payable_type' => Customer::class,
-                    'payable_id' => $validated['customer_id'],
-                    'sale_id' => $sale->id,
-                    'type' => Payment::TYPE_RECEIVED,
-                    'amount' => $advancePayment,
-                    'method' => $paymentMethod,
-                    'payment_date' => $validated['invoice_date'],
-                    'branch_id' => $branchId,
-                    'user_id' => auth()->id(),
-                    'sales_rep_id' => $salesRepId,
-                    'status' => Payment::STATUS_COMPLETED,
-                    'notes' => 'دفعة مقدمة - فاتورة رقم ' . $sale->invoice_number,
-                ]);
-
-                // تحديث المبلغ المدفوع في الفاتورة
-                $sale->paid_amount = $advancePayment;
-                $sale->remaining_amount = $sale->total_amount - $advancePayment;
-                $sale->payment_status = $advancePayment >= $sale->total_amount
-                    ? Sale::PAYMENT_STATUS_PAID
-                    : Sale::PAYMENT_STATUS_PARTIAL;
-                $sale->save();
-
-                // إضافة للخزينة إذا كان مندوب
-                if ($salesRepId) {
-                    $salesRep = SalesRep::find($salesRepId);
-                    if ($salesRep) {
-                        $salesRep->recordCollection($advancePayment, 'دفعة مقدمة - فاتورة ' . $sale->invoice_number, $payment->id);
-                    }
-                }
-            }
-
-            // إعادة حساب رصيد العميل
-            $customer = Customer::find($validated['customer_id']);
-            if ($customer) {
-                $customer->recalculateBalance();
-            }
+            // الفاتورة تبقى مسودة حتى يتم تأكيدها يدوياً
+            // خصم المخزون والدفع يتم عند التأكيد
 
             DB::commit();
 
@@ -726,10 +613,39 @@ class SaleController extends Controller
             // Update sale status
             $sale->update(['status' => Sale::STATUS_CONFIRMED]);
 
-            // رصيد العميل تم تحديثه بالفعل عند إنشاء الفاتورة في store()
+            // إنشاء تحصيل تلقائي للمبيعات النقدية
+            if (feature_enabled('auto_cash_payment') && $sale->payment_type === 'cash' && $sale->total_amount > 0) {
+                $payment = Payment::create([
+                    'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
+                    'payable_type' => Sale::class,
+                    'payable_id' => $sale->id,
+                    'sale_id' => $sale->id,
+                    'type' => Payment::TYPE_RECEIVED,
+                    'amount' => $sale->total_amount,
+                    'method' => Payment::METHOD_CASH,
+                    'payment_date' => $sale->invoice_date,
+                    'branch_id' => $sale->branch_id,
+                    'user_id' => auth()->id(),
+                    'sales_rep_id' => $sale->sales_rep_id,
+                    'status' => Payment::STATUS_COMPLETED,
+                    'notes' => 'تحصيل نقدي تلقائي - فاتورة رقم ' . $sale->invoice_number,
+                ]);
+
+                $sale->paid_amount = $sale->total_amount;
+                $sale->remaining_amount = 0;
+                $sale->payment_status = Sale::PAYMENT_STATUS_PAID;
+                $sale->save();
+
+                if ($sale->sales_rep_id) {
+                    $salesRep = SalesRep::find($sale->sales_rep_id);
+                    if ($salesRep) {
+                        $salesRep->recordCollection($sale->total_amount, 'تحصيل نقدي - فاتورة ' . $sale->invoice_number, $payment->id);
+                    }
+                }
+            }
 
             // إيداع مبلغ المبيعات النقدية في خزينة المندوب
-            if ($sale->sales_rep_id && $sale->payment_type === 'cash') {
+            if ($sale->sales_rep_id && $sale->payment_type === 'cash' && !feature_enabled('auto_cash_payment')) {
                 $salesRep = SalesRep::find($sale->sales_rep_id);
                 if ($salesRep) {
                     $salesRep->deposit(
@@ -741,10 +657,16 @@ class SaleController extends Controller
                 }
             }
 
+            // إعادة حساب رصيد العميل
+            $customer = Customer::find($sale->customer_id);
+            if ($customer) {
+                $customer->recalculateBalance();
+            }
+
             DB::commit();
 
             return redirect()->route('sales.show', $sale)
-                ->with('success', 'تم تأكيد الفاتورة بنجاح');
+                ->with('success', 'تم تأكيد الفاتورة وخصم المخزون بنجاح');
 
         } catch (\Exception $e) {
             DB::rollBack();
