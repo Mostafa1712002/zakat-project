@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Partner;
+use App\Models\PartnerTransaction;
 use App\Models\Payment;
 use App\Models\Expense;
 use App\Models\Sale;
@@ -184,8 +186,10 @@ class TreasuryController extends Controller
             ->where('status', Payment::STATUS_COMPLETED)
             ->sum('amount');
 
-        // رأس المال / الرصيد الافتتاحي
-        $openingBalance = floatval(\DB::table('settings')->where('key', 'treasury_opening_balance')->value('value') ?? 0);
+        // رأس المال من الشركاء (الاستثمار المبدئي + استثمارات إضافية - مرتجعات رأس مال)
+        $openingBalance = Partner::sum('initial_investment')
+            + PartnerTransaction::where('type', PartnerTransaction::TYPE_INVESTMENT)->sum('amount')
+            - PartnerTransaction::where('type', PartnerTransaction::TYPE_RETURN)->sum('amount');
 
         $overallBalance = $openingBalance + ($totalCollectionsAll + $totalCashSalesAll + $totalRepWithdrawalsAll) - ($totalExpensesAll + $totalSupplierPaymentsAll);
 

@@ -9,6 +9,8 @@ use App\Models\Sale;
 use App\Models\Purchase;
 use App\Models\Expense;
 use App\Models\Payment;
+use App\Models\Partner;
+use App\Models\PartnerTransaction;
 use App\Models\SalesRep;
 use App\Models\InventoryLevel;
 use Carbon\Carbon;
@@ -24,7 +26,10 @@ class DashboardController extends Controller
         $todayPurchases = Purchase::whereDate('invoice_date', $today)->sum('total_amount');
 
         // Treasury balance (same logic as TreasuryController)
-        $openingBalance = floatval(\DB::table('settings')->where('key', 'treasury_opening_balance')->value('value') ?? 0);
+        // رأس المال من الشركاء
+        $openingBalance = Partner::sum('initial_investment')
+            + PartnerTransaction::where('type', PartnerTransaction::TYPE_INVESTMENT)->sum('amount')
+            - PartnerTransaction::where('type', PartnerTransaction::TYPE_RETURN)->sum('amount');
 
         $totalCollections = Payment::where('type', Payment::TYPE_RECEIVED)
             ->where('status', Payment::STATUS_COMPLETED)
