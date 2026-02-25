@@ -47,6 +47,18 @@ class SiteFeatureSeeder extends Seeder
             'quotations'             => true,
             'purchase_quotations'    => true,
         ],
+        'al-hadari' => [
+            'customer_target'        => false,
+            'tile_area_tracking'     => true,
+            'grade_system'           => true,
+            'per_item_discount'      => true,
+            'auto_cash_payment'      => true,
+            'color_palette'          => true,
+            'invoice_customization'  => true,
+            'simple_invoice_numbers' => true,
+            'quotations'             => true,
+            'purchase_quotations'    => true,
+        ],
     ];
 
     /**

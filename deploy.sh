@@ -8,6 +8,7 @@ set -e
 #   ./deploy.sh rogence       # Deploy to rogence
 #   ./deploy.sh syramik       # Deploy to syramik
 #   ./deploy.sh demo-sibakuh  # Deploy to demo-sibakuh
+#   ./deploy.sh al-hadari     # Deploy to al-hadari
 #   ./deploy.sh all           # Deploy all platforms
 #   ./deploy.sh               # Auto-detect from branch
 #
@@ -16,6 +17,7 @@ set -e
 #   rogence      → rogence site
 #   syramik      → syramik site
 #   demo-sibakuh → demo-sibakuh site
+#   al-hadari    → al-hadari.7erfa-system.com
 # ===================================================
 
 SERVER="root@161.35.211.31"
@@ -25,6 +27,7 @@ declare -A SITES=(
     ["rogence"]="/var/www/rogence.newaves-systems.com"
     ["syramik"]="/var/www/syramik.newaves-systems.com"
     ["demo-sibakuh"]="/var/www/demo-sibakuh.newaves-systems.com"
+    ["al-hadari"]="/var/www/al-hadari.7erfa-system.com"
 )
 
 # Branch → Site mapping (for auto-detect)
@@ -32,6 +35,7 @@ declare -A BRANCH_TO_SITE=(
     ["rogence"]="rogence"
     ["syramik"]="syramik"
     ["demo-sibakuh"]="demo-sibakuh"
+    ["al-hadari"]="al-hadari"
 )
 
 deploy_site() {
@@ -86,7 +90,7 @@ if [ -z "$SITE" ]; then
     if [ -z "$SITE" ]; then
         echo "❌ Branch '$BRANCH' has no deploy target."
         echo ""
-        echo "Usage: ./deploy.sh [rogence|syramik|demo-sibakuh|all]"
+        echo "Usage: ./deploy.sh [rogence|syramik|demo-sibakuh|al-hadari|all]"
         echo ""
         echo "  main branch is the master codebase - switch to a platform branch to deploy:"
         echo "    git checkout rogence && ./deploy.sh"
