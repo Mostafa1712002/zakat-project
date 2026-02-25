@@ -78,7 +78,7 @@ class FixDiscountTotals extends Command
 
         $this->info("  Processed: {$salesFixed} sales, Changed: {$salesChanged}");
 
-        // Step 3: Recalculate all purchase totals
+        // Step 3: Recalculate all purchase totals (uses subtotal, not total - purchases don't have per-item discounts)
         $this->info('');
         $this->info('Step 3: Recalculating all purchase totals...');
 
