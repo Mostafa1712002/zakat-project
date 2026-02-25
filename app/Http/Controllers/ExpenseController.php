@@ -93,6 +93,8 @@ class ExpenseController extends Controller
         $validated['expense_number'] = Expense::generateExpenseNumber();
         $validated['total_amount'] = $validated['amount'];
         $validated['user_id'] = auth()->id();
+        $validated['status'] = 'paid';
+        $validated['branch_id'] = auth()->user()->branch_id;
 
         DB::beginTransaction();
 
