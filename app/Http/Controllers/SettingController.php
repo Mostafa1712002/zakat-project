@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class SettingController extends Controller
@@ -526,6 +527,111 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             // Log the error but don't throw - settings table might not exist
             \Log::warning("Could not save setting {$key}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the data reset confirmation page.
+     */
+    public function resetData()
+    {
+        return view('settings.reset');
+    }
+
+    /**
+     * Execute data reset - delete all transactional data, keep users/settings/master data.
+     */
+    public function confirmResetData(Request $request)
+    {
+        $request->validate([
+            'password' => 'required',
+            'confirmation' => 'required|in:تصفير',
+        ], [
+            'password.required' => 'يجب إدخال كلمة المرور',
+            'confirmation.required' => 'يجب كتابة كلمة "تصفير" للتأكيد',
+            'confirmation.in' => 'يجب كتابة كلمة "تصفير" بالضبط للتأكيد',
+        ]);
+
+        if (!Hash::check($request->password, auth()->user()->password)) {
+            return back()->withErrors(['password' => 'كلمة المرور غير صحيحة']);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Tables to truncate (order matters for foreign keys)
+            $tablesToTruncate = [
+                'sale_return_items',
+                'sale_returns',
+                'purchase_return_items',
+                'purchase_returns',
+                'sale_items',
+                'purchase_items',
+                'stock_movements',
+                'inventory_levels',
+                'payments',
+                'expenses',
+                'commission_withdrawals',
+                'sales_rep_inventory',
+                'employee_transactions',
+                'partner_transactions',
+                'audit_logs',
+                'sales',
+                'purchases',
+            ];
+
+            // Disable foreign key checks for clean truncation
+            $driver = DB::connection()->getDriverName();
+            if ($driver === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = OFF');
+            } else {
+                DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+            }
+
+            foreach ($tablesToTruncate as $table) {
+                try {
+                    DB::table($table)->delete();
+                } catch (\Exception $e) {
+                    // Table might not exist, skip
+                }
+            }
+
+            // Reset customer balances
+            DB::table('customers')->update([
+                'current_balance' => 0,
+                'total_paid' => 0,
+            ]);
+
+            // Reset supplier balances
+            try {
+                DB::table('suppliers')->update(['total_paid' => 0]);
+            } catch (\Exception $e) {}
+
+            // Reset employee balances
+            try {
+                DB::table('employees')->update(['current_balance' => 0]);
+            } catch (\Exception $e) {}
+
+            // Reset partner balances
+            try {
+                DB::table('partners')->update(['current_balance' => 0]);
+            } catch (\Exception $e) {}
+
+            // Re-enable foreign key checks
+            if ($driver === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = ON');
+            } else {
+                DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+            }
+
+            DB::commit();
+
+            return redirect()->route('settings.index')
+                ->with('success', 'تم تصفير جميع البيانات بنجاح. يمكنك البدء من جديد.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'حدث خطأ أثناء التصفير: ' . $e->getMessage()]);
         }
     }
 }

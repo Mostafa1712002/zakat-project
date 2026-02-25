@@ -83,6 +83,18 @@
         </div>
     </div>
 
+    <!-- Data Reset -->
+    <div class="card settings-card settings-card-danger">
+        <div class="settings-card-icon">🔄</div>
+        <div class="settings-card-content">
+            <h3>التصفير</h3>
+            <p>مسح جميع المبيعات والمشتريات والأرصدة والبدء من جديد</p>
+        </div>
+        <div class="settings-card-action">
+            <a href="{{ route('settings.reset') }}" class="btn btn-danger">تصفير</a>
+        </div>
+    </div>
+
 </div>
 
 <style>
@@ -125,6 +137,14 @@
 
 .settings-card-action {
     margin-top: 1.5rem;
+}
+
+.settings-card-danger {
+    border: 2px solid #fee2e2;
+    background: #fff5f5;
+}
+.settings-card-danger:hover {
+    border-color: #fca5a5;
 }
 </style>
 @endsection

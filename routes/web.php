@@ -213,6 +213,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/roles/{role}/edit', [SettingController::class, 'editRole'])->name('roles.edit');
         Route::put('/roles/{role}', [SettingController::class, 'updateRole'])->name('roles.update');
         Route::delete('/roles/{role}', [SettingController::class, 'destroyRole'])->name('roles.destroy');
+
+        // Data Reset (التصفير)
+        Route::get('/reset', [SettingController::class, 'resetData'])->name('reset');
+        Route::post('/reset', [SettingController::class, 'confirmResetData'])->name('reset.confirm');
     });
 
     // Profile (الملف الشخصي)
