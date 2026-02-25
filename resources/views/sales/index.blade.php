@@ -79,12 +79,14 @@
                     <td>
                         <div class="table-actions">
                             <a href="{{ route('sales.show', $sale) }}" class="btn btn-sm">عرض</a>
+                            @if($sale->status !== 'cancelled')
                             <a href="{{ route('sales.edit', $sale) }}" class="btn btn-sm">تعديل</a>
-                            <form action="{{ route('sales.destroy', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
+                            <form action="{{ route('sales.destroy', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من الحذف؟{{ $sale->status === "confirmed" ? " سيتم إرجاع المخزون وحذف الدفعات." : "" }}')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">حذف</button>
                             </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

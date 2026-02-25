@@ -10,15 +10,22 @@
             <span class="btn-icon">🖨️</span>
             طباعة
         </a>
-        @if($sale->status === 'draft')
-        <form action="{{ route('sales.confirm', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تأكيد الفاتورة؟ سيتم خصم الكميات من المخزون.')">
-            @csrf
-            <button type="submit" class="btn btn-success btn-lg">
-                <span class="btn-icon">✅</span>
-                تأكيد الفاتورة
-            </button>
-        </form>
-        <a href="{{ route('sales.edit', $sale) }}" class="btn">تعديل</a>
+        @if($sale->status !== 'cancelled')
+            @if($sale->status === 'draft')
+            <form action="{{ route('sales.confirm', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تأكيد الفاتورة؟ سيتم خصم الكميات من المخزون.')">
+                @csrf
+                <button type="submit" class="btn btn-success btn-lg">
+                    <span class="btn-icon">✅</span>
+                    تأكيد الفاتورة
+                </button>
+            </form>
+            @endif
+            <a href="{{ route('sales.edit', $sale) }}" class="btn">تعديل</a>
+            <form action="{{ route('sales.destroy', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف الفاتورة؟ {{ $sale->status === "confirmed" ? "سيتم إرجاع المخزون وحذف الدفعات." : "" }}')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger">حذف</button>
+            </form>
         @endif
         <a href="{{ route('sales.index') }}" class="btn">← رجوع للمبيعات</a>
     </div>

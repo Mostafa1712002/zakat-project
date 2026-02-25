@@ -346,9 +346,9 @@ class SaleController extends Controller
             abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
         }
 
-        // Only allow editing draft sales
-        if ($sale->status !== Sale::STATUS_DRAFT) {
-            return back()->with('error', 'لا يمكن تعديل فاتورة تم تأكيدها');
+        // Don't allow editing cancelled sales
+        if ($sale->status === Sale::STATUS_CANCELLED) {
+            return back()->with('error', 'لا يمكن تعديل فاتورة ملغاة');
         }
 
         $user = auth()->user();
@@ -387,10 +387,12 @@ class SaleController extends Controller
             abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
         }
 
-        // Only allow editing draft sales
-        if ($sale->status !== Sale::STATUS_DRAFT) {
-            return back()->with('error', 'لا يمكن تعديل فاتورة تم تأكيدها');
+        // Don't allow editing cancelled sales
+        if ($sale->status === Sale::STATUS_CANCELLED) {
+            return back()->with('error', 'لا يمكن تعديل فاتورة ملغاة');
         }
+
+        $wasConfirmed = $sale->status === Sale::STATUS_CONFIRMED;
 
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
@@ -418,12 +420,33 @@ class SaleController extends Controller
         ]);
 
         // التحقق من توفر الكميات في المخزن
+        // For confirmed sales, old quantities will be returned first, so add them back for validation
+        $oldItemQuantities = [];
+        if ($wasConfirmed) {
+            foreach ($sale->items as $oldItem) {
+                $oldItemQuantities[$oldItem->product_id] = ($oldItemQuantities[$oldItem->product_id] ?? 0) + $oldItem->quantity;
+            }
+        }
+
         $stockErrors = [];
+        $user = auth()->user();
+        $isSalesRep = $user->isSalesRep() && $user->salesRep;
+
         foreach ($validated['items'] as $index => $item) {
             $product = Product::find($item['product_id']);
             if ($product && $product->track_inventory) {
-                $warehouse = Warehouse::find($validated['warehouse_id']);
-                $availableStock = $warehouse ? $warehouse->getAvailableStock($product->id) : 0;
+                if ($isSalesRep) {
+                    $repInventory = SalesRepInventory::where('sales_rep_id', $user->salesRep->id)
+                        ->where('product_id', $item['product_id'])
+                        ->first();
+                    $availableStock = $repInventory ? $repInventory->available_quantity : 0;
+                } else {
+                    $warehouse = Warehouse::find($validated['warehouse_id']);
+                    $availableStock = $warehouse ? $warehouse->getAvailableStock($product->id) : 0;
+                }
+
+                // Add back old quantities that will be returned
+                $availableStock += ($oldItemQuantities[$item['product_id']] ?? 0);
 
                 if ($item['quantity'] > $availableStock) {
                     $stockErrors[] = "الصنف \"{$product->name}\" - الكمية المطلوبة ({$item['quantity']}) أكبر من المتاح ({$availableStock})";
@@ -464,6 +487,62 @@ class SaleController extends Controller
                 'notes' => $validated['notes'] ?? null,
                 'terms' => $validated['terms'] ?? null,
             ]);
+
+            // If sale was confirmed, reverse stock movements and payments first
+            if ($wasConfirmed) {
+                // Reverse stock
+                if ($sale->sales_rep_id) {
+                    foreach ($sale->items as $item) {
+                        SalesRepStockMovement::record(
+                            $sale->sales_rep_id,
+                            $item->product_id,
+                            SalesRepStockMovement::TYPE_RETURN,
+                            $item->quantity,
+                            $sale->warehouse_id,
+                            $sale->id,
+                            'تعديل فاتورة - إرجاع ' . $sale->invoice_number
+                        );
+                    }
+                } else {
+                    foreach ($sale->items as $item) {
+                        StockMovement::recordMovement([
+                            'product_id' => $item->product_id,
+                            'warehouse_id' => $sale->warehouse_id,
+                            'type' => StockMovement::TYPE_RETURN,
+                            'quantity' => $item->quantity,
+                            'unit_cost' => $item->cost_price,
+                            'reference_type' => Sale::class,
+                            'reference_id' => $sale->id,
+                            'reference_number' => $sale->invoice_number,
+                            'user_id' => auth()->id(),
+                            'reason' => 'تعديل فاتورة - إرجاع',
+                        ]);
+                    }
+                }
+
+                // Withdraw from sales rep treasury if cash sale
+                if ($sale->sales_rep_id && $sale->payment_type === 'cash') {
+                    $salesRep = SalesRep::find($sale->sales_rep_id);
+                    if ($salesRep && $salesRep->treasury_balance >= $sale->total_amount) {
+                        $salesRep->withdraw(
+                            $sale->total_amount,
+                            'تعديل فاتورة - إرجاع ' . $sale->invoice_number,
+                            Sale::class,
+                            $sale->id
+                        );
+                    }
+                }
+
+                // Delete existing payments
+                $sale->payments()->delete();
+
+                // Reset payment fields
+                $sale->update([
+                    'paid_amount' => 0,
+                    'remaining_amount' => $sale->total_amount,
+                    'payment_status' => Sale::PAYMENT_STATUS_UNPAID,
+                ]);
+            }
 
             // Delete existing items and recreate
             $sale->items()->delete();
@@ -507,6 +586,92 @@ class SaleController extends Controller
             $sale->calculateTotals();
             $sale->save();
 
+            // If sale was confirmed, re-apply stock deduction and payments
+            if ($wasConfirmed) {
+                // Refresh items relationship to get newly created items
+                $sale->load('items');
+
+                // Re-deduct stock with new items
+                if ($sale->sales_rep_id) {
+                    foreach ($sale->items as $newItem) {
+                        SalesRepStockMovement::record(
+                            $sale->sales_rep_id,
+                            $newItem->product_id,
+                            SalesRepStockMovement::TYPE_SALE,
+                            $newItem->quantity,
+                            $sale->warehouse_id,
+                            $sale->id,
+                            'تعديل فاتورة - بيع ' . $sale->invoice_number
+                        );
+                    }
+                } else {
+                    foreach ($sale->items as $newItem) {
+                        StockMovement::recordMovement([
+                            'product_id' => $newItem->product_id,
+                            'warehouse_id' => $sale->warehouse_id,
+                            'type' => StockMovement::TYPE_OUT,
+                            'quantity' => $newItem->quantity,
+                            'unit_cost' => $newItem->cost_price,
+                            'reference_type' => Sale::class,
+                            'reference_id' => $sale->id,
+                            'reference_number' => $sale->invoice_number,
+                            'user_id' => auth()->id(),
+                            'reason' => 'تعديل فاتورة - بيع',
+                        ]);
+                    }
+                }
+
+                // Re-create auto payment for cash sales
+                if (feature_enabled('auto_cash_payment') && $sale->payment_type === 'cash' && $sale->total_amount > 0) {
+                    $payment = Payment::create([
+                        'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
+                        'payable_type' => Sale::class,
+                        'payable_id' => $sale->id,
+                        'sale_id' => $sale->id,
+                        'type' => Payment::TYPE_RECEIVED,
+                        'amount' => $sale->total_amount,
+                        'method' => Payment::METHOD_CASH,
+                        'payment_date' => $sale->invoice_date,
+                        'branch_id' => $sale->branch_id,
+                        'user_id' => auth()->id(),
+                        'sales_rep_id' => $sale->sales_rep_id,
+                        'status' => Payment::STATUS_COMPLETED,
+                        'notes' => 'تحصيل نقدي تلقائي (تعديل) - فاتورة رقم ' . $sale->invoice_number,
+                    ]);
+
+                    $sale->paid_amount = $sale->total_amount;
+                    $sale->remaining_amount = 0;
+                    $sale->payment_status = Sale::PAYMENT_STATUS_PAID;
+                    $sale->save();
+
+                    if ($sale->sales_rep_id) {
+                        $salesRep = SalesRep::find($sale->sales_rep_id);
+                        if ($salesRep) {
+                            $salesRep->recordCollection($sale->total_amount, 'تحصيل نقدي (تعديل) - فاتورة ' . $sale->invoice_number, $payment->id);
+                        }
+                    }
+                }
+
+                // Re-deposit to sales rep treasury for cash sales without auto payment
+                if ($sale->sales_rep_id && $sale->payment_type === 'cash' && !feature_enabled('auto_cash_payment')) {
+                    $salesRep = SalesRep::find($sale->sales_rep_id);
+                    if ($salesRep) {
+                        $salesRep->deposit(
+                            $sale->total_amount,
+                            'مبيعات نقدية (تعديل) - فاتورة ' . $sale->invoice_number,
+                            Sale::class,
+                            $sale->id
+                        );
+                    }
+                }
+
+                // Recalculate customer balance
+                $customer = Customer::find($sale->customer_id);
+                if ($customer) {
+                    $customer->recalculateBalance();
+                }
+            }
+
             DB::commit();
 
             return redirect()->route('sales.show', $sale)
@@ -531,19 +696,69 @@ class SaleController extends Controller
             abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
         }
 
-        // Only allow deleting draft sales
-        if ($sale->status !== Sale::STATUS_DRAFT) {
-            return back()->with('error', 'لا يمكن حذف فاتورة تم تأكيدها');
-        }
-
-        // Check if sale has payments
-        if ($sale->paid_amount > 0) {
-            return back()->with('error', 'لا يمكن حذف فاتورة تم دفع جزء منها');
+        // Don't allow deleting cancelled sales
+        if ($sale->status === Sale::STATUS_CANCELLED) {
+            return back()->with('error', 'لا يمكن حذف فاتورة ملغاة');
         }
 
         DB::beginTransaction();
 
         try {
+            // If sale was confirmed, reverse stock and payments
+            if ($sale->status === Sale::STATUS_CONFIRMED) {
+                // Reverse stock
+                if ($sale->sales_rep_id) {
+                    foreach ($sale->items as $item) {
+                        SalesRepStockMovement::record(
+                            $sale->sales_rep_id,
+                            $item->product_id,
+                            SalesRepStockMovement::TYPE_RETURN,
+                            $item->quantity,
+                            $sale->warehouse_id,
+                            $sale->id,
+                            'حذف فاتورة - إرجاع ' . $sale->invoice_number
+                        );
+                    }
+                } else {
+                    foreach ($sale->items as $item) {
+                        StockMovement::recordMovement([
+                            'product_id' => $item->product_id,
+                            'warehouse_id' => $sale->warehouse_id,
+                            'type' => StockMovement::TYPE_RETURN,
+                            'quantity' => $item->quantity,
+                            'unit_cost' => $item->cost_price,
+                            'reference_type' => Sale::class,
+                            'reference_id' => $sale->id,
+                            'reference_number' => $sale->invoice_number,
+                            'user_id' => auth()->id(),
+                            'reason' => 'حذف فاتورة - إرجاع',
+                        ]);
+                    }
+                }
+
+                // Withdraw from sales rep treasury if cash sale
+                if ($sale->sales_rep_id && $sale->payment_type === 'cash') {
+                    $salesRep = SalesRep::find($sale->sales_rep_id);
+                    if ($salesRep && $salesRep->treasury_balance >= $sale->total_amount) {
+                        $salesRep->withdraw(
+                            $sale->total_amount,
+                            'حذف فاتورة - ' . $sale->invoice_number,
+                            Sale::class,
+                            $sale->id
+                        );
+                    }
+                }
+
+                // Delete payments
+                $sale->payments()->delete();
+
+                // Recalculate customer balance
+                $customer = Customer::find($sale->customer_id);
+                if ($customer) {
+                    $customer->recalculateBalance();
+                }
+            }
+
             // Delete sale items
             $sale->items()->delete();
 
