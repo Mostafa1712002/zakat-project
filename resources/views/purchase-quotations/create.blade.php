@@ -77,6 +77,21 @@
                     </select>
                 </div>
 
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">نوع الخصم</label>
+                        <select name="discount_type" id="discount_type" class="form-control">
+                            <option value="fixed">مبلغ ثابت</option>
+                            <option value="percentage">نسبة مئوية</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">قيمة الخصم</label>
+                        <input type="number" step="0.01" name="discount_value" id="discount_value" class="form-control" value="0" min="0">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">ملاحظات</label>
                     <textarea name="notes" class="form-control" rows="2">{{ old('notes') }}</textarea>
@@ -123,6 +138,8 @@
             </div>
 
             <div class="totals-section">
+                <div class="totals-row"><span>الإجمالي الفرعي:</span> <strong id="subtotal">0.00</strong> ج.م</div>
+                <div class="totals-row" id="discountRow" style="display: none; color: #dc2626;"><span>الخصم:</span> <strong id="totalDiscount">0.00</strong> ج.م</div>
                 <div class="totals-row total-final"><span>الإجمالي:</span> <strong id="grandTotal">0.00</strong> ج.م</div>
             </div>
         </div>
@@ -287,9 +304,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function calculateTotals() {
-        let total = 0;
-        document.querySelectorAll('.item-row').forEach(row => { total += calculateRowTotal(row); });
-        document.getElementById('grandTotal').textContent = total.toFixed(2);
+        let subtotal = 0;
+        document.querySelectorAll('.item-row').forEach(row => { subtotal += calculateRowTotal(row); });
+
+        const discountType = document.getElementById('discount_type').value;
+        const discountValue = parseFloat(document.getElementById('discount_value').value) || 0;
+        let discount = discountType === 'percentage' ? (subtotal * discountValue / 100) : discountValue;
+
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('totalDiscount').textContent = discount.toFixed(2);
+        document.getElementById('discountRow').style.display = discount > 0 ? 'flex' : 'none';
+        document.getElementById('grandTotal').textContent = (subtotal - discount).toFixed(2);
     }
 
     function attachRowEvents(row) {
@@ -299,6 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     attachRowEvents(document.querySelector('.item-row'));
+    document.getElementById('discount_type').addEventListener('change', calculateTotals);
+    document.getElementById('discount_value').addEventListener('input', calculateTotals);
     initPurchaseSelect2();
 });
 </script>

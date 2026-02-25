@@ -91,12 +91,14 @@
                     <td>
                         <div class="table-actions">
                             <a href="{{ route('purchases.show', $purchase) }}" class="btn btn-sm" title="عرض">👁️</a>
+                            @if($purchase->status !== 'cancelled')
                             <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-sm" title="تعديل">✏️</a>
-                            <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الشراء؟')">
+                            <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الشراء؟{{ $purchase->status === "received" ? " سيتم إرجاع المخزون وحذف الدفعات والمصروفات." : "" }}')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger" title="حذف">🗑️</button>
                             </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

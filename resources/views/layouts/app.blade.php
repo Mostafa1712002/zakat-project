@@ -750,6 +750,9 @@
                     @if(feature_enabled('purchase_quotations'))
                     <li class="nav-sub-item"><a href="{{ route('purchase-quotations.index') }}" class="{{ request()->routeIs('purchase-quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchase_quotations', '📝') }}</span><span class="nav-label">{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}</span></a></li>
                     @endif
+                    @if(feature_enabled('purchase_returns'))
+                    <li class="nav-sub-item"><a href="{{ route('purchase-returns.index') }}" class="{{ request()->routeIs('purchase-returns.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchase_returns', 'مرتجعات المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchase_returns', '↩️') }}</span><span class="nav-label">{{ feature_name('purchase_returns', 'مرتجعات المشتريات') }}</span></a></li>
+                    @endif
                     @if(feature_enabled('products'))
                     <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('products', 'الأصناف') }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span><span class="nav-label">{{ feature_name('products', 'الأصناف') }}</span></a></li>
                     @endif
@@ -779,6 +782,9 @@
                     @endif
                     @if(feature_enabled('purchase_quotations'))
                     <li class="nav-sub-item"><a href="{{ route('purchase-quotations.index') }}" class="{{ request()->routeIs('purchase-quotations.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchase_quotations', '📝') }}</span><span class="nav-label">{{ feature_name('purchase_quotations', 'تسعيرات المشتريات') }}</span></a></li>
+                    @endif
+                    @if(feature_enabled('purchase_returns'))
+                    <li class="nav-sub-item"><a href="{{ route('purchase-returns.index') }}" class="{{ request()->routeIs('purchase-returns.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('purchase_returns', 'مرتجعات المشتريات') }}"><span class="nav-icon">{{ feature_icon('purchase_returns', '↩️') }}</span><span class="nav-label">{{ feature_name('purchase_returns', 'مرتجعات المشتريات') }}</span></a></li>
                     @endif
                     @if(feature_enabled('suppliers'))
                     <li><a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('suppliers', 'الموردين') }}"><span class="nav-icon">{{ feature_icon('suppliers', '🏢') }}</span><span class="nav-label">{{ feature_name('suppliers', 'الموردين') }}</span></a></li>

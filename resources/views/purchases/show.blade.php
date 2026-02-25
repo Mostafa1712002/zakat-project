@@ -10,7 +10,26 @@
             <span class="btn-icon">🖨️</span>
             طباعة
         </a>
-        <a href="{{ route('purchases.edit', $purchase) }}" class="btn">تعديل</a>
+        @if($purchase->status !== 'cancelled')
+            @if(in_array($purchase->status, ['draft', 'ordered']))
+            <form action="{{ route('purchases.confirm', $purchase) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تأكيد الفاتورة؟ سيتم إضافة الكميات للمخزون.')">
+                @csrf
+                <button type="submit" class="btn btn-success btn-lg">
+                    <span class="btn-icon">✅</span>
+                    تأكيد الفاتورة
+                </button>
+            </form>
+            @endif
+            @if($purchase->status === 'received')
+            <a href="{{ route('purchase-returns.create', ['purchase_id' => $purchase->id]) }}" class="btn" style="background: #f59e0b; color: white;">↩️ مرتجع</a>
+            @endif
+            <a href="{{ route('purchases.edit', $purchase) }}" class="btn">تعديل</a>
+            <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف الفاتورة؟ {{ $purchase->status === "received" ? "سيتم إرجاع المخزون وحذف الدفعات والمصروفات." : "" }}')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger">حذف</button>
+            </form>
+        @endif
         <a href="{{ route('purchases.index') }}" class="btn">← رجوع للمشتريات</a>
     </div>
 

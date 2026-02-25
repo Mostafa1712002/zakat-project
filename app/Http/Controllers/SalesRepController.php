@@ -117,7 +117,7 @@ class SalesRepController extends Controller
                 'user_id' => $user->id,
                 'name' => $name,
                 'code' => $validated['code'],
-                'type' => $validated['type'],
+                'type' => $validated['type'] ?? null,
                 'phone' => $validated['phone'] ?? $user->phone,
                 'email' => $email,
                 'commission_rate' => $validated['commission_rate'] ?? 0,
@@ -298,7 +298,7 @@ class SalesRepController extends Controller
             $salesRep->update([
                 'name' => $validated['name'],
                 'code' => $validated['code'],
-                'type' => $validated['type'],
+                'type' => $validated['type'] ?? null,
                 'phone' => $validated['phone'],
                 'email' => $validated['email'],
                 'commission_rate' => $validated['commission_rate'] ?? 0,

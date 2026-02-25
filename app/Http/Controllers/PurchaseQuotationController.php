@@ -57,6 +57,8 @@ class PurchaseQuotationController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'discount_type' => 'nullable|in:fixed,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -78,6 +80,8 @@ class PurchaseQuotationController extends Controller
                 'user_id' => auth()->id(),
                 'status' => Purchase::STATUS_DRAFT,
                 'payment_status' => 'unpaid',
+                'discount_type' => $request->discount_type ?? 'fixed',
+                'discount_value' => $request->discount_value ?? 0,
                 'notes' => $validated['notes'] ?? null,
                 'is_quotation' => true,
             ]);
@@ -100,9 +104,14 @@ class PurchaseQuotationController extends Controller
                 $subtotal += $itemSubtotal;
             }
 
+            $discountType = $request->discount_type ?? 'fixed';
+            $discountValue = floatval($request->discount_value ?? 0);
+            $discountAmount = $discountType === 'percentage' ? ($subtotal * $discountValue / 100) : $discountValue;
+
             $purchase->subtotal = $subtotal;
-            $purchase->total_amount = $subtotal;
-            $purchase->remaining_amount = $subtotal;
+            $purchase->discount_amount = $discountAmount;
+            $purchase->total_amount = $subtotal - $discountAmount;
+            $purchase->remaining_amount = $subtotal - $discountAmount;
             $purchase->paid_amount = 0;
             $purchase->save();
 
@@ -172,6 +181,8 @@ class PurchaseQuotationController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'discount_type' => 'nullable|in:fixed,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -183,6 +194,8 @@ class PurchaseQuotationController extends Controller
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $request->due_date,
                 'payment_type' => $request->payment_type ?? 'credit',
+                'discount_type' => $request->discount_type ?? 'fixed',
+                'discount_value' => $request->discount_value ?? 0,
                 'notes' => $validated['notes'] ?? null,
             ]);
 
@@ -206,9 +219,14 @@ class PurchaseQuotationController extends Controller
                 $subtotal += $itemSubtotal;
             }
 
+            $discountType = $request->discount_type ?? 'fixed';
+            $discountValue = floatval($request->discount_value ?? 0);
+            $discountAmount = $discountType === 'percentage' ? ($subtotal * $discountValue / 100) : $discountValue;
+
             $purchase->subtotal = $subtotal;
-            $purchase->total_amount = $subtotal;
-            $purchase->remaining_amount = $subtotal;
+            $purchase->discount_amount = $discountAmount;
+            $purchase->total_amount = $subtotal - $discountAmount;
+            $purchase->remaining_amount = $subtotal - $discountAmount;
             $purchase->paid_amount = 0;
             $purchase->save();
 

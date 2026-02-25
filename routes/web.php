@@ -28,6 +28,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\EmployeeTransactionController;
 use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\PartnerTransactionController;
 use App\Http\Controllers\ProfitDistributionController;
 use App\Http\Controllers\TreasuryController;
@@ -115,12 +116,16 @@ Route::middleware(['auth'])->group(function () {
 
     // Purchases (المشتريات)
     Route::get('purchases/{purchase}/pdf', [PurchaseController::class, 'pdf'])->name('purchases.pdf');
+    Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
     Route::resource('purchases', PurchaseController::class);
 
     // Purchase Quotations (تسعيرات المشتريات)
     Route::get('purchase-quotations/{purchase}/pdf', [PurchaseQuotationController::class, 'pdf'])->name('purchase-quotations.pdf');
     Route::post('purchase-quotations/{purchase}/confirm', [PurchaseQuotationController::class, 'confirm'])->name('purchase-quotations.confirm');
     Route::resource('purchase-quotations', PurchaseQuotationController::class);
+
+    // Purchase Returns (مرتجعات المشتريات)
+    Route::resource('purchase-returns', PurchaseReturnController::class)->except(['edit', 'update']);
 
     // Suppliers (الموردين)
     Route::get('suppliers/{supplier}/products', [SupplierController::class, 'products'])->name('suppliers.products');
