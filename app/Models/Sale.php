@@ -36,6 +36,8 @@ class Sale extends Model
         'due_date',
         'payment_type',
         'status',
+        'is_quotation',
+        'quotation_number',
         'payment_status',
         'subtotal',
         'discount_type',
@@ -56,6 +58,7 @@ class Sale extends Model
     ];
 
     protected $casts = [
+        'is_quotation' => 'boolean',
         'invoice_date' => 'date',
         'due_date' => 'date',
         'subtotal' => 'decimal:2',
@@ -191,6 +194,21 @@ class Sale extends Model
 
     public static function generateInvoiceNumber(): string
     {
+        // أرقام تسلسلية بسيطة (1, 2, 3, ...)
+        if (feature_enabled('simple_invoice_numbers')) {
+            $lastSale = self::withTrashed()
+                ->orderByRaw('CAST(invoice_number AS UNSIGNED) DESC')
+                ->first();
+
+            if ($lastSale && is_numeric($lastSale->invoice_number)) {
+                return (string) ((int) $lastSale->invoice_number + 1);
+            }
+
+            // Fallback: count all sales + 1
+            return (string) (self::withTrashed()->count() + 1);
+        }
+
+        // صيغة التاريخ: YYYYMM0001
         $prefix = date('Ym');
         $lastSale = self::withTrashed()
             ->where('invoice_number', 'like', $prefix . '%')

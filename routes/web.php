@@ -69,8 +69,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Customers (العملاء)
     Route::resource('customers', CustomerController::class);
-    Route::get('customers/{customer}/withdraw-target', [CustomerController::class, 'showWithdrawTarget'])->name('customers.withdraw-target.form');
-    Route::post('customers/{customer}/withdraw-target', [CustomerController::class, 'withdrawTarget'])->name('customers.withdraw-target.store');
+    Route::middleware(['feature:customer_target'])->group(function () {
+        Route::get('customers/{customer}/withdraw-target', [CustomerController::class, 'showWithdrawTarget'])->name('customers.withdraw-target.form');
+        Route::post('customers/{customer}/withdraw-target', [CustomerController::class, 'withdrawTarget'])->name('customers.withdraw-target.store');
+    });
     Route::middleware(['feature:payments'])->group(function () {
         Route::get('customers/{customer}/collect', [PaymentController::class, 'showCollectFromCustomer'])->name('customers.collect.form');
         Route::post('customers/{customer}/collect', [PaymentController::class, 'collectFromCustomer'])->name('customers.collect');

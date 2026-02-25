@@ -2,13 +2,16 @@
     $__siteSettings = \Illuminate\Support\Facades\Cache::remember('sidebar_settings', 3600, function() {
         try {
             return \DB::table('settings')
-                ->whereIn('key', ['company_name', 'company_logo'])
+                ->whereIn('key', ['company_name', 'company_logo', 'color_primary', 'color_primary_dark', 'color_primary_light'])
                 ->pluck('value', 'key')
                 ->toArray();
         } catch (\Exception $e) { return []; }
     });
     $__sidebarLogo = $__siteSettings['company_logo'] ?? '';
     $__sidebarName = $__siteSettings['company_name'] ?? config('app.name', 'CRM');
+    $__colorPrimary = $__siteSettings['color_primary'] ?? '#0891b2';
+    $__colorPrimaryDark = $__siteSettings['color_primary_dark'] ?? '#0e7490';
+    $__colorPrimaryLight = $__siteSettings['color_primary_light'] ?? '#06b6d4';
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -62,9 +65,9 @@
     </style>
     <style>
         :root {
-            --primary: #0891b2;
-            --primary-dark: #0e7490;
-            --primary-light: #06b6d4;
+            --primary: {{ $__colorPrimary }};
+            --primary-dark: {{ $__colorPrimaryDark }};
+            --primary-light: {{ $__colorPrimaryLight }};
             --success: #059669;
             --warning: #f59e0b;
             --danger: #dc2626;

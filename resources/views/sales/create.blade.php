@@ -179,12 +179,21 @@
                 <table class="table text-nowrap" id="itemsTable">
                     <thead>
                         <tr>
-                            <th style="width: 35%;">الصنف</th>
-                            <th style="width: 12%;">المتاح</th>
-                            <th style="width: 15%;">الكمية</th>
-                            <th style="width: 18%;">سعر الوحدة</th>
-                            <th style="width: 12%;">الإجمالي</th>
-                            <th style="width: 8%;"></th>
+                            <th style="width: 28%;">الصنف</th>
+                            @if(feature_enabled('grade_system'))
+                            <th style="width: 10%;">الفرز</th>
+                            @endif
+                            <th style="width: 8%;">المتاح</th>
+                            <th style="width: 10%;">الكمية</th>
+                            <th style="width: 12%;">سعر الوحدة</th>
+                            @if(feature_enabled('per_item_discount'))
+                            <th style="width: 10%;">الخصم</th>
+                            @endif
+                            @if(feature_enabled('tile_area_tracking'))
+                            <th style="width: 10%;">المساحة</th>
+                            @endif
+                            <th style="width: 10%;">الإجمالي</th>
+                            <th style="width: 5%;"></th>
                         </tr>
                     </thead>
                     <tbody id="itemsBody">
@@ -199,8 +208,20 @@
                                     @endforeach
                                 </select>
                                 <input type="hidden" name="items[0][price_type]" value="retail">
+                                @unless(feature_enabled('per_item_discount'))
                                 <input type="hidden" name="items[0][discount_amount]" class="discount-input" value="0">
+                                @endunless
                             </td>
+                            @if(feature_enabled('grade_system'))
+                            <td>
+                                <select name="items[0][grade_id]" class="form-control grade-select" style="font-size: 12px; padding: 6px;">
+                                    <option value="">-</option>
+                                    @foreach($grades as $grade)
+                                        <option value="{{ $grade->id }}">{{ $grade->name_ar ?? $grade->name }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            @endif
                             <td>
                                 <span class="stock-display badge badge-secondary">-</span>
                             </td>
@@ -210,6 +231,16 @@
                             <td>
                                 <input type="number" name="items[0][unit_price]" class="form-control price-input" value="0" min="0" step="0.01" required>
                             </td>
+                            @if(feature_enabled('per_item_discount'))
+                            <td>
+                                <input type="number" name="items[0][discount_amount]" class="form-control discount-input" value="0" min="0" step="0.01">
+                            </td>
+                            @endif
+                            @if(feature_enabled('tile_area_tracking'))
+                            <td>
+                                <span class="row-area">-</span> م²
+                            </td>
+                            @endif
                             <td>
                                 <span class="row-total">0.00</span> ج.م
                             </td>
@@ -220,7 +251,13 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="6">
+                            @php
+                                $colCount = 6;
+                                if (feature_enabled('per_item_discount')) $colCount++;
+                                if (feature_enabled('grade_system')) $colCount++;
+                                if (feature_enabled('tile_area_tracking')) $colCount++;
+                            @endphp
+                            <td colspan="{{ $colCount }}">
                                 <button type="button" class="btn btn-sm" id="addRowBtn">+ إضافة صنف</button>
                             </td>
                         </tr>
@@ -380,7 +417,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'retail' => (float) $p->selling_price,
             'min_price' => (float) ($p->min_selling_price ?? 0),
             'track' => $p->track_inventory,
-            'rep_stock' => $p->rep_stock ?? null
+            'rep_stock' => $p->rep_stock ?? null,
+            'area_per_unit' => (float) ($p->area_per_unit ?? 0),
         ]];
     })) !!};
 
@@ -629,12 +667,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Calculate row total
+    const perItemDiscountEnabled = @json(feature_enabled('per_item_discount'));
+
+    const tileAreaEnabled = @json(feature_enabled('tile_area_tracking'));
+
     function calculateRowTotal(row) {
         const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
         const price = parseFloat(row.querySelector('.price-input').value) || 0;
-        const total = qty * price;
-        row.querySelector('.row-total').textContent = total.toFixed(2);
-        return total;
+        const discountInput = row.querySelector('.discount-input');
+        const discount = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
+        const total = (qty * price) - discount;
+        row.querySelector('.row-total').textContent = Math.max(0, total).toFixed(2);
+
+        // Update area display
+        if (tileAreaEnabled) {
+            const areaDisplay = row.querySelector('.row-area');
+            if (areaDisplay) {
+                const productId = row.querySelector('.product-select').value;
+                const product = productsData[productId];
+                if (product && product.area_per_unit > 0) {
+                    areaDisplay.textContent = (qty * product.area_per_unit).toFixed(2);
+                } else {
+                    areaDisplay.textContent = '-';
+                }
+            }
+        }
+
+        return Math.max(0, total);
     }
 
     // Calculate all totals
@@ -658,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function attachRowEvents(row) {
         // Product selection change is handled by Select2 in initProductSelect2()
 
-        row.querySelectorAll('.quantity-input, .price-input').forEach(input => {
+        row.querySelectorAll('.quantity-input, .price-input, .discount-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
         });
 

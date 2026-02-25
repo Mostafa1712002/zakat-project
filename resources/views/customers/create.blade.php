@@ -43,8 +43,9 @@
                 <label for="item_type" class="form-label">صنف العميل</label>
                 <select name="item_type" id="item_type" class="form-control">
                     <option value="">اختر صنف العميل</option>
-                    <option value="fridge" {{ old('item_type') == 'fridge' ? 'selected' : '' }}>تلاجة</option>
-                    <option value="special" {{ old('item_type') == 'special' ? 'selected' : '' }}>خاص</option>
+                    @foreach(customer_item_types() as $type)
+                        <option value="{{ $type['value'] }}" {{ old('item_type') == $type['value'] ? 'selected' : '' }}>{{ $type['label'] }}</option>
+                    @endforeach
                 </select>
                 @error('item_type')
                     <div class="form-error">{{ $message }}</div>
@@ -88,6 +89,7 @@
                 @enderror
             </div>
 
+            @if(feature_enabled('customer_target'))
             <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">🎯 التارجت والخصم</h3>
 
@@ -110,6 +112,7 @@
                     @enderror
                 </div>
             </div>
+            @endif
 
             <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">🏢 التخصيص</h3>

@@ -22,7 +22,9 @@
                     <th>الاسم</th>
                     <th>الهاتف</th>
                     <th>الصنف</th>
+                    @if(feature_enabled('customer_target'))
                     <th>التارجت</th>
+                    @endif
                     <th>الإجراءات</th>
                 </tr>
             </thead>
@@ -34,16 +36,10 @@
                     <td>{{ $customer->phone ?? '-' }}</td>
                     <td>
                         @php
-                            $itemTypeLabel = match ($customer->item_type) {
-                                'fridge' => 'تلاجة',
-                                'special' => 'خاص',
-                                default => '-',
-                            };
-                            $itemTypeClass = match ($customer->item_type) {
-                                'fridge' => 'badge-primary',
-                                'special' => 'badge-warning',
-                                default => '',
-                            };
+                            $itemTypes = collect(customer_item_types())->keyBy('value');
+                            $itemTypeLabel = $itemTypes[$customer->item_type]['label'] ?? '-';
+                            $itemTypeColors = ['fridge' => 'badge-primary', 'special' => 'badge-warning', 'trader' => 'badge-primary', 'regular' => 'badge-warning'];
+                            $itemTypeClass = $itemTypeColors[$customer->item_type] ?? '';
                         @endphp
                         @if($itemTypeClass)
                             <span class="badge {{ $itemTypeClass }}">{{ $itemTypeLabel }}</span>
@@ -51,6 +47,7 @@
                             <span class="text-muted">{{ $itemTypeLabel }}</span>
                         @endif
                     </td>
+                    @if(feature_enabled('customer_target'))
                     <td>
                         @if($customer->target_amount > 0)
                             @php
@@ -73,11 +70,12 @@
                             <span class="text-muted">-</span>
                         @endif
                     </td>
+                    @endif
                     <td>
                         <div class="table-actions">
                             <a href="{{ route('customers.show', $customer) }}" class="btn btn-sm">عرض</a>
                             <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm">تعديل</a>
-                            @if($customer->hasAchievedTarget() && $customer->withdrawable_target_amount > 0)
+                            @if(feature_enabled('customer_target') && $customer->hasAchievedTarget() && $customer->withdrawable_target_amount > 0)
                                 <a href="{{ route('customers.withdraw-target.form', $customer) }}" class="btn btn-sm btn-success" title="سحب التارجت">🎯 سحب</a>
                             @endif
                             <form action="{{ route('customers.destroy', $customer) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
@@ -90,7 +88,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6">
+                    <td colspan="{{ feature_enabled('customer_target') ? 6 : 5 }}">
                         <div class="empty-state">
                             <div class="empty-state-icon">👥</div>
                             <h3>لا يوجد عملاء</h3>

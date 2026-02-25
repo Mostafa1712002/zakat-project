@@ -141,6 +141,37 @@
                 </div>
             </div>
 
+            @if(feature_enabled('tile_area_tracking'))
+            <hr style="margin: 24px 0; border-color: var(--border-color);">
+            <h3 style="margin-bottom: 16px;">📐 بيانات المساحة</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="area_per_unit" class="form-label">المساحة لكل وحدة (م²)</label>
+                    <input type="number" step="0.0001" name="area_per_unit" id="area_per_unit" class="form-control" value="{{ old('area_per_unit', $product->area_per_unit) }}" min="0">
+                    @error('area_per_unit')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="tiles_per_box" class="form-label">عدد القطع في الكرتونة</label>
+                    <input type="number" name="tiles_per_box" id="tiles_per_box" class="form-control" value="{{ old('tiles_per_box', $product->tiles_per_box) }}" min="0">
+                    @error('tiles_per_box')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="tile_area" class="form-label">مساحة القطعة الواحدة (م²)</label>
+                    <input type="number" step="0.0001" name="tile_area" id="tile_area" class="form-control" value="{{ old('tile_area', $product->tile_area) }}" min="0">
+                    @error('tile_area')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+            @endif
+
             <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">⚙️ الإعدادات</h3>
 

@@ -29,6 +29,7 @@ class Customer extends Model
         'credit_limit',
         'current_balance',
         'payment_terms_days',
+        'fixed_discount',
         'target_amount',
         'target_discount_percentage',
         'target_paid_amount',
@@ -41,6 +42,7 @@ class Customer extends Model
     protected $casts = [
         'credit_limit' => 'decimal:2',
         'current_balance' => 'decimal:2',
+        'fixed_discount' => 'decimal:2',
         'target_amount' => 'decimal:2',
         'target_discount_percentage' => 'decimal:2',
         'target_paid_amount' => 'decimal:2',

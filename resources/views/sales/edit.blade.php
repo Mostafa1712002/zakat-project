@@ -30,6 +30,7 @@
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'discount_amount' => $item->discount_amount ?? 0,
+                'grade_id' => $item->grade_id ?? null,
             ];
         })->toArray();
     }
@@ -154,12 +155,21 @@
                     <thead>
                         <tr>
                             <th style="width: 28%;">الصنف</th>
-                            <th style="width: 12%;">المتاح</th>
-                            <th style="width: 12%;">الكمية</th>
-                            <th style="width: 15%;">سعر الوحدة</th>
-                            <th style="width: 13%;">أقل سعر</th>
-                            <th style="width: 12%;">الإجمالي</th>
-                            <th style="width: 8%;"></th>
+                            @if(feature_enabled('grade_system'))
+                            <th style="width: 10%;">الفرز</th>
+                            @endif
+                            <th style="width: 8%;">المتاح</th>
+                            <th style="width: 10%;">الكمية</th>
+                            <th style="width: 12%;">سعر الوحدة</th>
+                            <th style="width: 10%;">أقل سعر</th>
+                            @if(feature_enabled('per_item_discount'))
+                            <th style="width: 10%;">الخصم</th>
+                            @endif
+                            @if(feature_enabled('tile_area_tracking'))
+                            <th style="width: 10%;">المساحة</th>
+                            @endif
+                            <th style="width: 10%;">الإجمالي</th>
+                            <th style="width: 5%;"></th>
                         </tr>
                     </thead>
                     <tbody id="itemsBody">
@@ -175,8 +185,20 @@
                                     @endforeach
                                 </select>
                                 <input type="hidden" name="items[{{ $index }}][price_type]" value="retail">
+                                @unless(feature_enabled('per_item_discount'))
                                 <input type="hidden" name="items[{{ $index }}][discount_amount]" class="discount-input" value="{{ $item['discount_amount'] ?? 0 }}">
+                                @endunless
                             </td>
+                            @if(feature_enabled('grade_system'))
+                            <td>
+                                <select name="items[{{ $index }}][grade_id]" class="form-control grade-select" style="font-size: 12px; padding: 6px;">
+                                    <option value="">-</option>
+                                    @foreach($grades as $grade)
+                                        <option value="{{ $grade->id }}" {{ ($item['grade_id'] ?? null) == $grade->id ? 'selected' : '' }}>{{ $grade->name_ar ?? $grade->name }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            @endif
                             <td>
                                 <span class="stock-display badge badge-secondary">-</span>
                             </td>
@@ -189,6 +211,16 @@
                             <td>
                                 <span class="min-price-display badge badge-secondary">-</span>
                             </td>
+                            @if(feature_enabled('per_item_discount'))
+                            <td>
+                                <input type="number" name="items[{{ $index }}][discount_amount]" class="form-control discount-input" value="{{ $item['discount_amount'] ?? 0 }}" min="0" step="0.01">
+                            </td>
+                            @endif
+                            @if(feature_enabled('tile_area_tracking'))
+                            <td>
+                                <span class="row-area">-</span> م²
+                            </td>
+                            @endif
                             <td>
                                 <span class="row-total">0.00</span> ج.م
                             </td>
@@ -200,7 +232,13 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="7">
+                            @php
+                                $colCount = 7;
+                                if (feature_enabled('per_item_discount')) $colCount++;
+                                if (feature_enabled('grade_system')) $colCount++;
+                                if (feature_enabled('tile_area_tracking')) $colCount++;
+                            @endphp
+                            <td colspan="{{ $colCount }}">
                                 <button type="button" class="btn btn-sm" id="addRowBtn">+ إضافة صنف</button>
                             </td>
                         </tr>
@@ -318,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const stockCache = {};
 
     // Products data with prices and min selling price
-    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'min_price' => $p->min_selling_price ?? 0, 'track' => $p->track_inventory]]));
+    const productsData = @json($products->mapWithKeys(fn($p) => [$p->id => ['retail' => $p->selling_price, 'min_price' => $p->min_selling_price ?? 0, 'track' => $p->track_inventory, 'area_per_unit' => (float) ($p->area_per_unit ?? 0)]]));
 
     // Get stock API URL
     const getStockUrl = '{{ route("sales.get-stock") }}';
@@ -495,12 +533,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    const tileAreaEnabled = @json(feature_enabled('tile_area_tracking'));
+
     function calculateRowTotal(row) {
         const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
         const price = parseFloat(row.querySelector('.price-input').value) || 0;
-        const total = qty * price;
-        row.querySelector('.row-total').textContent = total.toFixed(2);
-        return total;
+        const discountInput = row.querySelector('.discount-input');
+        const discount = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
+        const total = (qty * price) - discount;
+        row.querySelector('.row-total').textContent = Math.max(0, total).toFixed(2);
+
+        // Update area display
+        if (tileAreaEnabled) {
+            const areaDisplay = row.querySelector('.row-area');
+            if (areaDisplay) {
+                const productId = row.querySelector('.product-select').value;
+                const product = productsData[productId];
+                if (product && product.area_per_unit > 0) {
+                    areaDisplay.textContent = (qty * product.area_per_unit).toFixed(2);
+                } else {
+                    areaDisplay.textContent = '-';
+                }
+            }
+        }
+
+        return Math.max(0, total);
     }
 
     function calculateTotals() {
@@ -524,7 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateStockDisplay(row);
         });
 
-        row.querySelectorAll('.quantity-input, .price-input').forEach(input => {
+        row.querySelectorAll('.quantity-input, .price-input, .discount-input').forEach(input => {
             input.addEventListener('input', calculateTotals);
         });
 

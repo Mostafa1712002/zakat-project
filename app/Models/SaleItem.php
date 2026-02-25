@@ -26,6 +26,8 @@ class SaleItem extends Model
         'tax_amount',
         'subtotal',
         'total',
+        'total_area',
+        'grade_id',
         'notes',
     ];
 
@@ -39,6 +41,7 @@ class SaleItem extends Model
         'tax_amount' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'total' => 'decimal:2',
+        'total_area' => 'decimal:4',
     ];
 
     public function sale(): BelongsTo
@@ -49,6 +52,11 @@ class SaleItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function grade(): BelongsTo
+    {
+        return $this->belongsTo(Grade::class);
     }
 
     public function returnItems(): HasMany

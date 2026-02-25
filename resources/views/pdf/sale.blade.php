@@ -335,11 +335,19 @@
         <thead>
             <tr>
                 <th style="width: 6%;">#</th>
-                <th style="width: 38%;">الصنف</th>
-                <th style="width: 12%;">الكمية</th>
-                <th style="width: 16%;">سعر الوحدة</th>
-                <th style="width: 12%;">الخصم</th>
-                <th style="width: 16%;">الإجمالي</th>
+                <th>الصنف</th>
+                @if(feature_enabled('grade_system'))
+                <th style="width: 10%;">الفرز</th>
+                @endif
+                <th style="width: 10%;">الكمية</th>
+                <th style="width: 14%;">سعر الوحدة</th>
+                @if(feature_enabled('per_item_discount'))
+                <th style="width: 10%;">الخصم</th>
+                @endif
+                @if(feature_enabled('tile_area_tracking'))
+                <th style="width: 10%;">المساحة</th>
+                @endif
+                <th style="width: 14%;">الإجمالي</th>
             </tr>
         </thead>
         <tbody>
@@ -347,9 +355,17 @@
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td class="name">{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
+                @if(feature_enabled('grade_system'))
+                <td>{{ $item->grade->name_ar ?? $item->grade->name ?? '-' }}</td>
+                @endif
                 <td>{{ number_format($item->quantity, 2) }}</td>
                 <td>{{ number_format($item->unit_price, 2) }}</td>
+                @if(feature_enabled('per_item_discount'))
                 <td>{{ number_format($item->discount_amount, 2) }}</td>
+                @endif
+                @if(feature_enabled('tile_area_tracking'))
+                <td>{{ $item->total_area ? number_format($item->total_area, 2) : '-' }}</td>
+                @endif
                 <td>{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
             </tr>
             @endforeach
@@ -385,6 +401,24 @@
             @endif
         </table>
     </div>
+
+    @if(!empty($invoiceNote))
+    <div style="margin-bottom: 12px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11pt; color: #374151;">
+        <strong>ملاحظة:</strong> {{ $invoiceNote }}
+    </div>
+    @endif
+
+    @if(!empty($showCustomerBalance) && $sale->customer)
+    <div style="margin-bottom: 12px; padding: 10px 14px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 6px; font-size: 12pt;">
+        <strong>رصيد العميل:</strong> {{ number_format($sale->customer->current_balance, 2) }} ج.م
+    </div>
+    @endif
+
+    @if(!empty($invoiceFooter))
+    <div style="margin-bottom: 12px; text-align: center; font-size: 11pt; color: #6b7280;">
+        {{ $invoiceFooter }}
+    </div>
+    @endif
 
     <!-- Signatures -->
     <div class="signatures">

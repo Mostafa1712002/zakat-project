@@ -57,6 +57,35 @@ if (!function_exists('feature_name')) {
     }
 }
 
+if (!function_exists('customer_item_types')) {
+    /**
+     * الحصول على أنواع العملاء من الإعدادات
+     * كل موقع يحدد الأنواع بتاعته (rogence: fridge/special — syramik: trader/regular)
+     *
+     * @return array [['value' => 'fridge', 'label' => 'تلاجة'], ...]
+     */
+    function customer_item_types(): array
+    {
+        return \Illuminate\Support\Facades\Cache::remember('customer_item_types', 3600, function () {
+            try {
+                $json = \DB::table('settings')->where('key', 'customer_item_types')->value('value');
+                if ($json) {
+                    $types = json_decode($json, true);
+                    if (is_array($types) && !empty($types)) {
+                        return $types;
+                    }
+                }
+            } catch (\Exception $e) {}
+
+            // Default: rogence types
+            return [
+                ['value' => 'fridge', 'label' => 'تلاجة'],
+                ['value' => 'special', 'label' => 'خاص'],
+            ];
+        });
+    }
+}
+
 if (!function_exists('feature_icon')) {
     /**
      * الحصول على أيقونة الميزة

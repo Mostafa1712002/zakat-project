@@ -58,22 +58,25 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
             'tax_number' => 'nullable|string|max:50',
-            'item_type' => 'nullable|in:fridge,special',
+            'item_type' => 'nullable|in:' . implode(',', array_column(customer_item_types(), 'value')),
             'price_tier' => 'nullable|in:retail,wholesale,special',
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms_days' => 'nullable|integer|min:0',
-            'target_amount' => 'nullable|numeric|min:0',
-            'target_discount_percentage' => 'nullable|numeric|min:0|max:100',
             'branch_id' => 'nullable|exists:branches,id',
             'sales_rep_id' => 'nullable|exists:sales_reps,id',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
-        ]);
+        ] + (feature_enabled('customer_target') ? [
+            'target_amount' => 'nullable|numeric|min:0',
+            'target_discount_percentage' => 'nullable|numeric|min:0|max:100',
+        ] : []));
 
         $validated['type'] = 'retail';
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['current_balance'] = 0;
-        $validated['target_paid_amount'] = 0;
+        if (feature_enabled('customer_target')) {
+            $validated['target_paid_amount'] = 0;
+        }
         if (empty($validated['price_tier'] ?? null)) {
             $validated['price_tier'] = 'retail';
         }
@@ -154,17 +157,18 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
             'tax_number' => 'nullable|string|max:50',
-            'item_type' => 'nullable|in:fridge,special',
+            'item_type' => 'nullable|in:' . implode(',', array_column(customer_item_types(), 'value')),
             'price_tier' => 'nullable|in:retail,wholesale,special',
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms_days' => 'nullable|integer|min:0',
-            'target_amount' => 'nullable|numeric|min:0',
-            'target_discount_percentage' => 'nullable|numeric|min:0|max:100',
             'branch_id' => 'nullable|exists:branches,id',
             'sales_rep_id' => 'nullable|exists:sales_reps,id',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
-        ]);
+        ] + (feature_enabled('customer_target') ? [
+            'target_amount' => 'nullable|numeric|min:0',
+            'target_discount_percentage' => 'nullable|numeric|min:0|max:100',
+        ] : []));
 
         $validated['type'] = 'retail';
         $validated['is_active'] = $request->boolean('is_active');

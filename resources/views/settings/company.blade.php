@@ -183,6 +183,92 @@
 
             <button type="button" class="btn" onclick="addContact()" style="margin-bottom: 16px;">+ إضافة جهة اتصال</button>
 
+            @if(feature_enabled('color_palette'))
+            <hr style="margin: 24px 0; border-color: var(--border-color);">
+            <h3 style="margin-bottom: 16px;">🎨 ألوان الموقع</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="color_primary" class="form-label">اللون الأساسي</label>
+                    <input type="color" name="color_primary" id="color_primary" class="form-control" value="{{ old('color_primary', $settings['color_primary'] ?? '#0891b2') }}" style="height: 46px; padding: 4px;">
+                    @error('color_primary')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="color_primary_dark" class="form-label">اللون الأساسي (داكن)</label>
+                    <input type="color" name="color_primary_dark" id="color_primary_dark" class="form-control" value="{{ old('color_primary_dark', $settings['color_primary_dark'] ?? '#0e7490') }}" style="height: 46px; padding: 4px;">
+                    @error('color_primary_dark')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="color_primary_light" class="form-label">اللون الأساسي (فاتح)</label>
+                    <input type="color" name="color_primary_light" id="color_primary_light" class="form-control" value="{{ old('color_primary_light', $settings['color_primary_light'] ?? '#06b6d4') }}" style="height: 46px; padding: 4px;">
+                    @error('color_primary_light')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+            @endif
+
+            @if(feature_enabled('invoice_customization'))
+            <hr style="margin: 24px 0; border-color: var(--border-color);">
+            <h3 style="margin-bottom: 16px;">📝 تخصيص الفواتير</h3>
+
+            <div class="form-group">
+                <label for="invoice_note" class="form-label">ملاحظة الفاتورة</label>
+                <textarea name="invoice_note" id="invoice_note" class="form-control" rows="2" placeholder="ملاحظة تظهر أسفل الفاتورة">{{ old('invoice_note', $settings['invoice_note'] ?? '') }}</textarea>
+                <small style="color: #64748b; font-size: 12px;">تظهر في كل فاتورة مطبوعة</small>
+                @error('invoice_note')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label for="invoice_footer" class="form-label">فوتر الفاتورة</label>
+                <textarea name="invoice_footer" id="invoice_footer" class="form-control" rows="2" placeholder="نص يظهر في أسفل الفاتورة">{{ old('invoice_footer', $settings['invoice_footer'] ?? '') }}</textarea>
+                @error('invoice_footer')
+                    <div class="form-error">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="show_customer_balance" value="1" {{ old('show_customer_balance', $settings['show_customer_balance'] ?? '0') == '1' ? 'checked' : '' }}>
+                    <span>عرض رصيد العميل في الفاتورة</span>
+                </label>
+            </div>
+            @endif
+
+            <hr style="margin: 24px 0; border-color: var(--border-color);">
+            <h3 style="margin-bottom: 16px;">👥 أنواع العملاء</h3>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 12px;">تحديد أنواع (تصنيفات) العملاء المتاحة في النظام</p>
+
+            <div id="item-types-container">
+                @php
+                    $existingTypes = [];
+                    if (!empty($settings['customer_item_types'])) {
+                        $decoded = json_decode($settings['customer_item_types'], true);
+                        if (is_array($decoded)) $existingTypes = $decoded;
+                    }
+                    if (empty($existingTypes)) {
+                        $existingTypes = customer_item_types();
+                    }
+                @endphp
+                @foreach($existingTypes as $tIdx => $type)
+                <div class="item-type-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px;">
+                    <input type="text" name="customer_item_types[{{ $tIdx }}][value]" class="form-control" placeholder="القيمة (بالإنجليزية)" value="{{ $type['value'] ?? '' }}" style="flex: 1;" dir="ltr">
+                    <input type="text" name="customer_item_types[{{ $tIdx }}][label]" class="form-control" placeholder="الاسم (بالعربية)" value="{{ $type['label'] ?? '' }}" style="flex: 1;">
+                    <button type="button" class="btn" onclick="removeItemType(this)" style="padding: 8px 12px; color: #dc2626;">✕</button>
+                </div>
+                @endforeach
+            </div>
+
+            <button type="button" class="btn" onclick="addItemType()" style="margin-bottom: 16px;">+ إضافة نوع</button>
+
             <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">💰 إعدادات مالية</h3>
 
@@ -317,6 +403,24 @@ function addContact() {
 }
 
 function removeContact(btn) {
+    btn.parentElement.remove();
+}
+
+var itemTypeIndex = {{ count($existingTypes) }};
+
+function addItemType() {
+    var container = document.getElementById('item-types-container');
+    var row = document.createElement('div');
+    row.className = 'item-type-row';
+    row.style.cssText = 'display: flex; gap: 12px; align-items: center; margin-bottom: 10px;';
+    row.innerHTML = '<input type="text" name="customer_item_types[' + itemTypeIndex + '][value]" class="form-control" placeholder="القيمة (بالإنجليزية)" style="flex: 1;" dir="ltr">' +
+        '<input type="text" name="customer_item_types[' + itemTypeIndex + '][label]" class="form-control" placeholder="الاسم (بالعربية)" style="flex: 1;">' +
+        '<button type="button" class="btn" onclick="removeItemType(this)" style="padding: 8px 12px; color: #dc2626;">✕</button>';
+    container.appendChild(row);
+    itemTypeIndex++;
+}
+
+function removeItemType(btn) {
     btn.parentElement.remove();
 }
 

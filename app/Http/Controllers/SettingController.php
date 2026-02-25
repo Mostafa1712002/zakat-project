@@ -58,6 +58,17 @@ class SettingController extends Controller
             'contacts' => 'nullable|array',
             'contacts.*.name' => 'nullable|string|max:255',
             'contacts.*.phone' => 'nullable|string|max:20',
+            // Color palette
+            'color_primary' => 'nullable|string|max:20',
+            'color_primary_dark' => 'nullable|string|max:20',
+            'color_primary_light' => 'nullable|string|max:20',
+            // Invoice customization
+            'invoice_note' => 'nullable|string|max:1000',
+            'show_customer_balance' => 'nullable|boolean',
+            // Customer item types
+            'customer_item_types' => 'nullable|array',
+            'customer_item_types.*.value' => 'nullable|string|max:50',
+            'customer_item_types.*.label' => 'nullable|string|max:100',
         ]);
 
         // Save invoice contacts as JSON
@@ -66,8 +77,19 @@ class SettingController extends Controller
         $contacts = array_values(array_filter($contacts, fn($c) => !empty($c['name']) && !empty($c['phone'])));
         $this->setSetting('invoice_contacts', json_encode($contacts, JSON_UNESCAPED_UNICODE));
 
+        // Handle checkbox fields (not in $validated if unchecked)
+        $this->setSetting('show_customer_balance', $request->boolean('show_customer_balance') ? '1' : '0');
+
+        // Save customer item types as JSON
+        $itemTypes = $request->input('customer_item_types', []);
+        $itemTypes = array_values(array_filter($itemTypes, fn($t) => !empty($t['value']) && !empty($t['label'])));
+        if (!empty($itemTypes)) {
+            $this->setSetting('customer_item_types', json_encode($itemTypes, JSON_UNESCAPED_UNICODE));
+            Cache::forget('customer_item_types');
+        }
+
         // Exclude file fields and contacts from text settings
-        $fileFields = ['logo', 'stamp', 'contacts'];
+        $fileFields = ['logo', 'stamp', 'contacts', 'show_customer_balance', 'customer_item_types'];
         foreach ($validated as $key => $value) {
             if (!in_array($key, $fileFields)) {
                 $this->setSetting($key, $value);
@@ -447,6 +469,12 @@ class SettingController extends Controller
                 'invoice_footer' => $this->getSetting('invoice_footer', ''),
                 'invoice_terms' => $this->getSetting('invoice_terms', ''),
                 'invoice_contacts' => $this->getSetting('invoice_contacts', '[]'),
+                'color_primary' => $this->getSetting('color_primary', '#0891b2'),
+                'color_primary_dark' => $this->getSetting('color_primary_dark', '#0e7490'),
+                'color_primary_light' => $this->getSetting('color_primary_light', '#06b6d4'),
+                'invoice_note' => $this->getSetting('invoice_note', ''),
+                'show_customer_balance' => $this->getSetting('show_customer_balance', '0'),
+                'customer_item_types' => $this->getSetting('customer_item_types', ''),
             ];
         });
     }

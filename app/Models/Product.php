@@ -34,6 +34,9 @@ class Product extends Model
         'is_active',
         'track_inventory',
         'notes',
+        'area_per_unit',
+        'tiles_per_box',
+        'tile_area',
     ];
 
     protected $casts = [
@@ -45,6 +48,9 @@ class Product extends Model
         'is_taxable' => 'boolean',
         'is_active' => 'boolean',
         'track_inventory' => 'boolean',
+        'area_per_unit' => 'decimal:4',
+        'tiles_per_box' => 'integer',
+        'tile_area' => 'decimal:4',
     ];
 
     public function category(): BelongsTo

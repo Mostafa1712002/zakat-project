@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\InventoryLevel;
 use App\Models\SalesRepInventory;
 use App\Models\SalesRepStockMovement;
+use App\Models\Grade;
 
 class SaleController extends Controller
 {
@@ -130,7 +131,9 @@ class SaleController extends Controller
             $useSalesRepInventory = false;
         }
 
-        return view('sales.create', compact('customers', 'products', 'warehouses', 'branches', 'salesReps', 'currentSalesRep', 'useSalesRepInventory'));
+        $grades = feature_enabled('grade_system') ? Grade::active()->ordered()->get() : collect();
+
+        return view('sales.create', compact('customers', 'products', 'warehouses', 'branches', 'salesReps', 'currentSalesRep', 'useSalesRepInventory', 'grades'));
     }
 
     /**
@@ -160,6 +163,7 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.discount_amount' => 'nullable|numeric|min:0',
+            'items.*.grade_id' => 'nullable|exists:grades,id',
             // Advance payment for credit sales
             'advance_payment' => 'nullable|numeric|min:0',
             'advance_payment_method' => 'nullable|in:cash,bank_transfer,instapay,vodafone_cash,card',
@@ -246,7 +250,7 @@ class SaleController extends Controller
                 $taxAmount = $product->is_taxable ? ($subtotal - $discount) * ($product->tax_rate / 100) : 0;
                 $total = $subtotal - $discount + $taxAmount;
 
-                SaleItem::create([
+                $saleItemData = [
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
                     'product_name' => $product->name,
@@ -259,7 +263,19 @@ class SaleController extends Controller
                     'tax_amount' => $taxAmount,
                     'subtotal' => $subtotal,
                     'total' => $total,
-                ]);
+                ];
+
+                // حساب المساحة إذا كانت الميزة مفعلة
+                if (feature_enabled('tile_area_tracking') && $product->area_per_unit) {
+                    $saleItemData['total_area'] = $item['quantity'] * $product->area_per_unit;
+                }
+
+                // الفرز
+                if (feature_enabled('grade_system') && !empty($item['grade_id'])) {
+                    $saleItemData['grade_id'] = $item['grade_id'];
+                }
+
+                SaleItem::create($saleItemData);
             }
 
             // Calculate totals
@@ -267,7 +283,7 @@ class SaleController extends Controller
             $sale->save();
 
             // إنشاء تحصيل تلقائي للمبيعات النقدية
-            if ($validated['payment_type'] === 'cash' && $sale->total_amount > 0) {
+            if (feature_enabled('auto_cash_payment') && $validated['payment_type'] === 'cash' && $sale->total_amount > 0) {
                 $payment = Payment::create([
                     'payment_number' => Payment::generatePaymentNumber(Payment::TYPE_RECEIVED),
                     'payable_type' => Sale::class,
@@ -367,7 +383,11 @@ class SaleController extends Controller
             abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
         }
 
-        $sale->load(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'items.product', 'payments']);
+        $itemRelations = ['items.product'];
+        if (feature_enabled('grade_system')) {
+            $itemRelations[] = 'items.grade';
+        }
+        $sale->load(array_merge(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'payments'], $itemRelations));
 
         $supervisorPhone = '';
         $companyName = '';
@@ -404,7 +424,11 @@ class SaleController extends Controller
         }
 
         $user = auth()->user();
-        $sale->load('items.product');
+        $editItemRelations = ['items.product'];
+        if (feature_enabled('grade_system')) {
+            $editItemRelations[] = 'items.grade';
+        }
+        $sale->load($editItemRelations);
         $products = Product::active()->with('unit')->get();
         $branches = Branch::where('is_active', true)->get();
 
@@ -420,7 +444,9 @@ class SaleController extends Controller
             $salesReps = SalesRep::where('is_active', true)->get();
         }
 
-        return view('sales.edit', compact('sale', 'customers', 'products', 'warehouses', 'branches', 'salesReps'));
+        $grades = feature_enabled('grade_system') ? Grade::active()->ordered()->get() : collect();
+
+        return view('sales.edit', compact('sale', 'customers', 'products', 'warehouses', 'branches', 'salesReps', 'grades'));
     }
 
     /**
@@ -460,6 +486,7 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.discount_amount' => 'nullable|numeric|min:0',
+            'items.*.grade_id' => 'nullable|exists:grades,id',
         ]);
 
         // التحقق من توفر الكميات في المخزن
@@ -521,7 +548,7 @@ class SaleController extends Controller
                 $taxAmount = $product->is_taxable ? ($subtotal - $discount) * ($product->tax_rate / 100) : 0;
                 $total = $subtotal - $discount + $taxAmount;
 
-                SaleItem::create([
+                $saleItemData = [
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
                     'product_name' => $product->name,
@@ -534,7 +561,17 @@ class SaleController extends Controller
                     'tax_amount' => $taxAmount,
                     'subtotal' => $subtotal,
                     'total' => $total,
-                ]);
+                ];
+
+                if (feature_enabled('tile_area_tracking') && $product->area_per_unit) {
+                    $saleItemData['total_area'] = $item['quantity'] * $product->area_per_unit;
+                }
+
+                if (feature_enabled('grade_system') && !empty($item['grade_id'])) {
+                    $saleItemData['grade_id'] = $item['grade_id'];
+                }
+
+                SaleItem::create($saleItemData);
             }
 
             // Recalculate totals
@@ -683,15 +720,22 @@ class SaleController extends Controller
             abort(403, 'ليس لديك صلاحية للوصول لهذه الفاتورة');
         }
 
-        $sale->load(['customer', 'branch', 'warehouse', 'salesRep', 'user', 'items.product']);
+        $pdfItemRelations = ['items.product'];
+        if (feature_enabled('grade_system')) {
+            $pdfItemRelations[] = 'items.grade';
+        }
+        $sale->load(array_merge(['customer', 'branch', 'warehouse', 'salesRep', 'user'], $pdfItemRelations));
 
         $companyName = '';
         $companyLogo = '';
         $companyStamp = '';
         $invoiceContacts = [];
+        $invoiceNote = '';
+        $invoiceFooter = '';
+        $showCustomerBalance = false;
         try {
             $settings = \DB::table('settings')
-                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp', 'invoice_contacts'])
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp', 'invoice_contacts', 'invoice_note', 'invoice_footer', 'show_customer_balance'])
                 ->pluck('value', 'key');
             $companyName = $settings['company_name'] ?? '';
             $companyName = preg_replace('/[\x{1F000}-\x{1FFFF}|\x{2600}-\x{27FF}|\x{FE00}-\x{FEFF}]/u', '', $companyName);
@@ -699,9 +743,14 @@ class SaleController extends Controller
             $companyLogo = $settings['company_logo'] ?? '';
             $companyStamp = $settings['company_stamp'] ?? '';
             $invoiceContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: [];
+            if (feature_enabled('invoice_customization')) {
+                $invoiceNote = $settings['invoice_note'] ?? '';
+                $invoiceFooter = $settings['invoice_footer'] ?? '';
+                $showCustomerBalance = ($settings['show_customer_balance'] ?? '0') === '1';
+            }
         } catch (\Exception $e) {}
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts'));
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts', 'invoiceNote', 'invoiceFooter', 'showCustomerBalance'));
 
         $pdf->setOption('page-size', 'A4');
         $pdf->setOption('encoding', 'UTF-8');

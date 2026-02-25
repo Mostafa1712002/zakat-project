@@ -67,9 +67,17 @@
                     <tr>
                         <th>#</th>
                         <th>الصنف</th>
+                        @if(feature_enabled('grade_system'))
+                        <th>الفرز</th>
+                        @endif
                         <th>الكمية</th>
                         <th>سعر الوحدة</th>
+                        @if(feature_enabled('per_item_discount'))
                         <th>الخصم</th>
+                        @endif
+                        @if(feature_enabled('tile_area_tracking'))
+                        <th>المساحة</th>
+                        @endif
                         <th>الإجمالي</th>
                     </tr>
                 </thead>
@@ -78,9 +86,17 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
+                        @if(feature_enabled('grade_system'))
+                        <td>{{ $item->grade->name_ar ?? $item->grade->name ?? '-' }}</td>
+                        @endif
                         <td>{{ number_format($item->quantity, 2) }}</td>
                         <td>{{ number_format($item->unit_price, 2) }}</td>
+                        @if(feature_enabled('per_item_discount'))
                         <td>{{ number_format($item->discount_amount, 2) }}</td>
+                        @endif
+                        @if(feature_enabled('tile_area_tracking'))
+                        <td>{{ $item->total_area ? number_format($item->total_area, 2) . ' م²' : '-' }}</td>
+                        @endif
                         <td>{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
                     </tr>
                     @endforeach
@@ -238,9 +254,17 @@
                         <tr>
                             <th>#</th>
                             <th>الصنف</th>
+                            @if(feature_enabled('grade_system'))
+                            <th>الفرز</th>
+                            @endif
                             <th>الكمية</th>
                             <th>سعر الوحدة</th>
+                            @if(feature_enabled('per_item_discount'))
                             <th>الخصم</th>
+                            @endif
+                            @if(feature_enabled('tile_area_tracking'))
+                            <th>المساحة</th>
+                            @endif
                             <th class="no-print">الضريبة</th>
                             <th>الإجمالي</th>
                         </tr>
@@ -250,40 +274,54 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td class="item-name">{{ $item->product->name ?? $item->product_name ?? '-' }}</td>
+                            @if(feature_enabled('grade_system'))
+                            <td>{{ $item->grade->name_ar ?? $item->grade->name ?? '-' }}</td>
+                            @endif
                             <td>{{ number_format($item->quantity, 2) }}</td>
                             <td>{{ number_format($item->unit_price, 2) }}</td>
+                            @if(feature_enabled('per_item_discount'))
                             <td>{{ number_format($item->discount_amount, 2) }}</td>
+                            @endif
+                            @if(feature_enabled('tile_area_tracking'))
+                            <td>{{ $item->total_area ? number_format($item->total_area, 2) . ' م²' : '-' }}</td>
+                            @endif
                             <td class="no-print">{{ number_format($item->tax_amount, 2) }}</td>
                             <td class="item-total">{{ number_format($item->total ?? $item->subtotal, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
+                    @php
+                        $showColCount = 5;
+                        if (feature_enabled('grade_system')) $showColCount++;
+                        if (feature_enabled('per_item_discount')) $showColCount++;
+                        if (feature_enabled('tile_area_tracking')) $showColCount++;
+                    @endphp
                     <tfoot>
                         <tr class="subtotal-row">
-                            <td colspan="5" class="text-left"><strong>الإجمالي الفرعي</strong></td>
+                            <td colspan="{{ $showColCount }}" class="text-left"><strong>الإجمالي الفرعي</strong></td>
                             <td class="no-print"></td>
                             <td><strong>{{ number_format($sale->subtotal, 2) }} ج.م</strong></td>
                         </tr>
                         @if($sale->discount_amount > 0)
                         <tr>
-                            <td colspan="5" class="text-left">الخصم</td>
+                            <td colspan="{{ $showColCount }}" class="text-left">الخصم</td>
                             <td class="no-print"></td>
                             <td class="discount">- {{ number_format($sale->discount_amount, 2) }} ج.م</td>
                         </tr>
                         @endif
                         <tr class="grand-total-row">
-                            <td colspan="5" class="text-left"><strong>الإجمالي النهائي</strong></td>
+                            <td colspan="{{ $showColCount }}" class="text-left"><strong>الإجمالي النهائي</strong></td>
                             <td class="no-print"></td>
                             <td class="grand-total"><strong>{{ number_format($sale->total_amount, 2) }} ج.م</strong></td>
                         </tr>
                         @if($sale->paid_amount > 0)
                         <tr>
-                            <td colspan="5" class="text-left">المدفوع</td>
+                            <td colspan="{{ $showColCount }}" class="text-left">المدفوع</td>
                             <td class="no-print"></td>
                             <td class="paid">{{ number_format($sale->paid_amount, 2) }} ج.م</td>
                         </tr>
                         <tr>
-                            <td colspan="5" class="text-left"><strong>المتبقي</strong></td>
+                            <td colspan="{{ $showColCount }}" class="text-left"><strong>المتبقي</strong></td>
                             <td class="no-print"></td>
                             <td class="remaining"><strong>{{ number_format($sale->remaining_amount, 2) }} ج.م</strong></td>
                         </tr>
