@@ -13,7 +13,7 @@
 
 | البند | Rogence | Syramik | Demo Sibakuh |
 |-------|---------|---------|--------------|
-| **البرنش على السيرفر** | `main` | `syramik` | `demo-sibakuh` |
+| **البرنش على السيرفر** | `rogence` | `syramik` | `demo-sibakuh` |
 | **آخر commit** | `a0ab450` | `2a61fa1` | `f7d0477` |
 | **SITE_PROFILE** | غير مضبوط | غير مضبوط | غير مضبوط |
 | **Features table** | 0 rows | 0 rows | 28 rows (مفعلة) |
@@ -21,9 +21,9 @@
 
 ### ملاحظات عن الحالة الحالية
 
-- **الكود الموحد مع Feature Flags الجديدة** موجود محلياً على `main` ولم يتم نشره بعد.
-- **Rogence**: يشتغل على `main` بالكود القديم بدون feature flags.
-- **Syramik**: يشتغل على برنش `syramik` بكود مختلف تماماً (67 commit زيادة).
+- **`main`** هو الكود الأساسي الموحد فيه كل الميزات (لا يُنشر مباشرة).
+- **Rogence**: يشتغل على برنش `rogence` الخاص بيه.
+- **Syramik**: يشتغل على برنش `syramik`.
 - **Demo Sibakuh**: يشتغل على برنش `demo-sibakuh` وعنده features table مفعلة (28 feature) بما فيها `grades`, `tile_area`, `pallet_option`.
 
 ---
@@ -192,26 +192,66 @@
 
 ## النشر (Deployment)
 
+### الأوامر
+
 ```bash
-# نشر على rogence
+# نشر على منصة واحدة
 ./deploy.sh rogence
-
-# نشر على syramik
 ./deploy.sh syramik
-
-# نشر على demo-sibakuh
 ./deploy.sh demo-sibakuh
 
+# نشر على كل المنصات دفعة واحدة
+./deploy.sh all
+
 # اكتشاف تلقائي من البرنش الحالي
-./deploy.sh
+git checkout syramik && ./deploy.sh
 ```
 
-### خطوات النشر التلقائية:
-1. `git push origin <branch>`
-2. `git pull origin <branch>` على السيرفر
-3. `php artisan migrate --force`
-4. `php artisan db:seed --class=FeatureSeeder --force`
-5. مسح الكاش (config, view, route, cache)
+> **ملاحظة**: `main` ليس له deploy target. لازم تحدد المنصة أو تكون على برنش المنصة.
+
+### آلية النشر (deploy.sh)
+
+السكريبت بيعمل الخطوات دي تلقائياً:
+
+1. `git push origin <branch>` — رفع التغييرات للـ remote
+2. `git fetch origin <branch>` — جلب آخر التحديثات على السيرفر
+3. `git reset --hard origin/<branch>` — مزامنة السيرفر مع الـ remote (يتجنب مشكلة divergent branches)
+4. `php artisan migrate --force` — تشغيل الـ migrations
+5. `php artisan db:seed --class=FeatureSeeder --force` — تحديث الـ features
+6. مسح الكاش (cache, config, view, route)
+
+### لماذا `fetch + reset --hard` بدل `pull`؟
+
+لو حصل أي تعديل يدوي على السيرفر (حتى لو بسيط) الـ `git pull` بيفشل بخطأ:
+```
+fatal: Need to specify how to reconcile divergent branches.
+```
+استخدام `fetch + reset --hard` بيتجاوز المشكلة دي لأنه بيفرض الكود اللي على الـ remote بدون محاولة دمج.
+
+### هيكل البرنشات
+
+```
+main (الكود الأساسي - كل الميزات - لا يُنشر مباشرة)
+ ├── rogence      → rogence.newaves-systems.com
+ ├── syramik      → syramik.newaves-systems.com
+ └── demo-sibakuh → demo-sibakuh.newaves-systems.com
+```
+
+**قاعدة مهمة**: كل منصة ليها برنش مستقل. **لا تعمل merge بين البرنشات**. لنقل إصلاح لكل المنصات:
+```bash
+# 1. اعمل الإصلاح على main
+git checkout main
+# ... عدّل الكود ...
+git commit -m "Fix something"
+
+# 2. انقل الإصلاح لكل منصة
+git checkout rogence && git cherry-pick <commit-hash>
+git checkout syramik && git cherry-pick <commit-hash>
+git checkout demo-sibakuh && git cherry-pick <commit-hash>
+
+# 3. انشر الكل
+git checkout main && ./deploy.sh all
+```
 
 ### أول نشر بعد الانتقال (مرة واحدة لكل سيرفر):
 1. أضف `SITE_PROFILE=<name>` في ملف `.env` على السيرفر
@@ -220,9 +260,9 @@
 
 ### إعداد منصة جديدة:
 1. أنشئ برنش جديد: `git checkout -b <branch-name>`
-2. أضف `SITE_PROFILE=<name>` في ملف `.env` على السيرفر
-3. أضف الـ profile الجديد في `SiteFeatureSeeder.php`
-4. أضف الموقع في `deploy.sh` (array `SITES`)
+2. أضف الموقع في `deploy.sh` (arrays: `SITES` و `BRANCH_TO_SITE`)
+3. أضف `SITE_PROFILE=<name>` في ملف `.env` على السيرفر
+4. أضف الـ profile الجديد في `SiteFeatureSeeder.php`
 5. شغل `php artisan db:seed --class=FeatureSeeder --force`
 6. شغل `php artisan db:seed --class=SiteFeatureSeeder --force`
 
