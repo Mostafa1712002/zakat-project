@@ -18,7 +18,7 @@ set -e
 #   demo-sibakuh → demo-sibakuh site
 # ===================================================
 
-SERVER="root@rogence.newaves-systems.com"
+SERVER="root@161.35.211.31"
 
 # Site → Remote path mapping
 declare -A SITES=(
@@ -54,6 +54,7 @@ deploy_site() {
         git reset --hard origin/$DEPLOY_BRANCH
         php artisan migrate --force
         php artisan db:seed --class=FeatureSeeder --force
+        php artisan db:seed --class=SiteFeatureSeeder --force
         php artisan cache:clear
         php artisan config:clear
         php artisan view:clear
