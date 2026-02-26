@@ -9,16 +9,34 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::withCount('suppliedProducts')
+        $query = Supplier::withCount('suppliedProducts')
             ->withSum(['purchases as total_remaining' => function ($q) {
                 $q->whereIn('payment_status', ['unpaid', 'partial'])
                   ->where('status', '!=', 'cancelled')
                   ->where('remaining_amount', '>', 0);
-            }], 'remaining_amount')
-            ->orderBy('name')
-            ->paginate(20);
+            }], 'remaining_amount');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('phone', 'like', "%{$request->search}%")
+                  ->orWhere('mobile', 'like', "%{$request->search}%");
+            });
+        }
+
+        if ($request->has('is_active') && $request->is_active !== '') {
+            $query->where('is_active', $request->is_active);
+        }
+
+        if ($request->balance === 'has_balance') {
+            $query->having('total_remaining', '>', 0);
+        } elseif ($request->balance === 'no_balance') {
+            $query->havingRaw('COALESCE(total_remaining, 0) <= 0');
+        }
+
+        $suppliers = $query->orderBy('name')->paginate(20);
         return view('suppliers.index', compact('suppliers'));
     }
 

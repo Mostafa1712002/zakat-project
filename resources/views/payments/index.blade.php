@@ -17,27 +17,20 @@
 </div>
 
 <!-- Filters -->
-<div class="card mb-4">
+<div class="card" style="margin-bottom: 20px;">
     <div class="card-body">
-        <form action="{{ route('payments.index') }}" method="GET" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
-            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
-                <label class="form-label">النوع</label>
+        <form action="{{ route('payments.index') }}" method="GET" class="filter-form">
+            <div class="filter-row">
                 <select name="type" class="form-control">
-                    <option value="">الكل</option>
+                    <option value="">كل الأنواع</option>
                     <option value="received" {{ request('type') === 'received' ? 'selected' : '' }}>تحصيلات</option>
                     <option value="paid" {{ request('type') === 'paid' ? 'selected' : '' }}>مدفوعات</option>
                 </select>
-            </div>
-            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
-                <label class="form-label">من تاريخ</label>
                 <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-            </div>
-            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
-                <label class="form-label">إلى تاريخ</label>
                 <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+                <button type="submit" class="btn btn-primary">بحث</button>
+                <a href="{{ route('payments.index') }}" class="btn">إعادة تعيين</a>
             </div>
-            <button type="submit" class="btn btn-primary">بحث</button>
-            <a href="{{ route('payments.index') }}" class="btn">إعادة تعيين</a>
         </form>
     </div>
 </div>
@@ -130,15 +123,9 @@
     </div>
 
     @if($payments->hasPages())
-    <div class="pagination">
-        {{ $payments->links() }}
+    <div class="card-footer">
+        {{ $payments->withQueryString()->links() }}
     </div>
     @endif
 </div>
 @endsection
-
-@push('styles')
-<style>
-    .mb-4 { margin-bottom: 20px; }
-</style>
-@endpush

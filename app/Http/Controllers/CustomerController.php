@@ -16,17 +16,34 @@ class CustomerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::with(['branch', 'salesRep'])
+        $query = Customer::with(['branch', 'salesRep'])
             ->withSum(['sales as total_remaining' => function ($q) {
                 $q->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
                   ->where('status', '!=', 'cancelled')
                   ->where('remaining_amount', '>', 0);
             }], 'remaining_amount')
-            ->forSalesRep()
-            ->latest()
-            ->paginate(15);
+            ->forSalesRep();
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('phone', 'like', "%{$request->search}%");
+            });
+        }
+
+        if ($request->item_type) {
+            $query->where('item_type', $request->item_type);
+        }
+
+        if ($request->balance === 'has_balance') {
+            $query->having('total_remaining', '>', 0);
+        } elseif ($request->balance === 'no_balance') {
+            $query->havingRaw('COALESCE(total_remaining, 0) <= 0');
+        }
+
+        $customers = $query->latest()->paginate(15);
 
         return view('customers.index', compact('customers'));
     }

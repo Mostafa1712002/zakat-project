@@ -13,8 +13,31 @@
     </div>
 </div>
 
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body">
+        <form action="{{ route('customers.index') }}" method="GET" class="filter-form">
+            <div class="filter-row">
+                <input type="text" name="search" class="form-control" placeholder="بحث بالاسم أو الهاتف..." value="{{ request('search') }}">
+                <select name="item_type" class="form-control">
+                    <option value="">كل الأصناف</option>
+                    @foreach(customer_item_types() as $type)
+                        <option value="{{ $type['value'] }}" {{ request('item_type') == $type['value'] ? 'selected' : '' }}>{{ $type['label'] }}</option>
+                    @endforeach
+                </select>
+                <select name="balance" class="form-control">
+                    <option value="">كل الأرصدة</option>
+                    <option value="has_balance" {{ request('balance') == 'has_balance' ? 'selected' : '' }}>عليه رصيد</option>
+                    <option value="no_balance" {{ request('balance') == 'no_balance' ? 'selected' : '' }}>بدون رصيد</option>
+                </select>
+                <button type="submit" class="btn btn-primary">بحث</button>
+                <a href="{{ route('customers.index') }}" class="btn">إعادة تعيين</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
-    <div class="table-container  overflow-auto">
+    <div class="table-container overflow-auto">
         <table class="table text-nowrap">
             <thead>
                 <tr>
@@ -114,8 +137,8 @@
     </div>
 
     @if($customers->hasPages())
-    <div class="pagination">
-        {{ $customers->links() }}
+    <div class="card-footer">
+        {{ $customers->withQueryString()->links() }}
     </div>
     @endif
 </div>

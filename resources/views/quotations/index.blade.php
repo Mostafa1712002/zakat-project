@@ -102,17 +102,9 @@
     </div>
 
     @if($quotations->hasPages())
-    <div class="pagination">
-        {{ $quotations->links() }}
+    <div class="card-footer">
+        {{ $quotations->withQueryString()->links() }}
     </div>
     @endif
 </div>
-
-<style>
-.filter-form { margin-bottom: 0; }
-.filter-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-.filter-row .form-control { max-width: 280px; }
-.btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; }
-.btn-success:hover { background: linear-gradient(135deg, #16a34a, #15803d); }
-</style>
 @endsection

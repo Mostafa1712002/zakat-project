@@ -128,21 +128,4 @@
     </div>
     @endif
 </div>
-
-<style>
-.filter-form { margin-bottom: 0; }
-.filter-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
-.filter-row .form-control { flex: 1; min-width: 120px; }
-.filter-row .btn { white-space: nowrap; }
-.table-actions { display: flex; gap: 0.25rem; flex-wrap: wrap; }
-.badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; }
-.badge-success { background: #10b981; color: white; }
-.badge-danger { background: #ef4444; color: white; }
-.badge-primary { background: #0891b2; color: white; }
-.badge-secondary { background: #64748b; color: white; }
-.alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-.alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-.alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-.text-muted { color: var(--text-muted); }
-</style>
 @endsection

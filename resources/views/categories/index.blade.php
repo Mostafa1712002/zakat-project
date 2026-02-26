@@ -13,8 +13,20 @@
     </div>
 </div>
 
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body">
+        <form action="{{ route('categories.index') }}" method="GET" class="filter-form">
+            <div class="filter-row">
+                <input type="text" name="search" class="form-control" placeholder="بحث باسم القسم..." value="{{ request('search') }}">
+                <button type="submit" class="btn btn-primary">بحث</button>
+                <a href="{{ route('categories.index') }}" class="btn">إعادة تعيين</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
-    <div class="table-container  overflow-auto">
+    <div class="table-container overflow-auto">
         <table class="table text-nowrap">
             <thead>
                 <tr>
@@ -62,8 +74,8 @@
     </div>
 
     @if($categories->hasPages())
-    <div class="pagination">
-        {{ $categories->links() }}
+    <div class="card-footer">
+        {{ $categories->withQueryString()->links() }}
     </div>
     @endif
 </div>

@@ -23,13 +23,36 @@ class SaleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $sales = Sale::with(['customer', 'branch', 'warehouse', 'user', 'salesRep'])
+        $query = Sale::with(['customer', 'branch', 'warehouse', 'user', 'salesRep'])
             ->where('is_quotation', false)
-            ->forSalesRep()
-            ->latest()
-            ->paginate(15);
+            ->forSalesRep();
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('invoice_number', 'like', "%{$request->search}%")
+                  ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$request->search}%"));
+            });
+        }
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->payment_status) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('invoice_date', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('invoice_date', '<=', $request->date_to);
+        }
+
+        $sales = $query->latest()->paginate(15);
 
         return view('sales.index', compact('sales'));
     }

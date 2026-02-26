@@ -13,6 +13,34 @@
     </div>
 </div>
 
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body">
+        <form action="{{ route('sales.index') }}" method="GET" class="filter-form">
+            <div class="filter-row">
+                <input type="text" name="search" class="form-control" placeholder="بحث برقم الفاتورة أو اسم العميل..." value="{{ request('search') }}">
+                <select name="status" class="form-control">
+                    <option value="">كل الحالات</option>
+                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
+                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>مؤكدة</option>
+                    <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>تم التسليم</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
+                </select>
+                <select name="payment_status" class="form-control">
+                    <option value="">كل حالات الدفع</option>
+                    <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>غير مدفوعة</option>
+                    <option value="partial" {{ request('payment_status') == 'partial' ? 'selected' : '' }}>جزئي</option>
+                    <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>مدفوعة</option>
+                    <option value="overdue" {{ request('payment_status') == 'overdue' ? 'selected' : '' }}>متأخرة</option>
+                </select>
+                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+                <button type="submit" class="btn btn-primary">بحث</button>
+                <a href="{{ route('sales.index') }}" class="btn">إعادة تعيين</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     <div class="table-container overflow-auto">
         <table class="table text-nowrap">
@@ -107,8 +135,8 @@
     </div>
 
     @if($sales->hasPages())
-    <div class="pagination">
-        {{ $sales->links() }}
+    <div class="card-footer">
+        {{ $sales->withQueryString()->links() }}
     </div>
     @endif
 </div>

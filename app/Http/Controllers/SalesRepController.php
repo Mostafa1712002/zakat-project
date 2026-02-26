@@ -16,12 +16,23 @@ use Spatie\Permission\Models\Role;
 
 class SalesRepController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $salesReps = SalesRep::with(['user', 'branch', 'warehouses'])
-            ->withCount(['customers', 'sales'])
-            ->orderBy('name')
-            ->paginate(20);
+        $query = SalesRep::with(['user', 'branch', 'warehouses'])
+            ->withCount(['customers', 'sales']);
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('code', 'like', "%{$request->search}%");
+            });
+        }
+
+        if ($request->has('is_active') && $request->is_active !== '') {
+            $query->where('is_active', $request->is_active);
+        }
+
+        $salesReps = $query->orderBy('name')->paginate(20);
 
         return view('sales-reps.index', compact('salesReps'));
     }

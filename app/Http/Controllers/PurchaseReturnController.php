@@ -26,8 +26,21 @@ class PurchaseReturnController extends Controller
             });
         }
 
+        if ($request->supplier_id) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('return_date', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('return_date', '<=', $request->date_to);
+        }
+
         $purchaseReturns = $query->paginate(20);
-        return view('purchase-returns.index', compact('purchaseReturns'));
+        $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
+        return view('purchase-returns.index', compact('purchaseReturns', 'suppliers'));
     }
 
     public function create(Request $request)

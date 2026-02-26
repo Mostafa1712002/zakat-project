@@ -14,14 +14,36 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with(['supplier', 'unit'])
-            ->withSum('inventoryLevels as stock_quantity', 'quantity')
-            ->latest()
-            ->paginate(15);
+        $query = Product::with(['supplier', 'unit'])
+            ->withSum('inventoryLevels as stock_quantity', 'quantity');
 
-        return view('products.index', compact('products'));
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('sku', 'like', "%{$request->search}%");
+            });
+        }
+
+        if ($request->supplier_id) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+
+        if ($request->stock_status) {
+            if ($request->stock_status === 'in_stock') {
+                $query->having('stock_quantity', '>', 0);
+            } elseif ($request->stock_status === 'low_stock') {
+                $query->havingRaw('stock_quantity > 0 AND stock_quantity <= COALESCE(min_stock, 0)');
+            } elseif ($request->stock_status === 'out_of_stock') {
+                $query->havingRaw('COALESCE(stock_quantity, 0) <= 0');
+            }
+        }
+
+        $products = $query->latest()->paginate(15);
+        $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
+
+        return view('products.index', compact('products', 'suppliers'));
     }
 
     /**

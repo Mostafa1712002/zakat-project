@@ -13,6 +13,28 @@
     </div>
 </div>
 
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body">
+        <form action="{{ route('suppliers.index') }}" method="GET" class="filter-form">
+            <div class="filter-row">
+                <input type="text" name="search" class="form-control" placeholder="بحث بالاسم أو الهاتف..." value="{{ request('search') }}">
+                <select name="is_active" class="form-control">
+                    <option value="">كل الحالات</option>
+                    <option value="1" {{ request('is_active') === '1' ? 'selected' : '' }}>نشط</option>
+                    <option value="0" {{ request('is_active') === '0' ? 'selected' : '' }}>غير نشط</option>
+                </select>
+                <select name="balance" class="form-control">
+                    <option value="">كل الأرصدة</option>
+                    <option value="has_balance" {{ request('balance') == 'has_balance' ? 'selected' : '' }}>عليه رصيد</option>
+                    <option value="no_balance" {{ request('balance') == 'no_balance' ? 'selected' : '' }}>بدون رصيد</option>
+                </select>
+                <button type="submit" class="btn btn-primary">بحث</button>
+                <a href="{{ route('suppliers.index') }}" class="btn">إعادة تعيين</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     <div class="table-container overflow-auto">
         <table class="table text-nowrap">
@@ -73,8 +95,8 @@
     </div>
 
     @if($suppliers->hasPages())
-    <div class="pagination">
-        {{ $suppliers->links() }}
+    <div class="card-footer">
+        {{ $suppliers->withQueryString()->links() }}
     </div>
     @endif
 </div>

@@ -686,6 +686,89 @@
         .font-bold { font-weight: 700; }
         .mb-4 { margin-bottom: 16px; }
         .mt-4 { margin-top: 16px; }
+
+        /* Card Footer (Pagination Container) */
+        .card-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            border-radius: 0 0 var(--radius) var(--radius);
+        }
+
+        .pagination-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .page-item .page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            background: white;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .page-item .page-link:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .page-item.active .page-link {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .page-item.disabled .page-link {
+            opacity: 0.4;
+            pointer-events: none;
+            background: var(--bg);
+        }
+
+        /* Filter Form Styles */
+        .filter-form { margin-bottom: 0; }
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-row .form-control { flex: 1; min-width: 140px; }
+        .filter-row .btn { white-space: nowrap; }
+
+        @media (max-width: 768px) {
+            .pagination-wrapper { justify-content: center; }
+            .filter-row .form-control { min-width: 100%; }
+        }
     </style>
     @stack('styles')
 </head>
@@ -958,6 +1041,18 @@
     <!-- jQuery + Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.filter-form select').each(function() {
+                $(this).select2({
+                    dir: 'rtl',
+                    allowClear: true,
+                    placeholder: $(this).find('option:first').text(),
+                    minimumResultsForSearch: 5
+                });
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

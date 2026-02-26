@@ -18,31 +18,21 @@
 <!-- Filters -->
 <div class="card" style="margin-bottom: 20px;">
     <div class="card-body">
-        <form action="{{ route('expenses.index') }}" method="GET" class="filters-form">
-            <div class="form-row" style="align-items: flex-end;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label">نوع المصروف</label>
-                    <select name="category_id" class="form-control">
-                        <option value="">-- الكل --</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label">من تاريخ</label>
-                    <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label">إلى تاريخ</label>
-                    <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <button type="submit" class="btn btn-primary">🔍 بحث</button>
-                    <a href="{{ route('expenses.index') }}" class="btn">إلغاء</a>
-                </div>
+        <form action="{{ route('expenses.index') }}" method="GET" class="filter-form">
+
+            <div class="filter-row">
+                <select name="category_id" class="form-control">
+                    <option value="">كل الأنواع</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+                <input type="date" name="from_date" class="form-control" placeholder="من تاريخ" value="{{ request('from_date') }}">
+                <input type="date" name="to_date" class="form-control" placeholder="إلى تاريخ" value="{{ request('to_date') }}">
+                <button type="submit" class="btn btn-primary">بحث</button>
+                <a href="{{ route('expenses.index') }}" class="btn">إعادة تعيين</a>
             </div>
         </form>
     </div>
@@ -106,26 +96,9 @@
     </div>
 
     @if($expenses->hasPages())
-    <div class="pagination">
-        {{ $expenses->links() }}
+    <div class="card-footer">
+        {{ $expenses->withQueryString()->links() }}
     </div>
     @endif
 </div>
-
-<style>
-.filters-form .form-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-.filters-form .form-group {
-    flex: 1;
-    min-width: 150px;
-}
-@media (max-width: 768px) {
-    .filters-form .form-group {
-        flex: 100%;
-    }
-}
-</style>
 @endsection

@@ -13,6 +13,30 @@
     </div>
 </div>
 
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body">
+        <form action="{{ route('products.index') }}" method="GET" class="filter-form">
+            <div class="filter-row">
+                <input type="text" name="search" class="form-control" placeholder="بحث بالاسم أو الكود..." value="{{ request('search') }}">
+                <select name="supplier_id" class="form-control">
+                    <option value="">كل الموردين</option>
+                    @foreach($suppliers as $supplier)
+                        <option value="{{ $supplier->id }}" {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
+                    @endforeach
+                </select>
+                <select name="stock_status" class="form-control">
+                    <option value="">كل حالات المخزون</option>
+                    <option value="in_stock" {{ request('stock_status') == 'in_stock' ? 'selected' : '' }}>متوفر</option>
+                    <option value="low_stock" {{ request('stock_status') == 'low_stock' ? 'selected' : '' }}>منخفض</option>
+                    <option value="out_of_stock" {{ request('stock_status') == 'out_of_stock' ? 'selected' : '' }}>نفذ</option>
+                </select>
+                <button type="submit" class="btn btn-primary">بحث</button>
+                <a href="{{ route('products.index') }}" class="btn">إعادة تعيين</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     <div class="table-container overflow-auto">
         <table class="table text-nowrap">
@@ -76,8 +100,8 @@
     </div>
 
     @if($products->hasPages())
-    <div class="pagination">
-        {{ $products->links() }}
+    <div class="card-footer">
+        {{ $products->withQueryString()->links() }}
     </div>
     @endif
 </div>
