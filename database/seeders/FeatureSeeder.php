@@ -378,6 +378,28 @@ class FeatureSeeder extends Seeder
                 'is_enabled' => false,
                 'sort_order' => 8,
             ],
+            [
+                'name' => 'purchase_returns',
+                'name_ar' => 'مرتجعات المشتريات',
+                'description' => 'Purchase returns management',
+                'description_ar' => 'إمكانية عمل مرتجعات لفواتير الشراء المستلمة',
+                'icon' => '↩️',
+                'route_name' => 'purchase-returns.index',
+                'group' => 'sales',
+                'is_enabled' => true,
+                'sort_order' => 5,
+            ],
+            [
+                'name' => 'purchase_edit_delete',
+                'name_ar' => 'تعديل وحذف المشتريات',
+                'description' => 'Allow editing and deleting purchase invoices',
+                'description_ar' => 'إمكانية تعديل وحذف فواتير الشراء',
+                'icon' => '✏️',
+                'route_name' => null,
+                'group' => 'sales',
+                'is_enabled' => true,
+                'sort_order' => 6,
+            ],
 
             // الإعدادات
             [

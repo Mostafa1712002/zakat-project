@@ -22,6 +22,8 @@ class SiteFeatureSeeder extends Seeder
             'simple_invoice_numbers' => false,
             'quotations'             => false,
             'purchase_quotations'    => false,
+            'purchase_returns'       => false,
+            'purchase_edit_delete'   => false,
         ],
         'syramik' => [
             'customer_target'        => false,
@@ -34,6 +36,8 @@ class SiteFeatureSeeder extends Seeder
             'simple_invoice_numbers' => true,
             'quotations'             => true,
             'purchase_quotations'    => true,
+            'purchase_returns'       => true,
+            'purchase_edit_delete'   => true,
         ],
         'demo-sibakuh' => [
             'customer_target'        => false,
@@ -46,6 +50,8 @@ class SiteFeatureSeeder extends Seeder
             'simple_invoice_numbers' => true,
             'quotations'             => true,
             'purchase_quotations'    => true,
+            'purchase_returns'       => true,
+            'purchase_edit_delete'   => true,
         ],
         'al-hadari' => [
             'customer_target'        => false,
@@ -58,6 +64,8 @@ class SiteFeatureSeeder extends Seeder
             'simple_invoice_numbers' => true,
             'quotations'             => true,
             'purchase_quotations'    => true,
+            'purchase_returns'       => true,
+            'purchase_edit_delete'   => true,
         ],
     ];
 

@@ -7,7 +7,7 @@ set -e
 # Examples:
 #   ./deploy.sh rogence       # Deploy to rogence
 #   ./deploy.sh syramik       # Deploy to syramik
-#   ./deploy.sh demo-sibakuh  # Deploy to demo-sibakuh
+#   ./deploy.sh demo-sibakuh  # Deploy to demo-sibakuh (demo-sibakuh.7erfa-system.com)
 #   ./deploy.sh al-hadari     # Deploy to al-hadari
 #   ./deploy.sh all           # Deploy all platforms
 #   ./deploy.sh               # Auto-detect from branch
@@ -16,7 +16,7 @@ set -e
 #   main         → master branch with all features (no direct deploy)
 #   rogence      → rogence site
 #   syramik      → syramik site
-#   demo-sibakuh → demo-sibakuh site
+#   demo-sibakuh → demo-sibakuh.7erfa-system.com
 #   al-hadari    → al-hadari.7erfa-system.com
 # ===================================================
 

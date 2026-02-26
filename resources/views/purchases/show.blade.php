@@ -20,15 +20,17 @@
                 </button>
             </form>
             @endif
-            @if($purchase->status === 'received')
+            @if($purchase->status === 'received' && feature_enabled('purchase_returns'))
             <a href="{{ route('purchase-returns.create', ['purchase_id' => $purchase->id]) }}" class="btn" style="background: #f59e0b; color: white;">↩️ مرتجع</a>
             @endif
+            @if(feature_enabled('purchase_edit_delete'))
             <a href="{{ route('purchases.edit', $purchase) }}" class="btn">تعديل</a>
             <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف الفاتورة؟ {{ $purchase->status === "received" ? "سيتم إرجاع المخزون وحذف الدفعات والمصروفات." : "" }}')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-danger">حذف</button>
             </form>
+            @endif
         @endif
         <a href="{{ route('purchases.index') }}" class="btn">← رجوع للمشتريات</a>
     </div>
