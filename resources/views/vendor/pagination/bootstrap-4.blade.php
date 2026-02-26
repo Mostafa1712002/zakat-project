@@ -1,7 +1,7 @@
 @if ($paginator->hasPages())
 <div class="pagination-wrapper">
     <div class="pagination-info">
-        عرض {{ $paginator->firstItem() }} إلى {{ $paginator->lastItem() }} من {{ $paginator->total() }} نتيجة
+        عرض من {{ $paginator->firstItem() }} إلى {{ $paginator->lastItem() }} | الإجمالي {{ $paginator->total() }}
     </div>
     <nav>
         <ul class="pagination">
