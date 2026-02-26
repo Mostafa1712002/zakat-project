@@ -13,13 +13,19 @@
     </div>
 </div>
 
-<div class="card" style="margin-bottom: 20px;">
-    <div class="card-body">
+<div class="card filter-card">
+    <div class="filter-toggle">
+        <span class="filter-toggle-title">فلترة وبحث</span>
+        <span class="filter-toggle-icon">▼</span>
+    </div>
+    <div class="filter-body">
         <form action="{{ route('categories.index') }}" method="GET" class="filter-form">
             <div class="filter-row">
                 <input type="text" name="search" class="form-control" placeholder="بحث باسم القسم..." value="{{ request('search') }}">
-                <button type="submit" class="btn btn-primary">بحث</button>
-                <a href="{{ route('categories.index') }}" class="btn">إعادة تعيين</a>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">بحث</button>
+                    <a href="{{ route('categories.index') }}" class="btn">إعادة تعيين</a>
+                </div>
             </div>
         </form>
     </div>

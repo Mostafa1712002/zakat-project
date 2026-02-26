@@ -16,10 +16,13 @@
 </div>
 
 <!-- Filters -->
-<div class="card" style="margin-bottom: 20px;">
-    <div class="card-body">
+<div class="card filter-card">
+    <div class="filter-toggle">
+        <span class="filter-toggle-title">فلترة وبحث</span>
+        <span class="filter-toggle-icon">▼</span>
+    </div>
+    <div class="filter-body">
         <form action="{{ route('expenses.index') }}" method="GET" class="filter-form">
-
             <div class="filter-row">
                 <select name="category_id" class="form-control">
                     <option value="">كل الأنواع</option>
@@ -29,10 +32,12 @@
                         </option>
                     @endforeach
                 </select>
-                <input type="date" name="from_date" class="form-control" placeholder="من تاريخ" value="{{ request('from_date') }}">
-                <input type="date" name="to_date" class="form-control" placeholder="إلى تاريخ" value="{{ request('to_date') }}">
-                <button type="submit" class="btn btn-primary">بحث</button>
-                <a href="{{ route('expenses.index') }}" class="btn">إعادة تعيين</a>
+                <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
+                <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">بحث</button>
+                    <a href="{{ route('expenses.index') }}" class="btn">إعادة تعيين</a>
+                </div>
             </div>
         </form>
     </div>

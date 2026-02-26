@@ -16,9 +16,12 @@
     </div>
 </div>
 
-<!-- Filters -->
-<div class="card" style="margin-bottom: 20px;">
-    <div class="card-body">
+<div class="card filter-card">
+    <div class="filter-toggle">
+        <span class="filter-toggle-title">فلترة وبحث</span>
+        <span class="filter-toggle-icon">▼</span>
+    </div>
+    <div class="filter-body">
         <form action="{{ route('payments.index') }}" method="GET" class="filter-form">
             <div class="filter-row">
                 <select name="type" class="form-control">
@@ -28,8 +31,10 @@
                 </select>
                 <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
                 <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                <button type="submit" class="btn btn-primary">بحث</button>
-                <a href="{{ route('payments.index') }}" class="btn">إعادة تعيين</a>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">بحث</button>
+                    <a href="{{ route('payments.index') }}" class="btn">إعادة تعيين</a>
+                </div>
             </div>
         </form>
     </div>

@@ -13,8 +13,12 @@
     </div>
 </div>
 
-<div class="card" style="margin-bottom: 20px;">
-    <div class="card-body">
+<div class="card filter-card">
+    <div class="filter-toggle">
+        <span class="filter-toggle-title">فلترة وبحث</span>
+        <span class="filter-toggle-icon">▼</span>
+    </div>
+    <div class="filter-body">
         <form action="{{ route('customers.index') }}" method="GET" class="filter-form">
             <div class="filter-row">
                 <input type="text" name="search" class="form-control" placeholder="بحث بالاسم أو الهاتف..." value="{{ request('search') }}">
@@ -29,8 +33,10 @@
                     <option value="has_balance" {{ request('balance') == 'has_balance' ? 'selected' : '' }}>عليه رصيد</option>
                     <option value="no_balance" {{ request('balance') == 'no_balance' ? 'selected' : '' }}>بدون رصيد</option>
                 </select>
-                <button type="submit" class="btn btn-primary">بحث</button>
-                <a href="{{ route('customers.index') }}" class="btn">إعادة تعيين</a>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">بحث</button>
+                    <a href="{{ route('customers.index') }}" class="btn">إعادة تعيين</a>
+                </div>
             </div>
         </form>
     </div>

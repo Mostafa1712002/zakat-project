@@ -754,20 +754,67 @@
             background: var(--bg);
         }
 
+        /* Filter Card Toggle */
+        .filter-card { margin-bottom: 20px; }
+        .filter-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .filter-toggle:hover { background: var(--bg); }
+        .filter-card.open .filter-toggle { border-bottom-color: var(--border); }
+        .filter-toggle-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-toggle-icon {
+            transition: transform 0.2s;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .filter-card.open .filter-toggle-icon { transform: rotate(180deg); }
+        .filter-body {
+            display: none;
+            padding: 16px 20px;
+        }
+        .filter-card.open .filter-body { display: block; }
+        .filter-card.has-filters .filter-toggle-title::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: inline-block;
+        }
+
         /* Filter Form Styles */
         .filter-form { margin-bottom: 0; }
         .filter-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            flex-wrap: wrap;
             align-items: center;
         }
-        .filter-row .form-control { flex: 1; min-width: 140px; }
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            grid-column: 1 / -1;
+        }
         .filter-row .btn { white-space: nowrap; }
 
         @media (max-width: 768px) {
             .pagination-wrapper { justify-content: center; }
-            .filter-row .form-control { min-width: 100%; }
+            .filter-row { grid-template-columns: 1fr; }
         }
     </style>
     @stack('styles')
@@ -1043,6 +1090,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Select2 auto-init for filter selects
             $('.filter-form select').each(function() {
                 $(this).select2({
                     dir: 'rtl',
@@ -1050,6 +1098,22 @@
                     placeholder: $(this).find('option:first').text(),
                     minimumResultsForSearch: 5
                 });
+            });
+
+            // Filter toggle
+            $('.filter-toggle').on('click', function() {
+                $(this).closest('.filter-card').toggleClass('open');
+            });
+
+            // Auto-open if filters are active
+            $('.filter-card').each(function() {
+                var hasFilters = false;
+                $(this).find('input, select').each(function() {
+                    if ($(this).val() && $(this).val() !== '') hasFilters = true;
+                });
+                if (hasFilters) {
+                    $(this).addClass('open has-filters');
+                }
             });
         });
     </script>

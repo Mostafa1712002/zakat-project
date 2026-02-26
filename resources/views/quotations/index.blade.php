@@ -21,8 +21,12 @@
 <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
 
-<div class="card">
-    <div class="card-body">
+<div class="card filter-card">
+    <div class="filter-toggle">
+        <span class="filter-toggle-title">فلترة وبحث</span>
+        <span class="filter-toggle-icon">▼</span>
+    </div>
+    <div class="filter-body">
         <form action="{{ route('quotations.index') }}" method="GET" class="filter-form">
             <div class="filter-row">
                 <input type="text" name="search" class="form-control" placeholder="بحث برقم التسعيرة أو اسم العميل..." value="{{ request('search') }}">
@@ -31,10 +35,10 @@
                     <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
                     <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>مؤكدة</option>
                 </select>
-                <button type="submit" class="btn btn-primary">بحث</button>
-                @if(request()->hasAny(['search', 'status']))
-                <a href="{{ route('quotations.index') }}" class="btn">مسح</a>
-                @endif
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">بحث</button>
+                    <a href="{{ route('quotations.index') }}" class="btn">إعادة تعيين</a>
+                </div>
             </div>
         </form>
     </div>
