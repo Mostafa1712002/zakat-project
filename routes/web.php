@@ -33,6 +33,7 @@ use App\Http\Controllers\PartnerTransactionController;
 use App\Http\Controllers\ProfitDistributionController;
 use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\SalesRepAccountController;
+use App\Http\Controllers\BranchController;
 
 // Dynamic favicon from company logo
 Route::get('/favicon.ico', function () {
@@ -95,6 +96,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales-reps/{salesRep}/withdraw-commission', [SalesRepController::class, 'showWithdrawCommission'])->name('sales-reps.withdraw-commission.form');
         Route::post('sales-reps/{salesRep}/withdraw-commission', [SalesRepController::class, 'withdrawCommission'])->name('sales-reps.withdraw-commission.store');
     });
+
+    // Branches (الفروع)
+    Route::resource('branches', BranchController::class)->except(['show']);
 
     // Warehouses (المخازن)
     Route::get('warehouses/transfer', [WarehouseController::class, 'showTransferForm'])->name('warehouses.transfer');

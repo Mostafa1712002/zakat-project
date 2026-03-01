@@ -922,6 +922,7 @@
                     @if(feature_enabled('warehouses'))
                     <li><a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('warehouses', 'المخازن') }}"><span class="nav-icon">{{ feature_icon('warehouses', '🏭') }}</span><span class="nav-label">{{ feature_name('warehouses', 'المخازن') }}</span></a></li>
                     @endif
+                    <li><a href="{{ route('branches.index') }}" class="{{ request()->routeIs('branches.*') ? 'active' : '' }}" data-tooltip="الفروع"><span class="nav-icon">🏢</span><span class="nav-label">الفروع</span></a></li>
                     @if(feature_enabled('products'))
                     <li><a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('products', 'الأصناف') }}"><span class="nav-icon">{{ feature_icon('products', '📦') }}</span><span class="nav-label">{{ feature_name('products', 'الأصناف') }}</span></a></li>
                     @endif
