@@ -17,6 +17,7 @@ use App\Models\InventoryLevel;
 use App\Models\SalesRepInventory;
 use App\Models\SalesRepStockMovement;
 use App\Models\Grade;
+use App\Services\ZatcaComplianceService;
 
 class SaleController extends Controller
 {
@@ -344,19 +345,23 @@ class SaleController extends Controller
         $companyName = '';
         $companyLogo = '';
         $companyStamp = '';
+        $companyTaxNumber = '';
         $invoiceContacts = [];
+        $zatcaEnabled = false;
         try {
             $settings = \DB::table('settings')
-                ->whereIn('key', ['supervisor_phone', 'company_name', 'company_logo', 'company_stamp', 'invoice_contacts'])
+                ->whereIn('key', ['supervisor_phone', 'company_name', 'company_logo', 'company_stamp', 'invoice_contacts', 'tax_number', 'zatca_enabled'])
                 ->pluck('value', 'key');
             $supervisorPhone = $settings['supervisor_phone'] ?? '';
             $companyName = $settings['company_name'] ?? '';
             $companyLogo = $settings['company_logo'] ?? '';
             $companyStamp = $settings['company_stamp'] ?? '';
+            $companyTaxNumber = $settings['tax_number'] ?? '';
             $invoiceContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: [];
+            $zatcaEnabled = ($settings['zatca_enabled'] ?? '0') === '1';
         } catch (\Exception $e) {}
 
-        return view('sales.show', compact('sale', 'supervisorPhone', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts'));
+        return view('sales.show', compact('sale', 'supervisorPhone', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts', 'companyTaxNumber', 'zatcaEnabled'));
     }
 
     /**
@@ -372,6 +377,10 @@ class SaleController extends Controller
         // Don't allow editing cancelled sales
         if ($sale->status === Sale::STATUS_CANCELLED) {
             return back()->with('error', 'لا يمكن تعديل فاتورة ملغاة');
+        }
+
+        if ($sale->isZatcaLocked()) {
+            return back()->with('error', 'لا يمكن تعديل فاتورة مؤكدة بعد إصدار بيانات الفوترة الإلكترونية. استخدم إشعار دائن/مدين بدلاً من التعديل المباشر.');
         }
 
         $user = auth()->user();
@@ -413,6 +422,10 @@ class SaleController extends Controller
         // Don't allow editing cancelled sales
         if ($sale->status === Sale::STATUS_CANCELLED) {
             return back()->with('error', 'لا يمكن تعديل فاتورة ملغاة');
+        }
+
+        if ($sale->isZatcaLocked()) {
+            return back()->with('error', 'لا يمكن تعديل فاتورة مؤكدة بعد إصدار بيانات الفوترة الإلكترونية. استخدم إشعار دائن/مدين بدلاً من التعديل المباشر.');
         }
 
         $wasConfirmed = $sale->status === Sale::STATUS_CONFIRMED;
@@ -724,6 +737,10 @@ class SaleController extends Controller
             return back()->with('error', 'لا يمكن حذف فاتورة ملغاة');
         }
 
+        if ($sale->isZatcaLocked()) {
+            return back()->with('error', 'لا يمكن حذف فاتورة مؤكدة بعد إصدار بيانات الفوترة الإلكترونية. يلزم التعامل معها عبر إشعار دائن/مدين.');
+        }
+
         DB::beginTransaction();
 
         try {
@@ -803,7 +820,7 @@ class SaleController extends Controller
     /**
      * Confirm a sale and deduct inventory.
      */
-    public function confirm(Sale $sale)
+    public function confirm(Sale $sale, ZatcaComplianceService $zatca)
     {
         // التحقق من صلاحية الوصول
         if (!$sale->canCurrentUserAccess()) {
@@ -812,6 +829,16 @@ class SaleController extends Controller
 
         if ($sale->status !== Sale::STATUS_DRAFT) {
             return back()->with('error', 'هذه الفاتورة تم تأكيدها مسبقاً');
+        }
+
+        $companySettings = null;
+        if ($zatca->isEnabled()) {
+            $companySettings = $zatca->getCompanySettings();
+            $missingSettings = $zatca->missingRequiredSettings($companySettings);
+
+            if (!empty($missingSettings)) {
+                return back()->with('error', 'لا يمكن تأكيد الفاتورة قبل استكمال بيانات ZATCA التالية: ' . implode('، ', $missingSettings));
+            }
         }
 
         DB::beginTransaction();
@@ -850,6 +877,11 @@ class SaleController extends Controller
 
             // Update sale status
             $sale->update(['status' => Sale::STATUS_CONFIRMED]);
+
+            if ($zatca->isEnabled()) {
+                $sale->loadMissing('customer');
+                $sale->update($zatca->prepareIssuedInvoiceData($sale, $companySettings));
+            }
 
             // إنشاء تحصيل تلقائي للمبيعات النقدية
             if (feature_enabled('auto_cash_payment') && $sale->payment_type === 'cash' && $sale->total_amount > 0) {
@@ -931,20 +963,24 @@ class SaleController extends Controller
         $companyName = '';
         $companyLogo = '';
         $companyStamp = '';
+        $companyTaxNumber = '';
         $invoiceContacts = [];
         $invoiceNote = '';
         $invoiceFooter = '';
         $showCustomerBalance = false;
+        $zatcaEnabled = false;
         try {
             $settings = \DB::table('settings')
-                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp', 'invoice_contacts', 'invoice_note', 'invoice_footer', 'show_customer_balance'])
+                ->whereIn('key', ['company_name', 'company_logo', 'company_stamp', 'invoice_contacts', 'invoice_note', 'invoice_footer', 'show_customer_balance', 'tax_number', 'zatca_enabled'])
                 ->pluck('value', 'key');
             $companyName = $settings['company_name'] ?? '';
             $companyName = preg_replace('/[\x{1F000}-\x{1FFFF}|\x{2600}-\x{27FF}|\x{FE00}-\x{FEFF}]/u', '', $companyName);
             $companyName = trim($companyName);
             $companyLogo = $settings['company_logo'] ?? '';
             $companyStamp = $settings['company_stamp'] ?? '';
+            $companyTaxNumber = $settings['tax_number'] ?? '';
             $invoiceContacts = json_decode($settings['invoice_contacts'] ?? '[]', true) ?: [];
+            $zatcaEnabled = ($settings['zatca_enabled'] ?? '0') === '1';
             if (feature_enabled('invoice_customization')) {
                 $invoiceNote = $settings['invoice_note'] ?? '';
                 $invoiceFooter = $settings['invoice_footer'] ?? '';
@@ -952,7 +988,7 @@ class SaleController extends Controller
             }
         } catch (\Exception $e) {}
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts', 'invoiceNote', 'invoiceFooter', 'showCustomerBalance'));
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp', 'companyTaxNumber', 'invoiceContacts', 'invoiceNote', 'invoiceFooter', 'showCustomerBalance', 'zatcaEnabled'));
 
         $pdf->setOption('page-size', 'A4');
         $pdf->setOption('encoding', 'UTF-8');
@@ -981,6 +1017,10 @@ class SaleController extends Controller
 
         if ($sale->paid_amount > 0) {
             return back()->with('error', 'لا يمكن إلغاء فاتورة تم دفع جزء منها');
+        }
+
+        if ($sale->isZatcaLocked()) {
+            return back()->with('error', 'لا يمكن إلغاء فاتورة مؤكدة بعد إصدار بيانات الفوترة الإلكترونية. استخدم إشعار دائن/مدين.');
         }
 
         DB::beginTransaction();

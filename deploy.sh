@@ -9,6 +9,7 @@ set -e
 #   ./deploy.sh syramik       # Deploy to syramik
 #   ./deploy.sh demo-sibakuh  # Deploy to demo-sibakuh (demo-sibakuh.7erfa-system.com)
 #   ./deploy.sh al-hadari     # Deploy to al-hadari
+#   ./deploy.sh zaca          # Deploy to zaca (zaca.newaves-systems.com)
 #   ./deploy.sh all           # Deploy all platforms
 #   ./deploy.sh               # Auto-detect from branch
 #
@@ -18,6 +19,7 @@ set -e
 #   syramik      → syramik site
 #   demo-sibakuh → demo-sibakuh.7erfa-system.com
 #   al-hadari    → al-hadari.7erfa-system.com
+#   zaca         → zaca.newaves-systems.com
 # ===================================================
 
 SERVER="root@161.35.211.31"
@@ -28,6 +30,7 @@ declare -A SITES=(
     ["syramik"]="/var/www/syramik.newaves-systems.com"
     ["demo-sibakuh"]="/var/www/demo-sibakuh.newaves-systems.com"
     ["al-hadari"]="/var/www/al-hadari.7erfa-system.com"
+    ["zaca"]="/var/www/zaca.newaves-systems.com"
 )
 
 # Branch → Site mapping (for auto-detect)
@@ -36,6 +39,7 @@ declare -A BRANCH_TO_SITE=(
     ["syramik"]="syramik"
     ["demo-sibakuh"]="demo-sibakuh"
     ["al-hadari"]="al-hadari"
+    ["zaca"]="zaca"
 )
 
 deploy_site() {
@@ -90,7 +94,7 @@ if [ -z "$SITE" ]; then
     if [ -z "$SITE" ]; then
         echo "❌ Branch '$BRANCH' has no deploy target."
         echo ""
-        echo "Usage: ./deploy.sh [rogence|syramik|demo-sibakuh|al-hadari|all]"
+        echo "Usage: ./deploy.sh [rogence|syramik|demo-sibakuh|al-hadari|zaca|all]"
         echo ""
         echo "  main branch is the master codebase - switch to a platform branch to deploy:"
         echo "    git checkout rogence && ./deploy.sh"

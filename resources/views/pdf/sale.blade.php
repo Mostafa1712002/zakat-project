@@ -269,6 +269,11 @@
                 <img src="file://{{ public_path('storage/' . $companyLogo) }}" alt="{{ $companyName }}" class="company-logo"><br>
             @endif
             <div class="company-name">{{ $companyName ?: 'الشركة' }}</div>
+            @if(!empty($companyTaxNumber))
+            <div class="header-contacts">
+                <span class="header-contact-item">VAT: <span class="contact-phone">{{ $companyTaxNumber }}</span></span>
+            </div>
+            @endif
             @if(!empty($invoiceContacts))
             <div class="header-contacts">
                 @foreach($invoiceContacts as $contact)
@@ -305,6 +310,10 @@
                 <span class="info-row-label">العنوان: </span>
                 <span class="info-row-value">{{ $sale->customer->address ?? '-' }}</span>
             </div>
+            <div class="info-row">
+                <span class="info-row-label">الرقم الضريبي: </span>
+                <span class="info-row-value">{{ $sale->customer->tax_number ?? '-' }}</span>
+            </div>
         </div>
         <div class="info-spacer"></div>
         <div class="info-box">
@@ -325,6 +334,16 @@
             <div class="info-row">
                 <span class="info-row-label">المندوب: </span>
                 <span class="info-row-value">{{ $sale->salesRep->name }}</span>
+            </div>
+            @endif
+            @if($zatcaEnabled || $sale->isZatcaIssued())
+            <div class="info-row">
+                <span class="info-row-label">نوع ZATCA: </span>
+                <span class="info-row-value">{{ $sale->zatca_invoice_type_label }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-row-label">UUID: </span>
+                <span class="info-row-value">{{ $sale->zatca_uuid ?: '-' }}</span>
             </div>
             @endif
         </div>

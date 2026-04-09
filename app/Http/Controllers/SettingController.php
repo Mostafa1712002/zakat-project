@@ -70,6 +70,16 @@ class SettingController extends Controller
             'customer_item_types.*.label' => 'nullable|string|max:100',
             // Treasury
             'treasury_opening_balance' => 'nullable|numeric|min:0',
+            // ZATCA
+            'zatca_enabled' => 'nullable|boolean',
+            'zatca_environment' => 'nullable|string|in:sandbox,simulation,production',
+            'zatca_business_category' => 'nullable|string|max:255',
+            'zatca_building_number' => 'nullable|string|max:20',
+            'zatca_additional_number' => 'nullable|string|max:20',
+            'zatca_district' => 'nullable|string|max:255',
+            'zatca_country_code' => 'nullable|string|size:2',
+            'zatca_egs_serial' => 'nullable|string|max:255',
+            'zatca_solution_name' => 'nullable|string|max:255',
         ]);
 
         // Save invoice contacts as JSON
@@ -80,6 +90,7 @@ class SettingController extends Controller
 
         // Handle checkbox fields (not in $validated if unchecked)
         $this->setSetting('show_customer_balance', $request->boolean('show_customer_balance') ? '1' : '0');
+        $this->setSetting('zatca_enabled', $request->boolean('zatca_enabled') ? '1' : '0');
 
         // Save customer item types as JSON
         $itemTypes = $request->input('customer_item_types', []);
@@ -90,7 +101,7 @@ class SettingController extends Controller
         }
 
         // Exclude file fields and contacts from text settings
-        $fileFields = ['logo', 'stamp', 'contacts', 'show_customer_balance', 'customer_item_types'];
+        $fileFields = ['logo', 'stamp', 'contacts', 'show_customer_balance', 'customer_item_types', 'zatca_enabled'];
         foreach ($validated as $key => $value) {
             if (!in_array($key, $fileFields)) {
                 $this->setSetting($key, $value);
@@ -475,6 +486,15 @@ class SettingController extends Controller
                 'show_customer_balance' => $this->getSetting('show_customer_balance', '0'),
                 'customer_item_types' => $this->getSetting('customer_item_types', ''),
                 'treasury_opening_balance' => $this->getSetting('treasury_opening_balance', '0'),
+                'zatca_enabled' => $this->getSetting('zatca_enabled', '0'),
+                'zatca_environment' => $this->getSetting('zatca_environment', 'simulation'),
+                'zatca_business_category' => $this->getSetting('zatca_business_category', ''),
+                'zatca_building_number' => $this->getSetting('zatca_building_number', ''),
+                'zatca_additional_number' => $this->getSetting('zatca_additional_number', ''),
+                'zatca_district' => $this->getSetting('zatca_district', ''),
+                'zatca_country_code' => $this->getSetting('zatca_country_code', 'SA'),
+                'zatca_egs_serial' => $this->getSetting('zatca_egs_serial', ''),
+                'zatca_solution_name' => $this->getSetting('zatca_solution_name', ''),
             ];
         });
     }

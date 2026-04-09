@@ -13,7 +13,6 @@ return new class extends Migration
         }
 
         Schema::table('payments', function (Blueprint $table) {
-            // ربط المدفوعات بفواتير محددة
             if (!Schema::hasColumn('payments', 'sale_id')) {
                 $table->foreignId('sale_id')->nullable()->after('payable_id')->constrained()->nullOnDelete();
             }
@@ -31,21 +30,14 @@ return new class extends Migration
         }
 
         Schema::table('payments', function (Blueprint $table) {
-            if (Schema::hasColumn('payments', 'sale_id')) {
-                $table->dropForeign(['sale_id']);
-            }
-
             if (Schema::hasColumn('payments', 'purchase_id')) {
                 $table->dropForeign(['purchase_id']);
+                $table->dropColumn('purchase_id');
             }
 
-            $columns = array_values(array_filter([
-                Schema::hasColumn('payments', 'sale_id') ? 'sale_id' : null,
-                Schema::hasColumn('payments', 'purchase_id') ? 'purchase_id' : null,
-            ]));
-
-            if (!empty($columns)) {
-                $table->dropColumn($columns);
+            if (Schema::hasColumn('payments', 'sale_id')) {
+                $table->dropForeign(['sale_id']);
+                $table->dropColumn('sale_id');
             }
         });
     }

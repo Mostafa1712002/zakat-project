@@ -25,6 +25,16 @@ class Sale extends Model
     public const PAYMENT_STATUS_PAID = 'paid';
     public const PAYMENT_STATUS_OVERDUE = 'overdue';
 
+    public const ZATCA_INVOICE_STANDARD = 'standard';
+    public const ZATCA_INVOICE_SIMPLIFIED = 'simplified';
+
+    public const ZATCA_STATUS_DRAFT = 'draft';
+    public const ZATCA_STATUS_PENDING_CLEARANCE = 'pending_clearance';
+    public const ZATCA_STATUS_PENDING_REPORTING = 'pending_reporting';
+    public const ZATCA_STATUS_CLEARED = 'cleared';
+    public const ZATCA_STATUS_REPORTED = 'reported';
+    public const ZATCA_STATUS_FAILED = 'failed';
+
     protected $fillable = [
         'invoice_number',
         'customer_id',
@@ -55,6 +65,17 @@ class Sale extends Model
         'terms',
         'received_by',
         'signature',
+        'zatca_uuid',
+        'zatca_invoice_type',
+        'zatca_status',
+        'zatca_issued_at',
+        'zatca_qr_tlv',
+        'zatca_xml',
+        'zatca_xml_generated_at',
+        'zatca_cleared_at',
+        'zatca_reported_at',
+        'zatca_response_reference',
+        'zatca_last_error',
     ];
 
     protected $casts = [
@@ -69,6 +90,10 @@ class Sale extends Model
         'total_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'remaining_amount' => 'decimal:2',
+        'zatca_issued_at' => 'datetime',
+        'zatca_xml_generated_at' => 'datetime',
+        'zatca_cleared_at' => 'datetime',
+        'zatca_reported_at' => 'datetime',
     ];
 
     public function customer(): BelongsTo
@@ -223,5 +248,37 @@ class Sale extends Model
         }
 
         return $prefix . '0001';
+    }
+
+    public function isZatcaIssued(): bool
+    {
+        return !empty($this->zatca_uuid);
+    }
+
+    public function isZatcaLocked(): bool
+    {
+        return $this->status === self::STATUS_CONFIRMED && $this->isZatcaIssued();
+    }
+
+    public function getZatcaInvoiceTypeLabelAttribute(): string
+    {
+        return match ($this->zatca_invoice_type) {
+            self::ZATCA_INVOICE_STANDARD => 'فاتورة ضريبية',
+            self::ZATCA_INVOICE_SIMPLIFIED => 'فاتورة ضريبية مبسطة',
+            default => '-',
+        };
+    }
+
+    public function getZatcaStatusLabelAttribute(): string
+    {
+        return match ($this->zatca_status) {
+            self::ZATCA_STATUS_DRAFT => 'مسودة',
+            self::ZATCA_STATUS_PENDING_CLEARANCE => 'بانتظار الربط/التخليص',
+            self::ZATCA_STATUS_PENDING_REPORTING => 'بانتظار الرفع',
+            self::ZATCA_STATUS_CLEARED => 'تم التخليص',
+            self::ZATCA_STATUS_REPORTED => 'تم الرفع',
+            self::ZATCA_STATUS_FAILED => 'فشل الإرسال',
+            default => '-',
+        };
     }
 }

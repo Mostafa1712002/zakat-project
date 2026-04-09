@@ -20,12 +20,14 @@
                 </button>
             </form>
             @endif
-            <a href="{{ route('sales.edit', $sale) }}" class="btn">تعديل</a>
-            <form action="{{ route('sales.destroy', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف الفاتورة؟ {{ $sale->status === "confirmed" ? "سيتم إرجاع المخزون وحذف الدفعات." : "" }}')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger">حذف</button>
-            </form>
+            @unless($sale->isZatcaLocked())
+                <a href="{{ route('sales.edit', $sale) }}" class="btn">تعديل</a>
+                <form action="{{ route('sales.destroy', $sale) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف الفاتورة؟ {{ $sale->status === "confirmed" ? "سيتم إرجاع المخزون وحذف الدفعات." : "" }}')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">حذف</button>
+                </form>
+            @endunless
         @endif
         <a href="{{ route('sales.index') }}" class="btn">← رجوع للمبيعات</a>
     </div>
@@ -259,6 +261,49 @@
                 </div>
             </div>
         </div>
+
+        @if($zatcaEnabled || $sale->isZatcaIssued())
+        <div class="info-grid no-print">
+            <div class="info-box">
+                <div class="info-box-header">
+                    <span class="info-icon">🧾</span>
+                    <h4>الفوترة الإلكترونية</h4>
+                </div>
+                <div class="info-box-body overflow-auto">
+                    <table class="info-table text-nowrap">
+                        <tr>
+                            <td class="info-label">نوع الفاتورة:</td>
+                            <td class="info-value"><strong>{{ $sale->zatca_invoice_type_label }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">الحالة:</td>
+                            <td class="info-value">{{ $sale->zatca_status_label }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">UUID:</td>
+                            <td class="info-value" dir="ltr">{{ $sale->zatca_uuid ?: '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">تاريخ الإصدار:</td>
+                            <td class="info-value" dir="ltr">{{ $sale->zatca_issued_at?->format('Y-m-d H:i:s') ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">الرقم الضريبي للبائع:</td>
+                            <td class="info-value" dir="ltr">{{ $companyTaxNumber ?: '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">الرقم الضريبي للمشتري:</td>
+                            <td class="info-value" dir="ltr">{{ $sale->customer->tax_number ?: '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">بيانات QR:</td>
+                            <td class="info-value">{{ $sale->zatca_qr_tlv ? 'تم تجهيزها' : 'غير متوفرة بعد' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Items Table -->
         <div class="items-card">

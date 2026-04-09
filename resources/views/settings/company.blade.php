@@ -119,6 +119,95 @@
             </div>
 
             <hr style="margin: 24px 0; border-color: var(--border-color);">
+            <h3 style="margin-bottom: 16px;">🧾 إعدادات ZATCA</h3>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 16px;">هذه الحقول هي الأساس المطلوب لتجهيز الفاتورة الإلكترونية السعودية داخل النظام.</p>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="zatca_enabled" value="1" {{ old('zatca_enabled', $settings['zatca_enabled'] ?? '0') == '1' ? 'checked' : '' }}>
+                    <span>تفعيل متطلبات الفوترة الإلكترونية السعودية</span>
+                </label>
+                <small style="color: #64748b; font-size: 12px;">عند التفعيل، سيتم تجهيز UUID ونوع الفاتورة وبيانات QR عند تأكيد الفاتورة، مع منع تعديل الفواتير المؤكدة.</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="zatca_environment" class="form-label">بيئة ZATCA</label>
+                    <select name="zatca_environment" id="zatca_environment" class="form-control">
+                        <option value="sandbox" {{ old('zatca_environment', $settings['zatca_environment'] ?? 'simulation') === 'sandbox' ? 'selected' : '' }}>Sandbox</option>
+                        <option value="simulation" {{ old('zatca_environment', $settings['zatca_environment'] ?? 'simulation') === 'simulation' ? 'selected' : '' }}>Simulation</option>
+                        <option value="production" {{ old('zatca_environment', $settings['zatca_environment'] ?? 'simulation') === 'production' ? 'selected' : '' }}>Production</option>
+                    </select>
+                    @error('zatca_environment')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="zatca_business_category" class="form-label">النشاط التجاري</label>
+                    <input type="text" name="zatca_business_category" id="zatca_business_category" class="form-control" value="{{ old('zatca_business_category', $settings['zatca_business_category'] ?? '') }}" placeholder="مثال: تجارة مواد البناء">
+                    @error('zatca_business_category')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="zatca_building_number" class="form-label">رقم المبنى</label>
+                    <input type="text" name="zatca_building_number" id="zatca_building_number" class="form-control" value="{{ old('zatca_building_number', $settings['zatca_building_number'] ?? '') }}">
+                    @error('zatca_building_number')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="zatca_additional_number" class="form-label">الرقم الإضافي</label>
+                    <input type="text" name="zatca_additional_number" id="zatca_additional_number" class="form-control" value="{{ old('zatca_additional_number', $settings['zatca_additional_number'] ?? '') }}">
+                    @error('zatca_additional_number')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="zatca_district" class="form-label">الحي</label>
+                    <input type="text" name="zatca_district" id="zatca_district" class="form-control" value="{{ old('zatca_district', $settings['zatca_district'] ?? '') }}">
+                    @error('zatca_district')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="zatca_country_code" class="form-label">رمز الدولة</label>
+                    <input type="text" name="zatca_country_code" id="zatca_country_code" class="form-control" value="{{ old('zatca_country_code', $settings['zatca_country_code'] ?? 'SA') }}" maxlength="2" dir="ltr">
+                    @error('zatca_country_code')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="zatca_egs_serial" class="form-label">الرقم التسلسلي لوحدة الفوترة</label>
+                    <input type="text" name="zatca_egs_serial" id="zatca_egs_serial" class="form-control" value="{{ old('zatca_egs_serial', $settings['zatca_egs_serial'] ?? '') }}" dir="ltr">
+                    <small style="color: #64748b; font-size: 12px;">Serial أو UUID الخاص بجهاز/وحدة EGS المستخدمة لاحقًا في الربط.</small>
+                    @error('zatca_egs_serial')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="zatca_solution_name" class="form-label">اسم الحل التقني</label>
+                    <input type="text" name="zatca_solution_name" id="zatca_solution_name" class="form-control" value="{{ old('zatca_solution_name', $settings['zatca_solution_name'] ?? '') }}" placeholder="مثال: CRM Internal E-Invoicing">
+                    @error('zatca_solution_name')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <hr style="margin: 24px 0; border-color: var(--border-color);">
             <h3 style="margin-bottom: 16px;">📞 معلومات الاتصال</h3>
 
             <div class="form-row">
