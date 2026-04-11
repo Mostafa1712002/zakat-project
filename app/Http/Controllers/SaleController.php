@@ -880,7 +880,13 @@ class SaleController extends Controller
 
             if ($zatca->isEnabled()) {
                 $sale->loadMissing('customer');
-                $sale->update($zatca->prepareIssuedInvoiceData($sale, $companySettings));
+                $issuedData = $zatca->prepareIssuedInvoiceData($sale, $companySettings);
+                $sale->update($issuedData);
+
+                // Generate XML and hash chain
+                $sale->refresh();
+                $xmlData = $zatca->generateInvoiceXmlAndHash($sale, $companySettings);
+                $sale->update($xmlData);
             }
 
             // إنشاء تحصيل تلقائي للمبيعات النقدية

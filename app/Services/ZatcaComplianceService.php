@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Sale;
+use App\Services\ZatcaHashService;
+use App\Services\ZatcaXmlService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -107,6 +109,30 @@ class ZatcaComplianceService
         $payload .= $this->encodeTlv(5, number_format($vatTotal, 2, '.', ''));
 
         return base64_encode($payload);
+    }
+
+    public function generateInvoiceXmlAndHash(Sale $sale, array $settings): array
+    {
+        $hashService = new ZatcaHashService();
+        $xmlService = new ZatcaXmlService();
+
+        $lastIssued = $hashService->getLastIssuedInvoiceData();
+        $pih = $hashService->getPreviousInvoiceHash($lastIssued['hash']);
+        $counter = $hashService->getNextCounter($lastIssued['counter']);
+
+        $sale->zatca_previous_invoice_hash = $pih;
+        $sale->zatca_invoice_counter = $counter;
+
+        $xml = $xmlService->generate($sale, $settings);
+        $invoiceHash = $hashService->generateInvoiceHash($xml);
+
+        return [
+            'zatca_xml' => $xml,
+            'zatca_invoice_hash' => $invoiceHash,
+            'zatca_previous_invoice_hash' => $pih,
+            'zatca_invoice_counter' => $counter,
+            'zatca_xml_generated_at' => now(),
+        ];
     }
 
     protected function encodeTlv(int $tag, string $value): string

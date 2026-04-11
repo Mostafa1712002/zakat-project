@@ -71,6 +71,27 @@ class ZatcaSaleComplianceTest extends TestCase
         $response->assertSessionHas('error');
     }
 
+    public function test_confirming_sale_generates_xml_and_hash(): void
+    {
+        $user = User::factory()->create(['is_super_admin' => true]);
+        $sale = $this->createSale($user, customerTaxNumber: null);
+        $this->enableZatca();
+
+        $this->actingAs($user)->post(route('sales.confirm', $sale));
+
+        $sale->refresh();
+
+        $this->assertNotNull($sale->zatca_xml);
+        $this->assertNotNull($sale->zatca_invoice_hash);
+        $this->assertNotNull($sale->zatca_previous_invoice_hash);
+        $this->assertNotNull($sale->zatca_invoice_counter);
+        $this->assertNotNull($sale->zatca_xml_generated_at);
+
+        // Verify XML is valid
+        $doc = new \DOMDocument();
+        $this->assertTrue($doc->loadXML($sale->zatca_xml));
+    }
+
     protected function createSale(User $user, ?string $customerTaxNumber): Sale
     {
         $branch = Branch::create([
