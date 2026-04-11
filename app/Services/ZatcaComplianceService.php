@@ -128,9 +128,23 @@ class ZatcaComplianceService
         $xml = $xmlService->generate($sale, $settings);
         $invoiceHash = $hashService->generateInvoiceHash($xml);
 
+        // Sign the invoice if certificate and private key are available
+        $privateKeyPath = storage_path('zatca/zatca_key.pem');
+        $certificate = $settings['zatca_certificate'] ?? '';
+
+        if (file_exists($privateKeyPath) && !empty($certificate)) {
+            $signingService = new ZatcaSigningService($privateKeyPath, $certificate);
+            $signResult = $signingService->sign($xml, $invoiceHash);
+            $xml = $signResult['signed_xml'];
+            $qrTlv = $signResult['qr_tlv'];
+        } else {
+            $qrTlv = null;
+        }
+
         return [
             'zatca_xml' => $xml,
             'zatca_invoice_hash' => $invoiceHash,
+            'zatca_qr_tlv' => $qrTlv,
             'zatca_previous_invoice_hash' => $pih,
             'zatca_invoice_counter' => $counter,
             'zatca_xml_generated_at' => now(),
