@@ -22,20 +22,45 @@ class ZatcaHashService
 
     public function prepareXmlForHashing(string $xml): string
     {
-        // Remove XML declaration line
-        $lines = explode("\n", $xml);
-        if (count($lines) > 0 && str_starts_with(trim($lines[0]), '<' . '?xml')) {
-            array_shift($lines);
+        $doc = new \DOMDocument();
+        $doc->loadXML($xml);
+        $xpath = new \DOMXPath($doc);
+
+        $xpath->registerNamespace('ext', 'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2');
+        $xpath->registerNamespace('cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
+        $xpath->registerNamespace('cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
+
+        // Remove UBLExtensions
+        foreach ($xpath->query('//ext:UBLExtensions') as $node) {
+            $node->parentNode->removeChild($node);
         }
-        $xml = implode("\n", $lines);
 
-        // Remove UBLExtensions element
-        $xml = preg_replace('#<ext:UBLExtensions>.*?</ext:UBLExtensions>\s*#s', '', $xml);
+        // Remove cac:Signature
+        foreach ($xpath->query('//cac:Signature') as $node) {
+            $node->parentNode->removeChild($node);
+        }
 
-        // Remove cac:Signature element
-        $xml = preg_replace('#<cac:Signature>.*?</cac:Signature>\s*#s', '', $xml);
+        // Remove QR AdditionalDocumentReference
+        foreach ($xpath->query("//cac:AdditionalDocumentReference[cbc:ID='QR']") as $node) {
+            $node->parentNode->removeChild($node);
+        }
 
-        return trim($xml);
+        // C14N canonicalize
+        $canonicalized = $doc->documentElement->C14N(false, false);
+
+        // ZATCA whitespace fixups
+        $canonicalized = str_replace(
+            '<cbc:ProfileID>',
+            "\n    <cbc:ProfileID>",
+            $canonicalized
+        );
+        $canonicalized = str_replace(
+            '<cac:AccountingSupplierParty>',
+            "\n    \n    <cac:AccountingSupplierParty>",
+            $canonicalized
+        );
+
+        return $canonicalized;
     }
 
     public function getNextCounter(?int $lastCounter): int
