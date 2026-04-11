@@ -205,6 +205,16 @@
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="zatca_certificate" class="form-label">شهادة ZATCA (Base64)</label>
+                    <textarea name="zatca_certificate" id="zatca_certificate" class="form-control" rows="3">{{ $settings['zatca_certificate'] ?? '' }}</textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="zatca_secret" class="form-label">كلمة سر ZATCA</label>
+                    <input type="password" name="zatca_secret" id="zatca_secret" class="form-control"
+                        value="{{ $settings['zatca_secret'] ?? '' }}">
+                </div>
             </div>
 
             <hr style="margin: 24px 0; border-color: var(--border-color);">

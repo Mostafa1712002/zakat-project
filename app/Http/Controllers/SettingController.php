@@ -80,6 +80,8 @@ class SettingController extends Controller
             'zatca_country_code' => 'nullable|string|size:2',
             'zatca_egs_serial' => 'nullable|string|max:255',
             'zatca_solution_name' => 'nullable|string|max:255',
+            'zatca_certificate' => 'nullable|string',
+            'zatca_secret' => 'nullable|string|max:500',
         ]);
 
         // Save invoice contacts as JSON
@@ -495,6 +497,8 @@ class SettingController extends Controller
                 'zatca_country_code' => $this->getSetting('zatca_country_code', 'SA'),
                 'zatca_egs_serial' => $this->getSetting('zatca_egs_serial', ''),
                 'zatca_solution_name' => $this->getSetting('zatca_solution_name', ''),
+                'zatca_certificate' => $this->getSetting('zatca_certificate', ''),
+                'zatca_secret' => $this->getSetting('zatca_secret', ''),
             ];
         });
     }

@@ -315,6 +315,47 @@
                             </td>
                         </tr>
                         @endif
+                        @if($sale->zatca_status === \App\Models\Sale::ZATCA_STATUS_PENDING_CLEARANCE || $sale->zatca_status === \App\Models\Sale::ZATCA_STATUS_PENDING_REPORTING)
+                        <tr>
+                            <td class="info-label">إرسال للهيئة:</td>
+                            <td>
+                                <form action="{{ route('sales.zatca.submit', $sale) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-paper-plane"></i>
+                                        {{ $sale->zatca_status === \App\Models\Sale::ZATCA_STATUS_PENDING_CLEARANCE ? 'اعتماد الفاتورة' : 'رفع الفاتورة' }}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endif
+                        @if($sale->zatca_status === \App\Models\Sale::ZATCA_STATUS_FAILED)
+                        <tr>
+                            <td class="info-label">خطأ:</td>
+                            <td class="text-danger">{{ $sale->zatca_last_error }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">إعادة المحاولة:</td>
+                            <td>
+                                <form action="{{ route('sales.zatca.retry', $sale) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-redo"></i> إعادة المحاولة
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endif
+                        @if($sale->isZatcaIssued() && !$sale->isCreditNote() && !$sale->isDebitNote())
+                        <tr>
+                            <td class="info-label">إشعارات:</td>
+                            <td>
+                                <a href="{{ route('sales.credit-note.create', $sale) }}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-file-invoice"></i> إصدار إشعار دائن
+                                </a>
+                            </td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
             </div>

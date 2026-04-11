@@ -1140,6 +1140,115 @@ class SaleController extends Controller
         return view('sales.credit-note-create', compact('sale'));
     }
 
+    public function zatcaSubmit(Sale $sale)
+    {
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403);
+        }
+
+        if (empty($sale->zatca_xml)) {
+            return back()->with('error', 'لم يتم إنشاء ملف XML لهذه الفاتورة');
+        }
+
+        if (in_array($sale->zatca_status, [Sale::ZATCA_STATUS_CLEARED, Sale::ZATCA_STATUS_REPORTED])) {
+            return back()->with('info', 'تم إرسال هذه الفاتورة مسبقاً');
+        }
+
+        $zatca = app(ZatcaComplianceService::class);
+        $settings = $zatca->getCompanySettings();
+        $apiService = new \App\Services\ZatcaApiService();
+
+        $environment = $settings['zatca_environment'] ?? 'sandbox';
+        $certificate = $settings['zatca_certificate'] ?? '';
+        $secret = $settings['zatca_secret'] ?? '';
+
+        if (blank($certificate) || blank($secret)) {
+            return back()->with('error', 'لم يتم تكوين شهادة ZATCA وكلمة السر. يرجى إكمال إعداد الاعتماد في الإعدادات.');
+        }
+
+        if ($sale->zatca_status === Sale::ZATCA_STATUS_PENDING_CLEARANCE) {
+            $result = $apiService->clearInvoice(
+                xml: $sale->zatca_xml,
+                uuid: $sale->zatca_uuid,
+                hash: $sale->zatca_invoice_hash,
+                environment: $environment,
+                certificate: $certificate,
+                secret: $secret,
+            );
+
+            if (!empty($result['error'])) {
+                $sale->update([
+                    'zatca_status' => Sale::ZATCA_STATUS_FAILED,
+                    'zatca_last_error' => $result['message'] ?? 'Unknown error',
+                    'zatca_retry_count' => $sale->zatca_retry_count + 1,
+                ]);
+                return back()->with('error', 'فشل اعتماد الفاتورة: ' . ($result['message'] ?? 'خطأ غير معروف'));
+            }
+
+            $sale->update([
+                'zatca_status' => Sale::ZATCA_STATUS_CLEARED,
+                'zatca_cleared_at' => now(),
+                'zatca_response_reference' => $result['clearanceStatus'] ?? null,
+                'zatca_last_error' => null,
+            ]);
+
+            if (!empty($result['clearedInvoice'])) {
+                $sale->update(['zatca_xml' => base64_decode($result['clearedInvoice'])]);
+            }
+
+            return back()->with('success', 'تم اعتماد الفاتورة بنجاح من هيئة الزكاة والضريبة والجمارك');
+        }
+
+        if ($sale->zatca_status === Sale::ZATCA_STATUS_PENDING_REPORTING) {
+            $result = $apiService->reportInvoice(
+                xml: $sale->zatca_xml,
+                uuid: $sale->zatca_uuid,
+                hash: $sale->zatca_invoice_hash,
+                environment: $environment,
+                certificate: $certificate,
+                secret: $secret,
+            );
+
+            if (!empty($result['error'])) {
+                $sale->update([
+                    'zatca_status' => Sale::ZATCA_STATUS_FAILED,
+                    'zatca_last_error' => $result['message'] ?? 'Unknown error',
+                    'zatca_retry_count' => $sale->zatca_retry_count + 1,
+                ]);
+                return back()->with('error', 'فشل رفع الفاتورة: ' . ($result['message'] ?? 'خطأ غير معروف'));
+            }
+
+            $sale->update([
+                'zatca_status' => Sale::ZATCA_STATUS_REPORTED,
+                'zatca_reported_at' => now(),
+                'zatca_response_reference' => $result['reportingStatus'] ?? null,
+                'zatca_last_error' => null,
+            ]);
+
+            return back()->with('success', 'تم رفع الفاتورة بنجاح إلى هيئة الزكاة والضريبة والجمارك');
+        }
+
+        return back()->with('error', 'حالة الفاتورة لا تسمح بالإرسال');
+    }
+
+    public function zatcaRetry(Sale $sale)
+    {
+        if ($sale->zatca_status !== Sale::ZATCA_STATUS_FAILED) {
+            return back()->with('error', 'لا يمكن إعادة المحاولة إلا للفواتير التي فشل إرسالها');
+        }
+
+        $newStatus = $sale->zatca_invoice_type === Sale::ZATCA_INVOICE_STANDARD
+            ? Sale::ZATCA_STATUS_PENDING_CLEARANCE
+            : Sale::ZATCA_STATUS_PENDING_REPORTING;
+
+        $sale->update([
+            'zatca_status' => $newStatus,
+            'zatca_last_error' => null,
+        ]);
+
+        return $this->zatcaSubmit($sale);
+    }
+
     public function storeCreditNote(Request $request, Sale $sale)
     {
         if (!$sale->canCurrentUserAccess()) {

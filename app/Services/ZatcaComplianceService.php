@@ -34,6 +34,8 @@ class ZatcaComplianceService
             'zatca_country_code' => (string) $this->getSetting('zatca_country_code', 'SA'),
             'zatca_egs_serial' => (string) $this->getSetting('zatca_egs_serial', ''),
             'zatca_solution_name' => (string) $this->getSetting('zatca_solution_name', ''),
+            'zatca_certificate' => (string) $this->getSetting('zatca_certificate', ''),
+            'zatca_secret' => (string) $this->getSetting('zatca_secret', ''),
         ];
     }
 
