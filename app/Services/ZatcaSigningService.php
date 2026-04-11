@@ -78,13 +78,32 @@ class ZatcaSigningService
         $certResource = openssl_x509_read($this->certPem);
         $certData = openssl_x509_parse($certResource);
 
-        $issuerParts = [];
-        foreach (array_reverse($certData['issuer']) as $key => $value) {
-            $issuerParts[] = "{$key}={$value}";
+        // Serial number must be decimal for X509SerialNumber
+        $serialRaw = $certData['serialNumber'] ?? '0';
+        if (str_starts_with($serialRaw, '0x') || str_starts_with($serialRaw, '0X')) {
+            // Convert hex to decimal using BC math for large numbers
+            $hex = substr($serialRaw, 2);
+            $serialNumber = '0';
+            for ($i = 0; $i < strlen($hex); $i++) {
+                $serialNumber = bcmul($serialNumber, '16');
+                $serialNumber = bcadd($serialNumber, (string) hexdec($hex[$i]));
+            }
+        } else {
+            $serialNumber = $serialRaw;
         }
-        $issuer = implode(', ', $issuerParts);
 
-        $serialNumber = $certData['serialNumber'] ?? '0';
+        // Issuer may have array values (DC can appear multiple times)
+        $issuerParts2 = [];
+        foreach ($certData['issuer'] as $key => $value) {
+            if (is_array($value)) {
+                foreach ($value as $v) {
+                    $issuerParts2[] = "{$key}={$v}";
+                }
+            } else {
+                $issuerParts2[] = "{$key}={$value}";
+            }
+        }
+        $issuer = implode(', ', array_reverse($issuerParts2));
 
         $pubKey = openssl_pkey_get_public($certResource);
         $pubKeyDetails = openssl_pkey_get_details($pubKey);
