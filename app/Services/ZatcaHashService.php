@@ -46,21 +46,7 @@ class ZatcaHashService
         }
 
         // C14N canonicalize
-        $canonicalized = $doc->documentElement->C14N(false, false);
-
-        // ZATCA whitespace fixups
-        $canonicalized = str_replace(
-            '<cbc:ProfileID>',
-            "\n    <cbc:ProfileID>",
-            $canonicalized
-        );
-        $canonicalized = str_replace(
-            '<cac:AccountingSupplierParty>',
-            "\n    \n    <cac:AccountingSupplierParty>",
-            $canonicalized
-        );
-
-        return $canonicalized;
+        return $doc->documentElement->C14N(false, false);
     }
 
     public function getNextCounter(?int $lastCounter): int
