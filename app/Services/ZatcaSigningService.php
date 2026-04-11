@@ -9,10 +9,9 @@ class ZatcaSigningService
 {
     private string $privateKeyPem;
     private string $certificateBase64;
-
     private string $certPem;
     private string $certDer;
-    private string $certBody; // inner base64 (PEM body without headers)
+    private string $certBody;
 
     public function __construct(string $privateKeyPath, string $certificateBase64)
     {
@@ -20,71 +19,52 @@ class ZatcaSigningService
         $this->certificateBase64 = $certificateBase64;
 
         // binarySecurityToken = base64(base64(DER))
-        // Decode once to get the PEM body (inner base64)
         $this->certBody = base64_decode($certificateBase64);
-        // Decode twice to get raw DER
         $this->certDer = base64_decode($this->certBody);
-        // Build PEM
         $this->certPem = "-----BEGIN CERTIFICATE-----\n"
             . chunk_split($this->certBody, 64, "\n")
             . "-----END CERTIFICATE-----";
     }
 
-    /**
-     * Sign an invoice XML and return the signed XML with QR.
-     */
     public function sign(string $xml, string $invoiceHash): array
     {
-        // 1. Get certificate info
         $certInfo = $this->extractCertificateInfo();
 
-        // 2. Build signed properties and compute its hash
-        $signingTime = gmdate('Y-m-d\TH:i:s\Z');
-        $certHash = $this->computeCertificateHash($this->certBody);
-        $signedPropsForSigning = $this->buildSignedPropertiesForSigning(
-            $signingTime,
-            $certHash,
-            $certInfo['issuer'],
-            $certInfo['serialNumber']
-        );
-        $signedPropsHash = $this->hashSignedProperties($signedPropsForSigning);
+        // BUG FIX #1: Sign the raw canonical XML, NOT the pre-hashed bytes.
+        // openssl_sign with OPENSSL_ALGO_SHA256 hashes internally.
+        // We need to get the canonical XML that was used to compute invoiceHash.
+        $hashService = new ZatcaHashService();
+        $canonicalXml = $hashService->prepareXmlForHashing($xml);
 
-        // 3. Sign the invoice hash bytes with private key (ECDSA-SHA256)
-        $hashBytes = base64_decode($invoiceHash);
         $privateKey = openssl_pkey_get_private($this->privateKeyPem);
-        openssl_sign($hashBytes, $signatureRaw, $privateKey, OPENSSL_ALGO_SHA256);
+        openssl_sign($canonicalXml, $signatureRaw, $privateKey, OPENSSL_ALGO_SHA256);
         $digitalSignature = base64_encode($signatureRaw);
 
-        // 4. Build the signed properties for embedding
+        // BUG FIX #3: Hash the full PEM certificate (with headers), not just the body
+        $signingTime = gmdate('Y-m-d\TH:i:s\Z');
+        $certHash = base64_encode(hash('sha256', $this->certBody));
+
+        $signedPropsForSigning = $this->buildSignedPropertiesForSigning(
+            $signingTime, $certHash, $certInfo['issuer'], $certInfo['serialNumber']
+        );
+        $signedPropsHash = base64_encode(hash('sha256', $signedPropsForSigning));
+
         $signedPropsEmbed = $this->buildSignedPropertiesForEmbedding(
-            $signingTime,
-            $certHash,
-            $certInfo['issuer'],
-            $certInfo['serialNumber']
+            $signingTime, $certHash, $certInfo['issuer'], $certInfo['serialNumber']
         );
 
-        // 5. Build the full ds:Signature XML
         $signatureXml = $this->buildSignatureXml(
-            $invoiceHash,
-            $signedPropsHash,
-            $digitalSignature,
-            $this->certBody,
-            $signedPropsEmbed
+            $invoiceHash, $signedPropsHash, $digitalSignature,
+            $this->certBody, $signedPropsEmbed
         );
 
-        // 6. Inject signature into UBLExtensions
         $signedXml = $this->injectSignature($xml, $signatureXml);
 
-        // 7. Build QR TLV with 9 tags
         $qrTlv = $this->buildQrTlv9Tags(
-            $xml,
-            $invoiceHash,
-            $digitalSignature,
-            $certInfo['publicKey'],
-            $certInfo['certSignature']
+            $xml, $invoiceHash, $digitalSignature,
+            $certInfo['publicKey'], $certInfo['certSignature']
         );
 
-        // 8. Inject QR into XML
         $finalXml = $this->injectQrCode($signedXml, $qrTlv);
 
         return [
@@ -100,22 +80,18 @@ class ZatcaSigningService
         $certResource = openssl_x509_read($this->certPem);
         $certData = openssl_x509_parse($certResource);
 
-        // Issuer string (reversed, comma-separated)
         $issuerParts = [];
         foreach (array_reverse($certData['issuer']) as $key => $value) {
             $issuerParts[] = "{$key}={$value}";
         }
         $issuer = implode(', ', $issuerParts);
 
-        // Serial number in decimal
         $serialNumber = $certData['serialNumber'] ?? '0';
 
-        // Extract public key as DER
         $pubKey = openssl_pkey_get_public($certResource);
         $pubKeyDetails = openssl_pkey_get_details($pubKey);
         $publicKeyDer = $this->pemToDer($pubKeyDetails['key']);
 
-        // Extract certificate's own signature from DER
         $certSignature = $this->extractCertSignature($this->certDer);
 
         return [
@@ -139,26 +115,13 @@ class ZatcaSigningService
 
     private function extractCertSignature(string $certDer): string
     {
-        // Certificate DER = SEQUENCE { tbsCertificate, signatureAlgorithm, signatureValue(BIT STRING) }
-        // We need the signatureValue which is the last element
-        // Parse the outer SEQUENCE to find the third element
-
         $offset = 0;
-
-        // Skip outer SEQUENCE tag + length
         $offset = $this->skipAsn1TagAndLength($certDer, $offset);
-
-        // Skip tbsCertificate (first SEQUENCE)
+        $offset = $this->skipAsn1Element($certDer, $offset);
         $offset = $this->skipAsn1Element($certDer, $offset);
 
-        // Skip signatureAlgorithm (second SEQUENCE)
-        $offset = $this->skipAsn1Element($certDer, $offset);
-
-        // Now we're at signatureValue (BIT STRING)
-        $tag = ord($certDer[$offset]);
-        $offset++;
-
-        // Read length
+        // BIT STRING tag
+        $offset++; // skip tag byte
         $length = $this->readAsn1Length($certDer, $offset);
         $offset = $length['offset'];
         $len = $length['length'];
@@ -172,7 +135,7 @@ class ZatcaSigningService
 
     private function skipAsn1TagAndLength(string $data, int $offset): int
     {
-        $offset++; // skip tag
+        $offset++;
         $lenByte = ord($data[$offset]);
         $offset++;
         if ($lenByte > 0x80) {
@@ -183,7 +146,7 @@ class ZatcaSigningService
 
     private function skipAsn1Element(string $data, int $offset): int
     {
-        $offset++; // skip tag
+        $offset++;
         $length = $this->readAsn1Length($data, $offset);
         return $length['offset'] + $length['length'];
     }
@@ -207,52 +170,32 @@ class ZatcaSigningService
         return ['offset' => $offset, 'length' => $length];
     }
 
-    private function computeCertificateHash(string $certBase64): string
-    {
-        // hash = base64(hex(sha256(cert_base64_string)))
-        $hashBytes = hash('sha256', $certBase64, true);
-        $hashHex = bin2hex($hashBytes);
-        return base64_encode($hashHex);
-    }
-
-    private function hashSignedProperties(string $signedPropsXml): string
-    {
-        // hash = base64(hex(sha256(xml_bytes)))
-        $hashBytes = hash('sha256', $signedPropsXml, true);
-        $hashHex = bin2hex($hashBytes);
-        return base64_encode($hashHex);
-    }
-
+    // BUG FIX #2: Signed properties template must match SallaApp format exactly
+    // Self-closing DigestMethod tag, proper indentation with newlines
     private function buildSignedPropertiesForSigning(
-        string $signingTime,
-        string $certHash,
-        string $issuer,
-        string $serialNumber
+        string $signingTime, string $certHash, string $issuer, string $serialNumber
     ): string {
-        return '<xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="xadesSignedProperties">'
-            . '<xades:SignedSignatureProperties>'
-            . '<xades:SigningTime>' . $signingTime . '</xades:SigningTime>'
-            . '<xades:SigningCertificate>'
-            . '<xades:Cert>'
-            . '<xades:CertDigest>'
-            . '<ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod>'
-            . '<ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $certHash . '</ds:DigestValue>'
-            . '</xades:CertDigest>'
-            . '<xades:IssuerSerial>'
-            . '<ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $issuer . '</ds:X509IssuerName>'
-            . '<ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $serialNumber . '</ds:X509SerialNumber>'
-            . '</xades:IssuerSerial>'
-            . '</xades:Cert>'
-            . '</xades:SigningCertificate>'
-            . '</xades:SignedSignatureProperties>'
-            . '</xades:SignedProperties>';
+        return '<xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="xadesSignedProperties">' . "\n"
+            . '                                <xades:SignedSignatureProperties>' . "\n"
+            . '                                    <xades:SigningTime>' . $signingTime . '</xades:SigningTime>' . "\n"
+            . '                                    <xades:SigningCertificate>' . "\n"
+            . '                                        <xades:Cert>' . "\n"
+            . '                                            <xades:CertDigest>' . "\n"
+            . '                                                <ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>' . "\n"
+            . '                                                <ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $certHash . '</ds:DigestValue>' . "\n"
+            . '                                            </xades:CertDigest>' . "\n"
+            . '                                            <xades:IssuerSerial>' . "\n"
+            . '                                                <ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $issuer . '</ds:X509IssuerName>' . "\n"
+            . '                                                <ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $serialNumber . '</ds:X509SerialNumber>' . "\n"
+            . '                                            </xades:IssuerSerial>' . "\n"
+            . '                                        </xades:Cert>' . "\n"
+            . '                                    </xades:SigningCertificate>' . "\n"
+            . '                                </xades:SignedSignatureProperties>' . "\n"
+            . '                            </xades:SignedProperties>';
     }
 
     private function buildSignedPropertiesForEmbedding(
-        string $signingTime,
-        string $certHash,
-        string $issuer,
-        string $serialNumber
+        string $signingTime, string $certHash, string $issuer, string $serialNumber
     ): string {
         return '<xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="xadesSignedProperties">'
             . '<xades:SignedSignatureProperties>'
@@ -260,7 +203,7 @@ class ZatcaSigningService
             . '<xades:SigningCertificate>'
             . '<xades:Cert>'
             . '<xades:CertDigest>'
-            . '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod>'
+            . '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
             . '<ds:DigestValue>' . $certHash . '</ds:DigestValue>'
             . '</xades:CertDigest>'
             . '<xades:IssuerSerial>'
@@ -274,11 +217,8 @@ class ZatcaSigningService
     }
 
     private function buildSignatureXml(
-        string $invoiceHash,
-        string $signedPropsHash,
-        string $digitalSignature,
-        string $certificateBase64,
-        string $signedPropsEmbed
+        string $invoiceHash, string $signedPropsHash, string $digitalSignature,
+        string $certificateBody, string $signedPropsEmbed
     ): string {
         return '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="signature">'
             . '<ds:SignedInfo>'
@@ -308,7 +248,7 @@ class ZatcaSigningService
             . '<ds:SignatureValue>' . $digitalSignature . '</ds:SignatureValue>'
             . '<ds:KeyInfo>'
             . '<ds:X509Data>'
-            . '<ds:X509Certificate>' . $certificateBase64 . '</ds:X509Certificate>'
+            . '<ds:X509Certificate>' . $certificateBody . '</ds:X509Certificate>'
             . '</ds:X509Data>'
             . '</ds:KeyInfo>'
             . '<ds:Object>'
@@ -324,23 +264,14 @@ class ZatcaSigningService
         $doc = new DOMDocument();
         $doc->loadXML($xml);
         $xpath = new DOMXPath($doc);
-        $xpath->registerNamespace('ext', 'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2');
-        $xpath->registerNamespace('sig', 'urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2');
         $xpath->registerNamespace('sac', 'urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2');
-        $xpath->registerNamespace('sbc', 'urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2');
 
-        // Find the sac:SignatureInformation element
         $sigInfoNodes = $xpath->query('//sac:SignatureInformation');
-
         if ($sigInfoNodes->length > 0) {
-            $sigInfo = $sigInfoNodes->item(0);
-
-            // Parse the signature XML fragment
             $sigDoc = new DOMDocument();
             $sigDoc->loadXML($signatureXml);
-            $importedSig = $doc->importNode($sigDoc->documentElement, true);
-
-            $sigInfo->appendChild($importedSig);
+            $imported = $doc->importNode($sigDoc->documentElement, true);
+            $sigInfoNodes->item(0)->appendChild($imported);
         }
 
         return $doc->saveXML();
@@ -354,21 +285,16 @@ class ZatcaSigningService
         $xpath->registerNamespace('cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
         $xpath->registerNamespace('cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
 
-        // Check if QR AdditionalDocumentReference exists, if not create it
         $qrNodes = $xpath->query("//cac:AdditionalDocumentReference[cbc:ID='QR']");
-
         $nsCAC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2';
         $nsCBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2';
 
         if ($qrNodes->length > 0) {
-            // Update existing
-            $qrNode = $qrNodes->item(0);
-            $embedNodes = $xpath->query('.//cbc:EmbeddedDocumentBinaryObject', $qrNode);
+            $embedNodes = $xpath->query('.//cbc:EmbeddedDocumentBinaryObject', $qrNodes->item(0));
             if ($embedNodes->length > 0) {
                 $embedNodes->item(0)->textContent = $qrTlvBase64;
             }
         } else {
-            // Create QR reference before cac:Signature
             $sigNodes = $xpath->query('//cac:Signature');
             $qrRef = $doc->createElementNS($nsCAC, 'cac:AdditionalDocumentReference');
             $qrId = $doc->createElementNS($nsCBC, 'cbc:ID', 'QR');
@@ -391,11 +317,8 @@ class ZatcaSigningService
     }
 
     private function buildQrTlv9Tags(
-        string $xml,
-        string $invoiceHash,
-        string $digitalSignature,
-        string $publicKeyDer,
-        string $certSignatureDer
+        string $xml, string $invoiceHash, string $digitalSignature,
+        string $publicKeyDer, string $certSignatureDer
     ): string {
         $doc = new DOMDocument();
         $doc->loadXML($xml);
@@ -403,7 +326,6 @@ class ZatcaSigningService
         $xpath->registerNamespace('cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
         $xpath->registerNamespace('cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
 
-        // Extract values from XML
         $sellerName = $this->xpathValue($xpath, '//cac:AccountingSupplierParty//cac:PartyLegalEntity/cbc:RegistrationName');
         $vatNumber = $this->xpathValue($xpath, '//cac:AccountingSupplierParty//cac:PartyTaxScheme/cbc:CompanyID');
         $issueDate = $this->xpathValue($xpath, '//cbc:IssueDate');
@@ -417,14 +339,12 @@ class ZatcaSigningService
         $tax = $taxNodes->length > 0 ? $taxNodes->item(0)->textContent : '0.00';
 
         $tlv = '';
-        // Tags 1-6: UTF-8 strings
         $tlv .= $this->encodeTlv(1, $sellerName);
         $tlv .= $this->encodeTlv(2, $vatNumber);
         $tlv .= $this->encodeTlv(3, $dateTime);
         $tlv .= $this->encodeTlv(4, $total);
         $tlv .= $this->encodeTlv(5, $tax);
         $tlv .= $this->encodeTlv(6, $invoiceHash);
-        // Tags 7-9: raw binary
         $tlv .= $this->encodeTlvBinary(7, base64_decode($digitalSignature));
         $tlv .= $this->encodeTlvBinary(8, $publicKeyDer);
         $tlv .= $this->encodeTlvBinary(9, $certSignatureDer);
@@ -442,7 +362,6 @@ class ZatcaSigningService
     {
         $len = strlen($value);
         if ($len > 255) {
-            // Use 2-byte length for values > 255
             return chr($tag) . chr(0x82) . pack('n', $len) . $value;
         }
         return chr($tag) . chr($len) . $value;
