@@ -361,7 +361,13 @@ class SaleController extends Controller
             $zatcaEnabled = ($settings['zatca_enabled'] ?? '0') === '1';
         } catch (\Exception $e) {}
 
-        return view('sales.show', compact('sale', 'supervisorPhone', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts', 'companyTaxNumber', 'zatcaEnabled'));
+        $zatcaQrImage = null;
+        if ($zatcaEnabled && $sale->isZatcaIssued() && $sale->zatca_qr_tlv) {
+            $qrService = new \App\Services\ZatcaQrService();
+            $zatcaQrImage = $qrService->generateBase64Image($sale->zatca_qr_tlv);
+        }
+
+        return view('sales.show', compact('sale', 'supervisorPhone', 'companyName', 'companyLogo', 'companyStamp', 'invoiceContacts', 'companyTaxNumber', 'zatcaEnabled', 'zatcaQrImage'));
     }
 
     /**
@@ -994,7 +1000,13 @@ class SaleController extends Controller
             }
         } catch (\Exception $e) {}
 
-        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp', 'companyTaxNumber', 'invoiceContacts', 'invoiceNote', 'invoiceFooter', 'showCustomerBalance', 'zatcaEnabled'));
+        $zatcaQrImage = null;
+        if ($zatcaEnabled && $sale->isZatcaIssued() && $sale->zatca_qr_tlv) {
+            $qrService = new \App\Services\ZatcaQrService();
+            $zatcaQrImage = $qrService->generateBase64Image($sale->zatca_qr_tlv);
+        }
+
+        $pdf = \Barryvdh\Snappy\Facades\SnappyPdf::loadView('pdf.sale', compact('sale', 'companyName', 'companyLogo', 'companyStamp', 'companyTaxNumber', 'invoiceContacts', 'invoiceNote', 'invoiceFooter', 'showCustomerBalance', 'zatcaEnabled', 'zatcaQrImage'));
 
         $pdf->setOption('page-size', 'A4');
         $pdf->setOption('encoding', 'UTF-8');
@@ -1094,5 +1106,21 @@ class SaleController extends Controller
 
             return back()->with('error', 'حدث خطأ أثناء إلغاء الفاتورة: ' . $e->getMessage());
         }
+    }
+
+    public function downloadXml(Sale $sale)
+    {
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403);
+        }
+
+        if (empty($sale->zatca_xml)) {
+            return back()->with('error', 'لم يتم إنشاء ملف XML لهذه الفاتورة بعد');
+        }
+
+        return response($sale->zatca_xml, 200, [
+            'Content-Type' => 'application/xml',
+            'Content-Disposition' => 'attachment; filename="invoice-' . $sale->invoice_number . '.xml"',
+        ]);
     }
 }

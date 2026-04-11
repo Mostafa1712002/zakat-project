@@ -336,14 +336,22 @@
                 <span class="info-row-value">{{ $sale->salesRep->name }}</span>
             </div>
             @endif
-            @if($zatcaEnabled || $sale->isZatcaIssued())
-            <div class="info-row">
-                <span class="info-row-label">نوع ZATCA: </span>
-                <span class="info-row-value">{{ $sale->zatca_invoice_type_label }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-row-label">UUID: </span>
-                <span class="info-row-value">{{ $sale->zatca_uuid ?: '-' }}</span>
+            @if(($zatcaEnabled ?? false) || $sale->isZatcaIssued())
+            <div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <div style="display: flex; align-items: flex-start; gap: 15px;">
+                    @if(!empty($zatcaQrImage))
+                    <div style="flex-shrink: 0;">
+                        <img src="{{ $zatcaQrImage }}" alt="QR Code" style="width: 120px; height: 120px;">
+                    </div>
+                    @endif
+                    <div style="flex-grow: 1; font-size: 10px; direction: rtl; text-align: right;">
+                        <div><strong>نوع الفاتورة:</strong> {{ $sale->zatca_invoice_type_label }}</div>
+                        <div><strong>رقم الفاتورة المميز:</strong> {{ $sale->zatca_uuid }}</div>
+                        @if($sale->zatca_invoice_hash)
+                        <div><strong>تجزئة الفاتورة:</strong> <span style="font-size: 8px; word-break: break-all;">{{ $sale->zatca_invoice_hash }}</span></div>
+                        @endif
+                    </div>
+                </div>
             </div>
             @endif
         </div>

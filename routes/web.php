@@ -111,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])->name('sales.pdf');
     Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
     Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
+    Route::get('sales/{sale}/zatca-xml', [SaleController::class, 'downloadXml'])->name('sales.zatca.xml');
     Route::resource('sales', SaleController::class);
 
     // Sales Quotations (تسعيرات المبيعات)

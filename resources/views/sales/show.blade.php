@@ -299,6 +299,22 @@
                             <td class="info-label">بيانات QR:</td>
                             <td class="info-value">{{ $sale->zatca_qr_tlv ? 'تم تجهيزها' : 'غير متوفرة بعد' }}</td>
                         </tr>
+                        @if(!empty($zatcaQrImage))
+                        <tr>
+                            <td class="info-label">رمز الاستجابة السريعة:</td>
+                            <td><img src="{{ $zatcaQrImage }}" alt="QR Code" style="width: 150px; height: 150px;"></td>
+                        </tr>
+                        @endif
+                        @if($sale->zatca_xml)
+                        <tr>
+                            <td class="info-label">ملف XML:</td>
+                            <td>
+                                <a href="{{ route('sales.zatca.xml', $sale) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <i class="fas fa-download"></i> تحميل XML
+                                </a>
+                            </td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
             </div>
