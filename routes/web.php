@@ -112,6 +112,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
     Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
     Route::get('sales/{sale}/zatca-xml', [SaleController::class, 'downloadXml'])->name('sales.zatca.xml');
+    Route::get('sales/{sale}/credit-note', [SaleController::class, 'createCreditNote'])->name('sales.credit-note.create');
+    Route::post('sales/{sale}/credit-note', [SaleController::class, 'storeCreditNote'])->name('sales.credit-note.store');
     Route::resource('sales', SaleController::class);
 
     // Sales Quotations (تسعيرات المبيعات)

@@ -1123,4 +1123,115 @@ class SaleController extends Controller
             'Content-Disposition' => 'attachment; filename="invoice-' . $sale->invoice_number . '.xml"',
         ]);
     }
+
+    public function createCreditNote(Sale $sale)
+    {
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403);
+        }
+
+        if (!$sale->isZatcaIssued()) {
+            return redirect()->route('sales.show', $sale)
+                ->with('error', 'لا يمكن إصدار إشعار دائن لفاتورة لم تصدر بعد إلكترونياً');
+        }
+
+        $sale->load('items.product', 'customer');
+
+        return view('sales.credit-note-create', compact('sale'));
+    }
+
+    public function storeCreditNote(Request $request, Sale $sale)
+    {
+        if (!$sale->canCurrentUserAccess()) {
+            abort(403);
+        }
+
+        if (!$sale->isZatcaIssued()) {
+            return redirect()->route('sales.show', $sale)
+                ->with('error', 'لا يمكن إصدار إشعار دائن لفاتورة لم تصدر بعد إلكترونياً');
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.sale_item_id' => 'required|exists:sale_items,id',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $creditNote = Sale::create([
+                'invoice_number' => Sale::generateInvoiceNumber(),
+                'customer_id' => $sale->customer_id,
+                'branch_id' => $sale->branch_id,
+                'warehouse_id' => $sale->warehouse_id,
+                'user_id' => auth()->id(),
+                'invoice_date' => now()->toDateString(),
+                'payment_type' => $sale->payment_type,
+                'status' => Sale::STATUS_CONFIRMED,
+                'payment_status' => Sale::PAYMENT_STATUS_UNPAID,
+                'discount_type' => 'fixed',
+                'discount_value' => 0,
+                'shipping_amount' => 0,
+                'paid_amount' => 0,
+                'remaining_amount' => 0,
+                'zatca_note_type' => Sale::ZATCA_NOTE_CREDIT,
+                'zatca_original_sale_id' => $sale->id,
+                'zatca_note_reason' => $validated['reason'],
+            ]);
+
+            foreach ($validated['items'] as $itemData) {
+                $originalItem = SaleItem::findOrFail($itemData['sale_item_id']);
+                $quantity = min($itemData['quantity'], $originalItem->quantity);
+
+                if ($quantity <= 0) {
+                    continue;
+                }
+
+                $taxAmount = $originalItem->unit_price * $quantity * ($originalItem->tax_rate / 100);
+                $subtotal = $originalItem->unit_price * $quantity;
+
+                SaleItem::create([
+                    'sale_id' => $creditNote->id,
+                    'product_id' => $originalItem->product_id,
+                    'product_name' => $originalItem->product_name,
+                    'product_sku' => $originalItem->product_sku,
+                    'quantity' => $quantity,
+                    'unit_price' => $originalItem->unit_price,
+                    'cost_price' => $originalItem->cost_price,
+                    'discount_amount' => 0,
+                    'tax_rate' => $originalItem->tax_rate,
+                    'tax_amount' => $taxAmount,
+                    'subtotal' => $subtotal,
+                    'total' => $subtotal + $taxAmount,
+                ]);
+            }
+
+            $creditNote->load('items');
+            $creditNote->calculateTotals();
+            $creditNote->save();
+
+            // Issue ZATCA data if enabled
+            $zatca = app(ZatcaComplianceService::class);
+            if ($zatca->isEnabled()) {
+                $companySettings = $zatca->getCompanySettings();
+                $creditNote->loadMissing('customer', 'originalSale');
+                $issuedData = $zatca->prepareIssuedInvoiceData($creditNote, $companySettings);
+                $creditNote->update($issuedData);
+
+                $creditNote->refresh();
+                $xmlData = $zatca->generateInvoiceXmlAndHash($creditNote, $companySettings);
+                $creditNote->update($xmlData);
+            }
+
+            DB::commit();
+
+            return redirect()->route('sales.show', $creditNote)
+                ->with('success', 'تم إصدار الإشعار الدائن بنجاح');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'حدث خطأ أثناء إصدار الإشعار الدائن: ' . $e->getMessage());
+        }
+    }
 }
