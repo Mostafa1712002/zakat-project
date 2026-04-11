@@ -35,6 +35,9 @@ class Sale extends Model
     public const ZATCA_STATUS_REPORTED = 'reported';
     public const ZATCA_STATUS_FAILED = 'failed';
 
+    public const ZATCA_NOTE_CREDIT = 'credit';
+    public const ZATCA_NOTE_DEBIT = 'debit';
+
     protected $fillable = [
         'invoice_number',
         'customer_id',
@@ -76,6 +79,14 @@ class Sale extends Model
         'zatca_reported_at',
         'zatca_response_reference',
         'zatca_last_error',
+        'zatca_invoice_hash',
+        'zatca_previous_invoice_hash',
+        'zatca_invoice_counter',
+        'zatca_note_type',
+        'zatca_original_sale_id',
+        'zatca_note_reason',
+        'zatca_retry_count',
+        'zatca_next_retry_at',
     ];
 
     protected $casts = [
@@ -94,6 +105,7 @@ class Sale extends Model
         'zatca_xml_generated_at' => 'datetime',
         'zatca_cleared_at' => 'datetime',
         'zatca_reported_at' => 'datetime',
+        'zatca_next_retry_at' => 'datetime',
     ];
 
     public function customer(): BelongsTo
@@ -278,6 +290,35 @@ class Sale extends Model
             self::ZATCA_STATUS_CLEARED => 'تم التخليص',
             self::ZATCA_STATUS_REPORTED => 'تم الرفع',
             self::ZATCA_STATUS_FAILED => 'فشل الإرسال',
+            default => '-',
+        };
+    }
+
+    public function originalSale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class, 'zatca_original_sale_id');
+    }
+
+    public function creditDebitNotes(): HasMany
+    {
+        return $this->hasMany(Sale::class, 'zatca_original_sale_id');
+    }
+
+    public function isCreditNote(): bool
+    {
+        return $this->zatca_note_type === self::ZATCA_NOTE_CREDIT;
+    }
+
+    public function isDebitNote(): bool
+    {
+        return $this->zatca_note_type === self::ZATCA_NOTE_DEBIT;
+    }
+
+    public function getZatcaNoteTypeLabelAttribute(): string
+    {
+        return match ($this->zatca_note_type) {
+            self::ZATCA_NOTE_CREDIT => 'إشعار دائن',
+            self::ZATCA_NOTE_DEBIT => 'إشعار مدين',
             default => '-',
         };
     }
