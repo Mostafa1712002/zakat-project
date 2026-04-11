@@ -85,11 +85,37 @@ class ZatcaSigningService
 
     private function extractCertificateInfo(string $certDer): array
     {
+        // The certificateBase64 is already base64 of the DER cert
+        // but certDer here is base64_decode of binarySecurityToken which is base64(base64(DER))
+        // So certDer might actually be the PEM body text, not raw DER
         $certPem = "-----BEGIN CERTIFICATE-----\n"
             . chunk_split(base64_encode($certDer), 64, "\n")
             . "-----END CERTIFICATE-----";
 
         $certResource = openssl_x509_read($certPem);
+
+        // If that fails, the token is base64(PEM_body), so decode once more
+        if ($certResource === false) {
+            $decoded = base64_decode($this->certificateBase64);
+            if ($decoded !== false) {
+                $certPem = "-----BEGIN CERTIFICATE-----\n"
+                    . chunk_split($this->certificateBase64, 64, "\n")
+                    . "-----END CERTIFICATE-----";
+                $certResource = openssl_x509_read($certPem);
+                $certDer = base64_decode($this->certificateBase64);
+            }
+        }
+
+        // If still fails, try the binarySecurityToken as base64(base64(DER))
+        if ($certResource === false) {
+            $innerBase64 = base64_decode($this->certificateBase64);
+            $certPem = "-----BEGIN CERTIFICATE-----\n"
+                . chunk_split($innerBase64, 64, "\n")
+                . "-----END CERTIFICATE-----";
+            $certResource = openssl_x509_read($certPem);
+            $certDer = base64_decode($innerBase64);
+        }
+
         $certData = openssl_x509_parse($certResource);
 
         // Get issuer string (reversed, comma-separated)
