@@ -79,7 +79,6 @@ class ZatcaXmlService
         // UBL requires non-empty ExtensionContent - add signature placeholder
         $sigInfo = $doc->createElementNS(self::NS_SIG, 'sig:UBLDocumentSignatures');
         $sigInfo->setAttribute('xmlns:sac', 'urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2');
-        $sigInfo->setAttribute('xmlns:sbc', self::NS_SBC);
         $sigContainer = $doc->createElement('sac:SignatureInformation');
         $sigId = $doc->createElementNS(self::NS_CBC, 'cbc:ID', 'urn:oasis:names:specification:ubl:signature:1');
         $sigContainer->appendChild($sigId);
