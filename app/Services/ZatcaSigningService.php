@@ -30,20 +30,17 @@ class ZatcaSigningService
     {
         $certInfo = $this->extractCertificateInfo();
 
-        // Sign the canonical XML with ECDSA-SHA256
-        // phpseclib3 withHash('sha256') computes SHA256 internally then signs
-        // Result: ECDSA(SHA256(canonicalXml)) — standard XML-DSIG signature
-        $hashService = new ZatcaHashService();
-        $canonicalXml = $hashService->prepareXmlForHashing($xml);
-
+        // Sign the raw binary hash bytes (32 bytes from SHA256 of canonical XML)
+        // phpseclib3 default hash is sha256, so sign(hashBytes) = ECDSA(SHA256(hashBytes))
+        // This matches SallaApp: $privateKey->sign($invoiceHashBinary)
+        $hashBytes = base64_decode($invoiceHash);
         $ecPrivateKey = \phpseclib3\Crypt\EC::loadPrivateKey($this->privateKeyPem);
-        $ecPrivateKey = $ecPrivateKey->withHash('sha256');
-        $signatureRaw = $ecPrivateKey->sign($canonicalXml);
+        $signatureRaw = $ecPrivateKey->sign($hashBytes);
         $digitalSignature = base64_encode($signatureRaw);
 
-        // BUG FIX #3: Hash the full PEM certificate (with headers), not just the body
+        // Certificate hash: base64(hex(sha256(full_pem_string))) — matches SallaApp getHash()
         $signingTime = gmdate('Y-m-d\TH:i:s\Z');
-        $certHash = base64_encode(hash('sha256', $this->certBody));
+        $certHash = base64_encode(hash('sha256', $this->certPem));
 
         $signedPropsForSigning = $this->buildSignedPropertiesForSigning(
             $signingTime, $certHash, $certInfo['issuer'], $certInfo['serialNumber']
@@ -93,7 +90,19 @@ class ZatcaSigningService
         $pubKeyDetails = openssl_pkey_get_details($pubKey);
         $publicKeyDer = $this->pemToDer($pubKeyDetails['key']);
 
-        $certSignature = $this->extractCertSignature($this->certDer);
+        // Extract cert signature using phpseclib3 (matches SallaApp)
+        $x509 = new \phpseclib3\File\X509();
+        $x509->loadX509($this->certPem);
+        $certSigRaw = $x509->getCurrentCert()['signature'];
+        $certSignature = substr($certSigRaw, 1); // strip unused bits byte
+
+        // Public key via phpseclib3 (matches SallaApp getPlainPublicKey)
+        $plainPubKeyB64 = str_replace(
+            ["-----BEGIN PUBLIC KEY-----\r\n", "\r\n-----END PUBLIC KEY-----", "\r\n",
+             "-----BEGIN PUBLIC KEY-----\n", "\n-----END PUBLIC KEY-----", "\n"],
+            '', $x509->getPublicKey()->toString('PKCS8')
+        );
+        $publicKeyDer = base64_decode($plainPubKeyB64);
 
         return [
             'issuer' => $issuer,
@@ -346,7 +355,9 @@ class ZatcaSigningService
         $tlv .= $this->encodeTlv(4, $total);
         $tlv .= $this->encodeTlv(5, $tax);
         $tlv .= $this->encodeTlv(6, $invoiceHash);
-        $tlv .= $this->encodeTlvBinary(7, base64_decode($digitalSignature));
+        // Tag 7: SallaApp passes the base64 STRING, not raw bytes
+        $tlv .= $this->encodeTlv(7, $digitalSignature);
+        // Tags 8-9: raw binary DER bytes
         $tlv .= $this->encodeTlvBinary(8, $publicKeyDer);
         $tlv .= $this->encodeTlvBinary(9, $certSignatureDer);
 
