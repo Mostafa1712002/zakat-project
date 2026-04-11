@@ -10,10 +10,24 @@ class ZatcaSigningService
     private string $privateKeyPem;
     private string $certificateBase64;
 
+    private string $certPem;
+    private string $certDer;
+    private string $certBody; // inner base64 (PEM body without headers)
+
     public function __construct(string $privateKeyPath, string $certificateBase64)
     {
         $this->privateKeyPem = file_get_contents($privateKeyPath);
         $this->certificateBase64 = $certificateBase64;
+
+        // binarySecurityToken = base64(base64(DER))
+        // Decode once to get the PEM body (inner base64)
+        $this->certBody = base64_decode($certificateBase64);
+        // Decode twice to get raw DER
+        $this->certDer = base64_decode($this->certBody);
+        // Build PEM
+        $this->certPem = "-----BEGIN CERTIFICATE-----\n"
+            . chunk_split($this->certBody, 64, "\n")
+            . "-----END CERTIFICATE-----";
     }
 
     /**
@@ -22,8 +36,7 @@ class ZatcaSigningService
     public function sign(string $xml, string $invoiceHash): array
     {
         // 1. Get certificate info
-        $certDer = base64_decode($this->certificateBase64);
-        $certInfo = $this->extractCertificateInfo($certDer);
+        $certInfo = $this->extractCertificateInfo();
 
         // 2. Sign the invoice hash with private key
         $hashBytes = base64_decode($invoiceHash);
@@ -34,7 +47,7 @@ class ZatcaSigningService
 
         // 3. Build signed properties XML and hash it
         $signingTime = gmdate('Y-m-d\TH:i:s\Z');
-        $certHash = $this->computeCertificateHash($this->certificateBase64);
+        $certHash = $this->computeCertificateHash($this->certBody);
         $signedPropsForSigning = $this->buildSignedPropertiesForSigning(
             $signingTime,
             $certHash,
@@ -56,7 +69,7 @@ class ZatcaSigningService
             $invoiceHash,
             $signedPropsHash,
             $digitalSignature,
-            $this->certificateBase64,
+            $this->certBody,
             $signedPropsEmbed
         );
 
@@ -83,42 +96,12 @@ class ZatcaSigningService
         ];
     }
 
-    private function extractCertificateInfo(string $certDer): array
+    private function extractCertificateInfo(): array
     {
-        // The certificateBase64 is already base64 of the DER cert
-        // but certDer here is base64_decode of binarySecurityToken which is base64(base64(DER))
-        // So certDer might actually be the PEM body text, not raw DER
-        $certPem = "-----BEGIN CERTIFICATE-----\n"
-            . chunk_split(base64_encode($certDer), 64, "\n")
-            . "-----END CERTIFICATE-----";
-
-        $certResource = openssl_x509_read($certPem);
-
-        // If that fails, the token is base64(PEM_body), so decode once more
-        if ($certResource === false) {
-            $decoded = base64_decode($this->certificateBase64);
-            if ($decoded !== false) {
-                $certPem = "-----BEGIN CERTIFICATE-----\n"
-                    . chunk_split($this->certificateBase64, 64, "\n")
-                    . "-----END CERTIFICATE-----";
-                $certResource = openssl_x509_read($certPem);
-                $certDer = base64_decode($this->certificateBase64);
-            }
-        }
-
-        // If still fails, try the binarySecurityToken as base64(base64(DER))
-        if ($certResource === false) {
-            $innerBase64 = base64_decode($this->certificateBase64);
-            $certPem = "-----BEGIN CERTIFICATE-----\n"
-                . chunk_split($innerBase64, 64, "\n")
-                . "-----END CERTIFICATE-----";
-            $certResource = openssl_x509_read($certPem);
-            $certDer = base64_decode($innerBase64);
-        }
-
+        $certResource = openssl_x509_read($this->certPem);
         $certData = openssl_x509_parse($certResource);
 
-        // Get issuer string (reversed, comma-separated)
+        // Issuer string (reversed, comma-separated)
         $issuerParts = [];
         foreach (array_reverse($certData['issuer']) as $key => $value) {
             $issuerParts[] = "{$key}={$value}";
@@ -128,14 +111,13 @@ class ZatcaSigningService
         // Serial number in decimal
         $serialNumber = $certData['serialNumber'] ?? '0';
 
-        // Extract public key DER
-        $pubKeyDetails = openssl_pkey_get_details(openssl_pkey_get_public($certResource));
-        $publicKeyDer = $pubKeyDetails['key'] ?? '';
-        // Convert PEM public key to DER
+        // Extract public key as DER
+        $pubKey = openssl_pkey_get_public($certResource);
+        $pubKeyDetails = openssl_pkey_get_details($pubKey);
         $publicKeyDer = $this->pemToDer($pubKeyDetails['key']);
 
-        // Extract certificate signature (last part of DER)
-        $certSignature = $this->extractCertSignature($certDer);
+        // Extract certificate's own signature from DER
+        $certSignature = $this->extractCertSignature($this->certDer);
 
         return [
             'issuer' => $issuer,
@@ -158,40 +140,72 @@ class ZatcaSigningService
 
     private function extractCertSignature(string $certDer): string
     {
-        // Parse ASN.1 to get the signature value from the certificate
-        // Certificate = SEQUENCE { tbsCertificate, signatureAlgorithm, signatureValue }
-        // signatureValue is a BIT STRING at the end
+        // Certificate DER = SEQUENCE { tbsCertificate, signatureAlgorithm, signatureValue(BIT STRING) }
+        // We need the signatureValue which is the last element
+        // Parse the outer SEQUENCE to find the third element
 
-        $hex = bin2hex($certDer);
-        // Find the last BIT STRING (tag 03) which is the signature
-        $lastBitString = strrpos($hex, '03');
+        $offset = 0;
 
-        if ($lastBitString !== false) {
-            $pos = $lastBitString;
-            $tag = substr($hex, $pos, 2);
-            $pos += 2;
+        // Skip outer SEQUENCE tag + length
+        $offset = $this->skipAsn1TagAndLength($certDer, $offset);
 
-            // Read length
-            $lenByte = hexdec(substr($hex, $pos, 2));
-            $pos += 2;
+        // Skip tbsCertificate (first SEQUENCE)
+        $offset = $this->skipAsn1Element($certDer, $offset);
 
-            if ($lenByte > 0x80) {
-                $numLenBytes = $lenByte - 0x80;
-                $len = hexdec(substr($hex, $pos, $numLenBytes * 2));
-                $pos += $numLenBytes * 2;
-            } else {
-                $len = $lenByte;
-            }
+        // Skip signatureAlgorithm (second SEQUENCE)
+        $offset = $this->skipAsn1Element($certDer, $offset);
 
-            // Skip the unused bits byte (00)
-            $pos += 2;
-            $len -= 1;
+        // Now we're at signatureValue (BIT STRING)
+        $tag = ord($certDer[$offset]);
+        $offset++;
 
-            $sigHex = substr($hex, $pos, $len * 2);
-            return hex2bin($sigHex);
+        // Read length
+        $length = $this->readAsn1Length($certDer, $offset);
+        $offset = $length['offset'];
+        $len = $length['length'];
+
+        // Skip unused bits byte (0x00)
+        $offset++;
+        $len--;
+
+        return substr($certDer, $offset, $len);
+    }
+
+    private function skipAsn1TagAndLength(string $data, int $offset): int
+    {
+        $offset++; // skip tag
+        $lenByte = ord($data[$offset]);
+        $offset++;
+        if ($lenByte > 0x80) {
+            $offset += ($lenByte - 0x80);
+        }
+        return $offset;
+    }
+
+    private function skipAsn1Element(string $data, int $offset): int
+    {
+        $offset++; // skip tag
+        $length = $this->readAsn1Length($data, $offset);
+        return $length['offset'] + $length['length'];
+    }
+
+    private function readAsn1Length(string $data, int $offset): array
+    {
+        $lenByte = ord($data[$offset]);
+        $offset++;
+
+        if ($lenByte <= 0x7F) {
+            return ['offset' => $offset, 'length' => $lenByte];
         }
 
-        return '';
+        $numBytes = $lenByte - 0x80;
+        $length = 0;
+        for ($i = 0; $i < $numBytes; $i++) {
+            $length = ($length << 8) | ord($data[$offset]);
+            $offset++;
+        }
+
+        return ['offset' => $offset, 'length' => $length];
     }
 
     private function computeCertificateHash(string $certBase64): string
