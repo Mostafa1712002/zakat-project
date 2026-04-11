@@ -12,6 +12,9 @@ class ZatcaXmlService
     private const NS_CAC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2';
     private const NS_CBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2';
     private const NS_EXT = 'urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2';
+    private const NS_SIG = 'urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2';
+    private const NS_SBC = 'urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2';
+    private const NS_DS = 'http://www.w3.org/2000/09/xmldsig#';
 
     public function generate(Sale $sale, array $seller): string
     {
@@ -28,6 +31,12 @@ class ZatcaXmlService
         $this->addElement($doc, $invoice, 'cbc', 'DocumentCurrencyCode', 'SAR');
         $this->addElement($doc, $invoice, 'cbc', 'TaxCurrencyCode', 'SAR');
 
+        // Signature reference
+        $signature = $doc->createElement('cac:Signature');
+        $this->addElement($doc, $signature, 'cbc', 'ID', 'urn:oasis:names:specification:ubl:signature:Invoice');
+        $this->addElement($doc, $signature, 'cbc', 'SignatureMethod', 'urn:oasis:names:specification:ubl:dsig:enveloped:xades');
+        $invoice->appendChild($signature);
+
         if ($sale->zatca_note_type && $sale->originalSale) {
             $this->addBillingReference($doc, $invoice, $sale);
         }
@@ -35,6 +44,12 @@ class ZatcaXmlService
         $this->addAdditionalDocumentReferences($doc, $invoice, $sale);
         $this->addSupplierParty($doc, $invoice, $seller);
         $this->addCustomerParty($doc, $invoice, $sale);
+
+        // Delivery with supply date (KSA-5)
+        $delivery = $doc->createElement('cac:Delivery');
+        $this->addElement($doc, $delivery, 'cbc', 'ActualDeliveryDate', $sale->invoice_date->format('Y-m-d'));
+        $invoice->appendChild($delivery);
+
         $this->addPaymentMeans($doc, $invoice, $sale);
         $this->addTaxTotals($doc, $invoice, $sale);
         $this->addLegalMonetaryTotal($doc, $invoice, $sale);
@@ -49,6 +64,9 @@ class ZatcaXmlService
         $invoice->setAttribute('xmlns:cac', self::NS_CAC);
         $invoice->setAttribute('xmlns:cbc', self::NS_CBC);
         $invoice->setAttribute('xmlns:ext', self::NS_EXT);
+        $invoice->setAttribute('xmlns:sig', self::NS_SIG);
+        $invoice->setAttribute('xmlns:sbc', self::NS_SBC);
+        $invoice->setAttribute('xmlns:ds', self::NS_DS);
         return $invoice;
     }
 
@@ -57,6 +75,19 @@ class ZatcaXmlService
         $extensions = $doc->createElement('ext:UBLExtensions');
         $extension = $doc->createElement('ext:UBLExtension');
         $content = $doc->createElement('ext:ExtensionContent');
+
+        // UBL requires non-empty ExtensionContent - add signature placeholder
+        $sigInfo = $doc->createElementNS(self::NS_SIG, 'sig:UBLDocumentSignatures');
+        $sigInfo->setAttribute('xmlns:sac', 'urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2');
+        $sigInfo->setAttribute('xmlns:sbc', self::NS_SBC);
+        $sigContainer = $doc->createElement('sac:SignatureInformation');
+        $sigId = $doc->createElementNS(self::NS_CBC, 'cbc:ID', 'urn:oasis:names:specification:ubl:signature:1');
+        $sigContainer->appendChild($sigId);
+        $referencedSig = $doc->createElementNS(self::NS_SBC, 'sbc:ReferencedSignatureID', 'urn:oasis:names:specification:ubl:signature:Invoice');
+        $sigContainer->appendChild($referencedSig);
+        $sigInfo->appendChild($sigContainer);
+        $content->appendChild($sigInfo);
+
         $extension->appendChild($content);
         $extensions->appendChild($extension);
         $parent->appendChild($extensions);
@@ -162,10 +193,21 @@ class ZatcaXmlService
         $customer = $sale->customer;
 
         if ($customer && filled($customer->tax_number)) {
+            // B2B: full buyer details
             $partyId = $doc->createElement('cac:PartyIdentification');
             $idEl = $this->addElement($doc, $partyId, 'cbc', 'ID', $customer->tax_number);
-            $idEl->setAttribute('schemeID', 'CRN');
+            $idEl->setAttribute('schemeID', 'NAT');
             $party->appendChild($partyId);
+
+            // Buyer address
+            $address = $doc->createElement('cac:PostalAddress');
+            $this->addElement($doc, $address, 'cbc', 'StreetName', $customer->address ?? 'N/A');
+            $this->addElement($doc, $address, 'cbc', 'CityName', $customer->city ?? 'N/A');
+            $this->addElement($doc, $address, 'cbc', 'PostalZone', $customer->postal_code ?? '00000');
+            $country = $doc->createElement('cac:Country');
+            $this->addElement($doc, $country, 'cbc', 'IdentificationCode', 'SA');
+            $address->appendChild($country);
+            $party->appendChild($address);
 
             $partyTaxScheme = $doc->createElement('cac:PartyTaxScheme');
             $this->addElement($doc, $partyTaxScheme, 'cbc', 'CompanyID', $customer->tax_number);
