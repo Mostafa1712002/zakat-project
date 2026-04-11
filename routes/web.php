@@ -284,6 +284,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ux-analysis', [UxAnalysisController::class, 'index'])->name('ux-analysis.index');
     Route::get('/ux-analysis/{module}', [UxAnalysisController::class, 'show'])->name('ux-analysis.show');
 
+    // ZATCA Dashboard (لوحة متابعة الفوترة الإلكترونية)
+    Route::get('zatca/dashboard', [App\Http\Controllers\ZatcaController::class, 'dashboard'])->name('zatca.dashboard');
+
     // Features Management (إدارة المميزات) - Super Admin Only
     Route::middleware(['super_admin'])->prefix('features')->name('features.')->group(function () {
         Route::get('/', [FeatureController::class, 'index'])->name('index');
