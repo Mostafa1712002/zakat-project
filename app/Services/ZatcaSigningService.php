@@ -30,11 +30,15 @@ class ZatcaSigningService
     {
         $certInfo = $this->extractCertificateInfo();
 
-        // Use phpseclib3 for ECDSA signing — it signs raw hash bytes without double-hashing
-        $hashBytes = base64_decode($invoiceHash);
+        // Sign the canonical XML directly (NOT the hash bytes)
+        // ZATCA expects: ECDSA(SHA256(canonicalXml))
+        // phpseclib with withHash('sha256') does SHA256 internally then signs
+        $hashService = new ZatcaHashService();
+        $canonicalXml = $hashService->prepareXmlForHashing($xml);
+
         $ecPrivateKey = \phpseclib3\Crypt\EC::loadPrivateKey($this->privateKeyPem);
         $ecPrivateKey = $ecPrivateKey->withHash('sha256');
-        $signatureRaw = $ecPrivateKey->sign($hashBytes);
+        $signatureRaw = $ecPrivateKey->sign($canonicalXml);
         $digitalSignature = base64_encode($signatureRaw);
 
         // BUG FIX #3: Hash the full PEM certificate (with headers), not just the body
