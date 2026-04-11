@@ -31,17 +31,18 @@ class ZatcaXmlService
         $this->addElement($doc, $invoice, 'cbc', 'DocumentCurrencyCode', 'SAR');
         $this->addElement($doc, $invoice, 'cbc', 'TaxCurrencyCode', 'SAR');
 
-        // Signature reference
-        $signature = $doc->createElement('cac:Signature');
-        $this->addElement($doc, $signature, 'cbc', 'ID', 'urn:oasis:names:specification:ubl:signature:Invoice');
-        $this->addElement($doc, $signature, 'cbc', 'SignatureMethod', 'urn:oasis:names:specification:ubl:dsig:enveloped:xades');
-        $invoice->appendChild($signature);
-
         if ($sale->zatca_note_type && $sale->originalSale) {
             $this->addBillingReference($doc, $invoice, $sale);
         }
 
         $this->addAdditionalDocumentReferences($doc, $invoice, $sale);
+
+        // Signature reference (must come after AdditionalDocumentReference, before AccountingSupplierParty)
+        $signature = $doc->createElement('cac:Signature');
+        $this->addElement($doc, $signature, 'cbc', 'ID', 'urn:oasis:names:specification:ubl:signature:Invoice');
+        $this->addElement($doc, $signature, 'cbc', 'SignatureMethod', 'urn:oasis:names:specification:ubl:dsig:enveloped:xades');
+        $invoice->appendChild($signature);
+
         $this->addSupplierParty($doc, $invoice, $seller);
         $this->addCustomerParty($doc, $invoice, $sale);
 
