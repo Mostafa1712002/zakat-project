@@ -38,14 +38,7 @@ class ZatcaSigningService
         // 1. Get certificate info
         $certInfo = $this->extractCertificateInfo();
 
-        // 2. Sign the invoice hash with private key
-        $hashBytes = base64_decode($invoiceHash);
-        $signature = '';
-        $privateKey = openssl_pkey_get_private($this->privateKeyPem);
-        openssl_sign($hashBytes, $signatureRaw, $privateKey, OPENSSL_ALGO_SHA256);
-        $digitalSignature = base64_encode($signatureRaw);
-
-        // 3. Build signed properties XML and hash it
+        // 2. Build signed properties and compute its hash
         $signingTime = gmdate('Y-m-d\TH:i:s\Z');
         $certHash = $this->computeCertificateHash($this->certBody);
         $signedPropsForSigning = $this->buildSignedPropertiesForSigning(
@@ -56,7 +49,13 @@ class ZatcaSigningService
         );
         $signedPropsHash = $this->hashSignedProperties($signedPropsForSigning);
 
-        // 4. Build the signed properties for embedding (without inline xmlns)
+        // 3. Sign the invoice hash bytes with private key (ECDSA-SHA256)
+        $hashBytes = base64_decode($invoiceHash);
+        $privateKey = openssl_pkey_get_private($this->privateKeyPem);
+        openssl_sign($hashBytes, $signatureRaw, $privateKey, OPENSSL_ALGO_SHA256);
+        $digitalSignature = base64_encode($signatureRaw);
+
+        // 4. Build the signed properties for embedding
         $signedPropsEmbed = $this->buildSignedPropertiesForEmbedding(
             $signingTime,
             $certHash,
