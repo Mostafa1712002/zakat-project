@@ -45,13 +45,14 @@ class ZatcaSigningService
         $signingTime = gmdate('Y-m-d\TH:i:s\Z');
         $certHash = base64_encode(hash('sha256', $this->certBody));
 
+        $signedPropsForSigning = $this->buildSignedPropertiesForSigning(
+            $signingTime, $certHash, $certInfo['issuer'], $certInfo['serialNumber']
+        );
+        $signedPropsHash = base64_encode(hash('sha256', $signedPropsForSigning));
+
         $signedPropsEmbed = $this->buildSignedPropertiesForEmbedding(
             $signingTime, $certHash, $certInfo['issuer'], $certInfo['serialNumber']
         );
-
-        // Compute signed properties hash from its C14N as embedded in the invoice
-        // (with inherited namespaces from parent elements)
-        $signedPropsHash = $this->computeSignedPropertiesHashInContext($xml, $signedPropsEmbed);
 
         $signatureXml = $this->buildSignatureXml(
             $invoiceHash, $signedPropsHash, $digitalSignature,
