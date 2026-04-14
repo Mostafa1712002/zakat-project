@@ -21,9 +21,12 @@ class ZatcaSigningService
         // binarySecurityToken = base64(base64(DER))
         $this->certBody = base64_decode($certificateBase64);
         $this->certDer = base64_decode($this->certBody);
-        $this->certPem = "-----BEGIN CERTIFICATE-----\n"
-            . chunk_split($this->certBody, 64, "\n")
-            . "-----END CERTIFICATE-----";
+
+        // Use phpseclib PEM format (CRLF line endings) to match ZATCA's expected hash
+        $x509 = new \phpseclib3\File\X509();
+        $tempPem = "-----BEGIN CERTIFICATE-----\n" . chunk_split($this->certBody, 64, "\n") . "-----END CERTIFICATE-----";
+        $x509->loadX509($tempPem);
+        $this->certPem = $x509->saveX509($x509->getCurrentCert());
     }
 
     public function sign(string $xml, string $invoiceHash): array
