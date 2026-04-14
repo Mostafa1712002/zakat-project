@@ -42,18 +42,16 @@ class ZatcaSigningService
         $digitalSignature = base64_encode($signatureRaw);
 
         // Certificate hash: base64(hex(sha256(certBody)))
-        // ZATCA hashes the content of ds:X509Certificate (= certBody, the inner base64)
         $signingTime = gmdate('Y-m-d\TH:i:s\Z');
         $certHash = base64_encode(hash('sha256', $this->certBody));
-
-        $signedPropsForSigning = $this->buildSignedPropertiesForSigning(
-            $signingTime, $certHash, $certInfo['issuer'], $certInfo['serialNumber']
-        );
-        $signedPropsHash = base64_encode(hash('sha256', $signedPropsForSigning));
 
         $signedPropsEmbed = $this->buildSignedPropertiesForEmbedding(
             $signingTime, $certHash, $certInfo['issuer'], $certInfo['serialNumber']
         );
+
+        // Compute signed properties hash from its C14N as embedded in the invoice
+        // (with inherited namespaces from parent elements)
+        $signedPropsHash = $this->computeSignedPropertiesHashInContext($xml, $signedPropsEmbed);
 
         $signatureXml = $this->buildSignatureXml(
             $invoiceHash, $signedPropsHash, $digitalSignature,
@@ -75,6 +73,30 @@ class ZatcaSigningService
             'qr_tlv' => $qrTlv,
             'invoice_hash' => $invoiceHash,
         ];
+    }
+
+    private function computeSignedPropertiesHashInContext(string $baseXml, string $signedPropsXml): string
+    {
+        // Inject the signed properties into a test XML with same context as final
+        $tempXml = str_replace(
+            '<sac:SignatureInformation>',
+            '<sac:SignatureInformation><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:Object><xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Target="signature">' . $signedPropsXml . '</xades:QualifyingProperties></ds:Object></ds:Signature>',
+            $baseXml
+        );
+
+        $doc = new \DOMDocument();
+        $doc->loadXML($tempXml);
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('xades', 'http://uri.etsi.org/01903/v1.3.2#');
+
+        $nodes = $xpath->query('//xades:SignedProperties');
+        if ($nodes->length === 0) {
+            // Fallback to template hashing
+            return base64_encode(hash('sha256', $signedPropsXml));
+        }
+
+        $c14n = $nodes->item(0)->C14N(false, false);
+        return base64_encode(hash('sha256', $c14n));
     }
 
     private function extractCertificateInfo(): array
