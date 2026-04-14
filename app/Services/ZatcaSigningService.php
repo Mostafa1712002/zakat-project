@@ -41,9 +41,10 @@ class ZatcaSigningService
         $signatureRaw = $ecPrivateKey->sign($hashBytes);
         $digitalSignature = base64_encode($signatureRaw);
 
-        // Certificate hash: base64(hex(sha256(full_pem_string))) — matches SallaApp getHash()
+        // Certificate hash: base64(hex(sha256(certBody)))
+        // ZATCA hashes the content of ds:X509Certificate (= certBody, the inner base64)
         $signingTime = gmdate('Y-m-d\TH:i:s\Z');
-        $certHash = base64_encode(hash('sha256', $this->certPem));
+        $certHash = base64_encode(hash('sha256', $this->certBody));
 
         $signedPropsForSigning = $this->buildSignedPropertiesForSigning(
             $signingTime, $certHash, $certInfo['issuer'], $certInfo['serialNumber']
