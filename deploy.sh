@@ -22,7 +22,7 @@ set -e
 #   zaca         → zaca.newaves-systems.com
 # ===================================================
 
-SERVER="root@161.35.211.31"
+SERVER="root@178.104.122.98"
 
 # Site → Remote path mapping
 declare -A SITES=(
@@ -31,6 +31,7 @@ declare -A SITES=(
     ["demo-sibakuh"]="/var/www/demo-sibakuh.newaves-systems.com"
     ["al-hadari"]="/var/www/al-hadari.7erfa-system.com"
     ["zaca"]="/var/www/zaca.newaves-systems.com"
+    ["ammrk"]="/var/www/ammrk.newaves-systems.com"
 )
 
 # Branch → Site mapping (for auto-detect)
@@ -40,6 +41,7 @@ declare -A BRANCH_TO_SITE=(
     ["demo-sibakuh"]="demo-sibakuh"
     ["al-hadari"]="al-hadari"
     ["zaca"]="zaca"
+    ["ammrk"]="ammrk"
 )
 
 deploy_site() {
