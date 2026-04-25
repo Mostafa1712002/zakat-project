@@ -235,3 +235,22 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class);
     });
 });
+
+// ============================================
+// Phase 5: Sales (Quotes)
+// ============================================
+// Resource is gated at view-level by either `quotes.view-all` (admins/
+// accountants) or `quotes.view-own` (account managers). Workflow endpoints
+// (submit/approve/reject) are gated by QuotePolicy on top of the view
+// permission, so an Account Manager can submit but cannot approve.
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('permission:quotes.view-all|quotes.view-own')->group(function () {
+        Route::resource('quotes', \App\Http\Controllers\Admin\QuoteController::class);
+        Route::post('quotes/{quote}/submit', [\App\Http\Controllers\Admin\QuoteController::class, 'submit'])
+            ->name('quotes.submit');
+        Route::post('quotes/{quote}/approve', [\App\Http\Controllers\Admin\QuoteController::class, 'approve'])
+            ->name('quotes.approve');
+        Route::post('quotes/{quote}/reject', [\App\Http\Controllers\Admin\QuoteController::class, 'reject'])
+            ->name('quotes.reject');
+    });
+});

@@ -189,36 +189,39 @@
 ## Phase 5: Sales (Quote → Invoice)
 
 ### Task 5.1: Migrations
-- [ ] `quotes`, `quote_items` migrations
-- [ ] `invoices`, `invoice_items` migrations (with all ZATCA fields)
+- [x] `quotes`, `quote_items` migrations (`2026_04_25_150000`, `2026_04_25_150001`) — `tax_rate DEFAULT 15` at DB level
+- [ ] `invoices`, `invoice_items` migrations (with all ZATCA fields) — Phase 5b
 
-**Outcome:** ✅ Sales tables exist
+**Outcome:** ✅ Quote tables exist (Invoice tables deferred to Phase 5b)
 **Dependencies:** Phase 3, Phase 4 complete
 
 ### Task 5.2: Models & Calculators
-- [ ] `Quote`, `QuoteItem`, `Invoice`, `InvoiceItem` models
-- [ ] `QuoteCalculator` service: applies default_tax_rate from settings, handles is_tax_exempt
-- [ ] `InvoiceCalculator` service: same logic + immutable once issued
-- [ ] Numbering: `QuoteNumberGenerator`, `InvoiceNumberGenerator` (Q-2026-0001 format)
+- [x] `Quote`, `QuoteItem` models under `app/Domain/Sales/Models/` (Invoice models = Phase 5b)
+- [x] `QuoteCalculator` service: applies `default_tax_rate` from settings, zeroes rate when `customer.is_tax_exempt`
+- [ ] `InvoiceCalculator` service — Phase 5b
+- [x] `QuoteNumberGenerator` (Q-2026-0001 format, year-scoped sequence). `InvoiceNumberGenerator` = Phase 5b
 
-**Outcome:** ✅ Models with auto VAT calculation
+**Outcome:** ✅ Quote models with auto VAT calculation (item `saving` hook + calculator aggregation)
 **Dependencies:** 5.1
 
 ### Task 5.3: Quote Workflow Actions
-- [ ] `CreateQuote` action
-- [ ] `SubmitQuote` action (draft → submitted)
-- [ ] `ApproveQuote` action (submitted → approved)
-- [ ] `RejectQuote` action (requires reason)
-- [ ] `ConvertQuoteToInvoice` action (approved → converted, creates invoice)
+- [x] `CreateQuote` action (DB transaction: header → items → recalculate)
+- [x] `SubmitQuote` action (draft → submitted, throws if not draft)
+- [x] `ApproveQuote` action (submitted → approved, sets `approved_by`/`approved_at`)
+- [x] `RejectQuote` action (requires reason, submitted → rejected)
+- [x] `ConvertQuoteToInvoice` — stub class throwing `LogicException` (Phase 5b implements it)
 
-**Outcome:** ✅ Quote workflow operational
+**Outcome:** ✅ Quote workflow operational (conversion to invoice = Phase 5b)
 **Dependencies:** 5.2
 
 ### Task 5.4: Quote UI
-- [ ] `Admin/QuoteController` + Livewire form
-- [ ] `quotes/index` (status filter, columns: number, customer, event, total, status)
-- [ ] `quotes/show` with workflow buttons (submit/approve/reject/convert)
-- [ ] `quotes/create` Livewire form: customer select → event details → line items (service, qty, price)
+- [x] `Admin/QuoteController` (resource + submit/approve/reject endpoints)
+- [x] `QuotePolicy` registered in `AppServiceProvider` (viewAny/view/create/update/delete + submit/approve/reject)
+- [x] Routes block under `admin/quotes` gated by `quotes.view-all|quotes.view-own` (10 routes)
+- [x] `quotes/index` Blade — status + customer filters, search by number/event, status badges
+- [x] `quotes/show` — read-only details + workflow buttons gated by `@can`
+- [x] `quotes/create` + `quotes/edit` — Alpine.js dynamic line items with live totals, default tax_rate=15
+- [x] Smoke test via tinker: Q-2026-0001 created, 2×100 → 200 subtotal / 30 tax / 230 grand, draft→submitted→approved
 
 **Outcome:** ✅ Quote creation/management UI
 **Dependencies:** 5.3
@@ -353,8 +356,8 @@
 | 2. Foundation | 4 | 4 | ✅ Complete |
 | 3. Catalog | 5 | 5 | ✅ Complete |
 | 4. Customer | 4 | 4 | ✅ Complete |
-| 5. Sales | 8 | 0 | Not Started |
+| 5. Sales | 8 | 4 | 🔄 Phase 5a Complete (Quote workflow) |
 | 6. Treasury | 3 | 0 | Not Started |
 | 7. Reports | 3 | 0 | Not Started |
 | 8. Polish | 3 | 0 | Not Started |
-| **Total** | **35** | **18** | **51%** |
+| **Total** | **35** | **22** | **63%** |
