@@ -105,7 +105,8 @@
 
 <div class="card">
     <h3>البنود</h3>
-    <table class="table">
+    <div class="table-container">
+    <table class="table items-table">
         <thead>
             <tr>
                 <th>الخدمة</th>
@@ -145,11 +146,13 @@
                 <td>{{ number_format((float) $invoice->paid_amount, 2) }}</td></tr>
         </tfoot>
     </table>
+    </div>
 </div>
 
 <div class="card">
     <h3>بيانات زاتكا</h3>
-    <table class="table">
+    <div class="table-container-auto">
+    <table class="table info-table">
         <tr><th>الحالة</th>
             <td><span class="badge badge-{{ $zcol }}">{{ $zlab }}</span></td>
         </tr>
@@ -178,5 +181,6 @@
             </tr>
         @endif
     </table>
+    </div>
 </div>
 @endsection

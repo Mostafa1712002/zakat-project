@@ -637,6 +637,16 @@
             .info-table td { font-size: 0.82rem; }
             .card { padding: 14px !important; }
             .form-card { padding: 14px !important; }
+            /* Auto-wrap any standalone .table inside a .card so it scrolls horizontally */
+            .card > table.table:not(.info-table) {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                white-space: nowrap;
+            }
+            .card > table.info-table { display: table; white-space: normal; }
+            .card > table.info-table th,
+            .card > table.info-table td { white-space: normal; word-break: break-word; }
 
             /* Responsive Tables - Enhanced */
             .table-container,
