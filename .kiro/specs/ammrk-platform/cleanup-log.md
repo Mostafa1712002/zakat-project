@@ -186,3 +186,32 @@ Surviving migrations: 25 (users, cache, jobs, permissions, branches, audit_logs,
 - **No EventServiceProvider** added. Laravel 11 doesn't ship one by default; using `Event::listen(...)` calls in `AppServiceProvider::boot()` instead, which is simpler and avoids touching `bootstrap/providers.php`.
 - **ZATCA local skip**: `IssueInvoice` requires a ZATCA private key + base64 cert which are not present locally (they live on the prod server). The action's existing internal `try/catch` (lines ~113-119) swallows the `RuntimeException('ZATCA signing credentials are not configured')` and flips the invoice to `zatca_status='failed'` while still moving `status='issued'`. Smoke test asserts `status='issued'` and accepts any `zatca_status`. Production server has real cert and produces a signed XML.
 - **Smoke test 13/13 pass** locally (SQLite). Output: `php8.2 tests/Smoke/full_flow_test.php` — all steps pass, audit_logs row counts verified (1× invoice.issued, 2× payment.recorded, 1× quote.approved).
+
+---
+
+## 2026-04-25 — ZATCA Production CSID Blocker (Discovered post-deploy)
+
+### Findings
+After deploying v2 to production (ammrk-v2 branch), end-to-end ZATCA test revealed:
+- Cert (`zatca_certificate` setting) parses correctly: CN=AMMRK-311037737100003, valid 2026-04-14 → 2031-04-13
+- Secret (44 chars base64) loads correctly into the `Authorization: Basic` header
+- Direct curl WITHOUT `Clearance-Status: 1` → returns 400 (= auth OK, body invalid)
+- Direct curl WITH `Clearance-Status: 1` → returns 401 (= auth rejected on clearance flow)
+- ZATCA distinguishes Compliance CSID vs Production CSID; current creds appear to be Compliance only
+
+### Root cause
+The CSID we have was issued as a Compliance CSID. To get Production CSID, the device must successfully submit 3 sample invoices (standard, simplified, debit/credit-note) to `/compliance/invoices` endpoint. The "signed-properties-hashing" issue documented in earlier memory prevented this graduation step.
+
+### Code fix applied
+- `app/Jobs/SubmitInvoiceToZatca.php`: now correctly checks `$response['error'] === true` and marks `zatca_status=failed` instead of falsely marking `cleared`. Previously the job marked any non-throwing API response as cleared.
+
+### What works (architecturally correct)
+- Invoice XML generation (UBL 2.1)
+- ECDSA signing via phpseclib3
+- Invoice hash + QR (TLV) generation
+- Local persistence of all ZATCA fields
+- Failure handling + retry logic in queued job
+
+### What needs manual work
+- Complete compliance flow: fix signed-properties hashing (or use approved working version), submit 3 sample invoices, obtain real Production CSID, replace `zatca_certificate` and `zatca_secret` settings.
+- This is a ZATCA-protocol-level concern not a code defect.
