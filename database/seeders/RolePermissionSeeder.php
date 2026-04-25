@@ -24,6 +24,7 @@ class RolePermissionSeeder extends Seeder
         'customers' => ['view-own', 'view-all', 'create', 'edit', 'delete'],
         'service-types' => ['view', 'create', 'edit', 'delete'],
         'services' => ['view', 'create', 'edit', 'delete'],
+        'units' => ['view', 'create', 'edit', 'delete'],
         'quotes' => ['view-own', 'view-all', 'create', 'edit-own', 'edit-any', 'submit', 'approve', 'reject', 'convert'],
         'invoices' => ['view-own', 'view-all', 'create', 'edit', 'issue', 'send-zatca', 'cancel'],
         'payments' => ['view', 'create', 'refund'],

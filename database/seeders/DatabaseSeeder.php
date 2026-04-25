@@ -8,14 +8,15 @@ use App\Models\ExpensePaymentMethod;
 use Illuminate\Database\Seeder;
 
 /**
- * Phase 2 root seeder.
+ * Root seeder (Phase 2 + Phase 3).
  *
  * Order matters:
  *   1. Default branch (users.branch_id FK target)
  *   2. SettingsSeeder (default_tax_rate, prefixes, etc.)
  *   3. RolePermissionSeeder (Spatie roles + permissions)
  *   4. DefaultUsersSeeder (depends on roles existing)
- *   5. Expense reference data (surviving legacy domains)
+ *   5. Phase 3 catalog (ServiceType, Unit) — services left empty
+ *   6. Expense reference data (surviving legacy domains)
  */
 class DatabaseSeeder extends Seeder
 {
@@ -27,6 +28,8 @@ class DatabaseSeeder extends Seeder
             SettingsSeeder::class,
             RolePermissionSeeder::class,
             DefaultUsersSeeder::class,
+            ServiceTypeSeeder::class,
+            UnitSeeder::class,
         ]);
 
         $this->createExpenseCategories();

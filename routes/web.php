@@ -207,3 +207,44 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/disable-all', [FeatureController::class, 'disableAll'])->name('disable-all');
     });
 });
+
+// ============================================
+// Phase 3: Catalog (Service Types, Services, Units)
+// ============================================
+// Permission middleware uses Spatie's `permission:` alias. Service Types,
+// Services, and Units each get a dedicated permission group; Account Manager
+// and Accountant roles do NOT have catalog permissions by default.
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('service-types', \App\Http\Controllers\Admin\ServiceTypeController::class)
+        ->except('show')
+        ->middleware([
+            'index'   => 'permission:service-types.view',
+            'create'  => 'permission:service-types.create',
+            'store'   => 'permission:service-types.create',
+            'edit'    => 'permission:service-types.edit',
+            'update'  => 'permission:service-types.edit',
+            'destroy' => 'permission:service-types.delete',
+        ]);
+
+    Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class)
+        ->except('show')
+        ->middleware([
+            'index'   => 'permission:services.view',
+            'create'  => 'permission:services.create',
+            'store'   => 'permission:services.create',
+            'edit'    => 'permission:services.edit',
+            'update'  => 'permission:services.edit',
+            'destroy' => 'permission:services.delete',
+        ]);
+
+    Route::resource('units', \App\Http\Controllers\Admin\UnitController::class)
+        ->except('show')
+        ->middleware([
+            'index'   => 'permission:units.view',
+            'create'  => 'permission:units.create',
+            'store'   => 'permission:units.create',
+            'edit'    => 'permission:units.edit',
+            'update'  => 'permission:units.edit',
+            'destroy' => 'permission:units.delete',
+        ]);
+});
