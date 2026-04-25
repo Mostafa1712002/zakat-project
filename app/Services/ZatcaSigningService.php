@@ -226,28 +226,29 @@ class ZatcaSigningService
         return ['offset' => $offset, 'length' => $length];
     }
 
-    // BUG FIX #2: Signed properties template must match SallaApp format exactly
-    // Self-closing DigestMethod tag, proper indentation with newlines
+    // ZATCA SDK 3.0.8 verified: Indentation is 36 spaces for SignedSignatureProperties
+    // (was 32 — that was the bug). Each level adds 4 more spaces.
+    // xmlns:xades and xmlns:ds inserted exactly as ZATCA's c14n output expects.
     private function buildSignedPropertiesForSigning(
         string $signingTime, string $certHash, string $issuer, string $serialNumber
     ): string {
         return '<xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="xadesSignedProperties">' . "\n"
-            . '                                <xades:SignedSignatureProperties>' . "\n"
-            . '                                    <xades:SigningTime>' . $signingTime . '</xades:SigningTime>' . "\n"
-            . '                                    <xades:SigningCertificate>' . "\n"
-            . '                                        <xades:Cert>' . "\n"
-            . '                                            <xades:CertDigest>' . "\n"
-            . '                                                <ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>' . "\n"
-            . '                                                <ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $certHash . '</ds:DigestValue>' . "\n"
-            . '                                            </xades:CertDigest>' . "\n"
-            . '                                            <xades:IssuerSerial>' . "\n"
-            . '                                                <ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $issuer . '</ds:X509IssuerName>' . "\n"
-            . '                                                <ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $serialNumber . '</ds:X509SerialNumber>' . "\n"
-            . '                                            </xades:IssuerSerial>' . "\n"
-            . '                                        </xades:Cert>' . "\n"
-            . '                                    </xades:SigningCertificate>' . "\n"
-            . '                                </xades:SignedSignatureProperties>' . "\n"
-            . '                            </xades:SignedProperties>';
+            . '                                    <xades:SignedSignatureProperties>' . "\n"
+            . '                                        <xades:SigningTime>' . $signingTime . '</xades:SigningTime>' . "\n"
+            . '                                        <xades:SigningCertificate>' . "\n"
+            . '                                            <xades:Cert>' . "\n"
+            . '                                                <xades:CertDigest>' . "\n"
+            . '                                                    <ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>' . "\n"
+            . '                                                    <ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $certHash . '</ds:DigestValue>' . "\n"
+            . '                                                </xades:CertDigest>' . "\n"
+            . '                                                <xades:IssuerSerial>' . "\n"
+            . '                                                    <ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $issuer . '</ds:X509IssuerName>' . "\n"
+            . '                                                    <ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">' . $serialNumber . '</ds:X509SerialNumber>' . "\n"
+            . '                                                </xades:IssuerSerial>' . "\n"
+            . '                                            </xades:Cert>' . "\n"
+            . '                                        </xades:SigningCertificate>' . "\n"
+            . '                                    </xades:SignedSignatureProperties>' . "\n"
+            . '                                </xades:SignedProperties>';
     }
 
     private function buildSignedPropertiesForEmbedding(
