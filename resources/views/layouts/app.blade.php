@@ -260,7 +260,24 @@
             object-fit: contain;
         }
 
-        .logo-text { font-size: 18px; font-weight: 700; }
+        .logo-text {
+            font-family: 'Amiri', 'Cairo', serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            line-height: 1.3;
+            padding: 8px 0;
+            position: relative;
+        }
+        .logo-text::after {
+            content: "";
+            display: block;
+            width: 32px;
+            height: 2px;
+            background: var(--gold, #b89968);
+            margin: 8px auto 0;
+            opacity: 0.7;
+        }
 
         .user-info {
             display: flex;
@@ -1236,11 +1253,6 @@
                 $homeRoute = route('dashboard');
             @endphp
             <a href="{{ $homeRoute }}" class="logo">
-                @if($__sidebarLogo)
-                    <img src="{{ asset('storage/' . $__sidebarLogo) }}" alt="{{ $__sidebarName }}" class="logo-icon">
-                @else
-                    <img src="{{ asset('logo.png') }}" alt="{{ $__sidebarName }}" class="logo-icon">
-                @endif
                 <div class="logo-text">{{ $__sidebarName }}</div>
             </a>
 
