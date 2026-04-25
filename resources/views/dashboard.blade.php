@@ -201,5 +201,25 @@
 
     .muted { color: #94a3b8; text-align: center; padding: 16px; }
     .table-sm th, .table-sm td { padding: 6px 8px; font-size: 0.88rem; }
+
+    @media (max-width: 640px) {
+        .stats-grid-4 { grid-template-columns: 1fr 1fr !important; gap: 8px; }
+        .stat-card { padding: 14px !important; }
+        .stat-card .stat-icon { font-size: 1.4rem !important; margin-bottom: 6px; }
+        .stat-card .stat-value { font-size: 1rem !important; word-break: break-word; line-height: 1.2; }
+        .stat-card .stat-label { font-size: 0.7rem !important; }
+        .bar-row { grid-template-columns: 56px 1fr 56px; font-size: 0.7rem; gap: 6px; }
+        .bar-label, .bar-value { font-size: 0.7rem; }
+        .bar-track { height: 14px; }
+        .status-row { grid-template-columns: 12px 1fr 60px; font-size: 0.78rem; gap: 6px; }
+        .status-row .status-swatch + span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .table-sm th, .table-sm td { padding: 4px 6px; font-size: 0.74rem; }
+        h1 { font-size: 1.25rem !important; }
+        .card { padding: 12px !important; }
+        .card h3 { font-size: 0.95rem; }
+    }
+    @media (max-width: 380px) {
+        .stats-grid-4 { grid-template-columns: 1fr !important; }
+    }
 </style>
 @endpush
