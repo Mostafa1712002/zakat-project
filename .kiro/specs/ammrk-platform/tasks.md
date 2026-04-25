@@ -190,18 +190,18 @@
 
 ### Task 5.1: Migrations
 - [x] `quotes`, `quote_items` migrations (`2026_04_25_150000`, `2026_04_25_150001`) — `tax_rate DEFAULT 15` at DB level
-- [ ] `invoices`, `invoice_items` migrations (with all ZATCA fields) — Phase 5b
+- [x] `invoices`, `invoice_items` migrations (`2026_04_25_160000`, `2026_04_25_160001`) — full ZATCA field set + `tax_rate DEFAULT 15`
 
-**Outcome:** ✅ Quote tables exist (Invoice tables deferred to Phase 5b)
+**Outcome:** ✅ Quote + Invoice tables exist
 **Dependencies:** Phase 3, Phase 4 complete
 
 ### Task 5.2: Models & Calculators
-- [x] `Quote`, `QuoteItem` models under `app/Domain/Sales/Models/` (Invoice models = Phase 5b)
-- [x] `QuoteCalculator` service: applies `default_tax_rate` from settings, zeroes rate when `customer.is_tax_exempt`
-- [ ] `InvoiceCalculator` service — Phase 5b
-- [x] `QuoteNumberGenerator` (Q-2026-0001 format, year-scoped sequence). `InvoiceNumberGenerator` = Phase 5b
+- [x] `Quote`, `QuoteItem` models under `app/Domain/Sales/Models/`
+- [x] `Invoice`, `InvoiceItem` models with ZATCA-compat accessor surface (Phase 5b)
+- [x] `QuoteCalculator` + `InvoiceCalculator` services
+- [x] `QuoteNumberGenerator` + `InvoiceNumberGenerator` (year-scoped sequence)
 
-**Outcome:** ✅ Quote models with auto VAT calculation (item `saving` hook + calculator aggregation)
+**Outcome:** ✅ Quote + Invoice models with auto VAT calculation (item `saving` hook + calculator aggregation)
 **Dependencies:** 5.1
 
 ### Task 5.3: Quote Workflow Actions
@@ -227,36 +227,37 @@
 **Dependencies:** 5.3
 
 ### Task 5.5: Invoice Issuance
-- [ ] `IssueInvoice` action: validates customer ZATCA data, generates UUID/ICV/PIH/hash/QR/signed XML
-- [ ] Wire up existing ZATCA services (`Domain/Zatca/Services/*`) in `IssueInvoice`
-- [ ] Persist `signed_xml`, `qr_code` to invoice
-- [ ] Queue `SubmitInvoiceToZatca` job
+- [x] `ConvertQuoteToInvoice` action (replaces Phase 5a stub) — validates approved status + ZATCA-ready customer, copies items, marks quote as converted
+- [x] `IssueInvoice` action: allocates UUID/ICV/PIH, builds UBL XML via `ZatcaXmlService`, hashes via `ZatcaHashService`, signs via `ZatcaSigningService`, embeds QR via `ZatcaQrService`. Wraps signing in try/catch — falls back to `zatca_status=failed` (with structured warning) when dev creds are missing.
+- [x] `InvoicePolicy`: viewAny / view / create / update (drafts only) / delete (cancel) / issue / sendZatca / cancel — registered in `AppServiceProvider`
+- [x] Adapted legacy ZATCA services to the new Invoice model (see cleanup-log.md): `ZatcaXmlService` and `ZatcaHashService` now type-hint `App\Domain\Sales\Models\Invoice as Sale`; XML service replaces the `Sale::ZATCA_NOTE_*` constants with string literals; Customer gets `tax_number`/`address` accessors mapping to `vat_number`/`street_name`.
 
-**Outcome:** ✅ Invoices generate ZATCA-ready artifacts
+**Outcome:** ✅ Invoices generate ZATCA-ready artifacts (UUID/ICV/PIH/hash on issue; signing skipped in dev without creds — surfaces as `zatca_status=failed`)
 **Dependencies:** 5.4
 
 ### Task 5.6: ZATCA Submission Job
-- [ ] `SubmitInvoiceToZatca` queued job: calls ZATCA API, updates `zatca_status`, persists warnings
-- [ ] Retry logic: 3 attempts with backoff
-- [ ] `RetryZatcaFailedSubmissions` artisan command (manual trigger)
+- [x] `App\Jobs\SubmitInvoiceToZatca` (queue=zatca, tries=3, backoff=[60,300,900]s) — calls `ZatcaApiService::clearInvoice`, updates `zatca_status` and `zatca_warnings`, throws on failure to honour the queue retry policy
+- [x] `php artisan zatca:retry-failed` re-dispatches the job for invoices where `zatca_status='failed' AND issued_at >= now()-7days`
 
-**Outcome:** ✅ Async ZATCA submission
+**Outcome:** ✅ Async ZATCA submission with manual retry CLI
 **Dependencies:** 5.5
 
 ### Task 5.7: Invoice UI
-- [ ] `Admin/InvoiceController` + Livewire form
-- [ ] `invoices/index` (status filter, ZATCA status filter)
-- [ ] `invoices/show` (header, items, totals, ZATCA panel with status/QR/warnings)
-- [ ] `invoices/{id}/pdf` (Browsershot PDF with QR code)
-- [ ] Cannot edit issued invoices (UI + policy enforcement)
+- [x] `Admin/InvoiceController`: index/create/store/show/edit/update/destroy + `convertFromQuote` + `issue` + `resendToZatca` + `pdf`
+- [x] Routes registered under `admin/` (Phase 5b block in `routes/web.php`) — gated by `permission:invoices.view-all|invoices.view-own`
+- [x] `invoices/index`: filters (status, zatca_status, date range, search) + ZATCA status badges
+- [x] `invoices/create` + `invoices/edit`: same Alpine.js form structure as Quote (line items, live totals, default tax_rate=15). Edit blocked when status≠draft.
+- [x] `invoices/show`: details, items, totals, ZATCA panel (uuid/icv/pih/hash/QR image/warnings) + workflow buttons (issue / resend-zatca / cancel / pdf) gated by `@can`
+- [x] `invoices/pdf`: simplified A4 Blade layout with QR base64 image and ZATCA UUID footer (no Browsershot — print/save as PDF from browser)
 
-**Outcome:** ✅ Invoice issuance and viewing
+**Outcome:** ✅ Invoice issuance and viewing operational
 **Dependencies:** 5.6
 
 ### Task 5.8: Tests
-- [ ] Pest tests: VAT 15% default applied, tax-exempt customer = 0%, quote workflow transitions, invoice immutability after issued
+- [x] Manual smoke test via tinker (see commit message): customer → quote → submit → approve → convert → issue. Verified Q-2026-0001 (200/30/230) → INV-2026-0001 with uuid, icv=1, 44-char PIH, status=issued. ZATCA signing degrades gracefully in dev (no creds).
+- [ ] Pest tests deferred to Phase 8.2 (per spec)
 
-**Outcome:** ✅ Sales logic tested
+**Outcome:** ✅ Sales logic smoke-tested end-to-end
 **Dependencies:** 5.7
 
 ---

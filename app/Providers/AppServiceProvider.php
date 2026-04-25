@@ -10,7 +10,9 @@ use App\Domain\Catalog\Policies\ServiceTypePolicy;
 use App\Domain\Catalog\Policies\UnitPolicy;
 use App\Domain\Customer\Models\Customer;
 use App\Domain\Customer\Policies\CustomerPolicy;
+use App\Domain\Sales\Models\Invoice;
 use App\Domain\Sales\Models\Quote;
+use App\Domain\Sales\Policies\InvoicePolicy;
 use App\Domain\Sales\Policies\QuotePolicy;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
@@ -44,5 +46,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Phase 5a: Sales / Quote policy
         Gate::policy(Quote::class, QuotePolicy::class);
+
+        // Phase 5b: Sales / Invoice policy
+        Gate::policy(Invoice::class, InvoicePolicy::class);
     }
 }

@@ -90,6 +90,22 @@ class Customer extends Model
         return $query->where('type', $type);
     }
 
+    // -----------------------------------------------------------------------
+    // ZATCA compatibility accessors (Phase 5b).
+    // The legacy ZatcaXmlService reads `tax_number` and `address` on the
+    // customer; map them to our REGA columns so we don't fork the service.
+    // -----------------------------------------------------------------------
+
+    public function getTaxNumberAttribute(): ?string
+    {
+        return $this->vat_number;
+    }
+
+    public function getAddressAttribute(): string
+    {
+        return trim((string) ($this->street_name ?? ''));
+    }
+
     public function scopeSearch($query, ?string $term)
     {
         $term = trim((string) $term);

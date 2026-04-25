@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Sale;
+use App\Domain\Sales\Models\Invoice as Sale;
 
 class ZatcaHashService
 {
@@ -56,13 +56,15 @@ class ZatcaHashService
 
     public function getLastIssuedInvoiceData(): array
     {
-        $lastSale = Sale::whereNotNull('zatca_invoice_hash')
-            ->orderByDesc('zatca_invoice_counter')
-            ->first(['zatca_invoice_hash', 'zatca_invoice_counter']);
+        // Phase 5b: read the new Invoice model (legacy column names mapped via
+        // accessors: invoice_hash + icv).
+        $last = Sale::whereNotNull('invoice_hash')
+            ->orderByDesc('icv')
+            ->first(['invoice_hash', 'icv']);
 
         return [
-            'hash' => $lastSale?->zatca_invoice_hash,
-            'counter' => $lastSale?->zatca_invoice_counter,
+            'hash' => $last?->invoice_hash,
+            'counter' => $last?->icv !== null ? (int) $last->icv : null,
         ];
     }
 }

@@ -254,3 +254,24 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
             ->name('quotes.reject');
     });
 });
+
+// ============================================
+// Phase 5b: Invoices + ZATCA
+// ============================================
+// Resource is gated at view-level by either `invoices.view-all` (admins/
+// accountants) or `invoices.view-own` (account managers). Action endpoints
+// (issue / resend-zatca / convert / cancel) are gated by InvoicePolicy on
+// top of the view permission. Cancellation goes through `destroy`.
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('permission:invoices.view-all|invoices.view-own')->group(function () {
+        Route::resource('invoices', \App\Http\Controllers\Admin\InvoiceController::class);
+        Route::post('quotes/{quote}/convert', [\App\Http\Controllers\Admin\InvoiceController::class, 'convertFromQuote'])
+            ->name('quotes.convert');
+        Route::post('invoices/{invoice}/issue', [\App\Http\Controllers\Admin\InvoiceController::class, 'issue'])
+            ->name('invoices.issue');
+        Route::post('invoices/{invoice}/resend-zatca', [\App\Http\Controllers\Admin\InvoiceController::class, 'resendToZatca'])
+            ->name('invoices.resend-zatca');
+        Route::get('invoices/{invoice}/pdf', [\App\Http\Controllers\Admin\InvoiceController::class, 'pdf'])
+            ->name('invoices.pdf');
+    });
+});

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Sale;
+use App\Domain\Sales\Models\Invoice as Sale;
 use DOMDocument;
 use DOMElement;
 
@@ -110,8 +110,8 @@ class ZatcaXmlService
     private function addInvoiceTypeCode(DOMDocument $doc, DOMElement $parent, Sale $sale): void
     {
         $typeCode = match ($sale->zatca_note_type) {
-            Sale::ZATCA_NOTE_CREDIT => '381',
-            Sale::ZATCA_NOTE_DEBIT => '383',
+            'credit' => '381',
+            'debit' => '383',
             default => '388',
         };
         $element = $this->addElement($doc, $parent, 'cbc', 'InvoiceTypeCode', $typeCode);
