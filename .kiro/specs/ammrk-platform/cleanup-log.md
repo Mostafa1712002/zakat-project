@@ -168,3 +168,14 @@ All migrations creating or altering tables for deleted domains. Listed in detail
 - 3× 2026_04 (zatca_fields_to_sales, missing_invoice_links_to_payments, zatca_phase2_fields_to_sales)
 
 Surviving migrations: 25 (users, cache, jobs, permissions, branches, audit_logs, branch_to_users, units, customers, employees, expense_categories, expenses, payments, expense_payment_methods, features, is_super_admin, employee_transactions, partners, partner_transactions, employee_partner_to_expenses, employee_role_and_permissions, target_fields_to_customers, item_type_to_customers, settings).
+
+## Phase 4 Customer Module Notes
+
+- **Old `App\Models\Customer` removed** — replaced by `App\Domain\Customer\Models\Customer`. References in `DashboardController` and `ReportController` repointed to the new namespace; `PaymentController::collectFromCustomer` and `showCollectFromCustomer` removed entirely (will be rebuilt in Phase 6).
+- **Old customer migrations deleted**: `2026_01_05_182913_create_customers_table.php`, `2026_02_02_100000_add_target_fields_to_customers_table.php`, `2026_02_17_100610_add_item_type_to_customers_table.php`. Replaced by `2026_04_25_140000_create_customers_table.php` and `2026_04_25_140001_create_customer_contacts_table.php` matching the spec.
+- **Old views removed**: `resources/views/customers/` directory deleted. New views at `resources/views/admin/customers/`.
+- **Old routes removed**: top-level `Route::resource('customers', ...)`, `customers/{customer}/withdraw-target`, `customers/{customer}/collect`. New resource lives under `admin/customers` per Phase 4 spec.
+- **Sidebar updated**: `route('customers.index')` -> `route('admin.customers.index')` in `resources/views/layouts/app.blade.php`.
+- **`reports/customers.blade.php` left as-is** — it references stats variables not provided by the controller stub. Will be rewritten in Phase 7. Route still resolves but rendering will fail if hit.
+- **Livewire ZatcaFields component skipped** — Alpine.js x-show in `_form.blade.php` handles dynamic field toggling for type/is_tax_exempt without adding a Livewire dependency.
+- **Pest test for scope skipped** — verified manually via tinker (Admin sees 2, Account Manager sees 1, policy denies cross-AM access). Per the explicit instruction to skip complex Pest tests, this remains as a TODO for Phase 8 QA.

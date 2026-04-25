@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExpensePaymentMethodController;
@@ -54,16 +53,9 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Customers (العملاء)
-    Route::resource('customers', CustomerController::class);
-    Route::middleware(['feature:customer_target'])->group(function () {
-        Route::get('customers/{customer}/withdraw-target', [CustomerController::class, 'showWithdrawTarget'])->name('customers.withdraw-target.form');
-        Route::post('customers/{customer}/withdraw-target', [CustomerController::class, 'withdrawTarget'])->name('customers.withdraw-target.store');
-    });
-    Route::middleware(['feature:payments'])->group(function () {
-        Route::get('customers/{customer}/collect', [PaymentController::class, 'showCollectFromCustomer'])->name('customers.collect.form');
-        Route::post('customers/{customer}/collect', [PaymentController::class, 'collectFromCustomer'])->name('customers.collect');
-    });
+    // Customers — moved to Phase 4 admin block (admin.customers.*).
+    // Old top-level customer/withdraw-target/collect routes removed; the new
+    // CustomerController lives under app/Http/Controllers/Admin/.
 
     // Branches (الفروع)
     Route::resource('branches', BranchController::class)->except(['show']);
@@ -229,5 +221,17 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::middleware('permission:units.view')->group(function () {
         Route::resource('units', \App\Http\Controllers\Admin\UnitController::class)
             ->except('show');
+    });
+});
+
+// ============================================
+// Phase 4: Customer Management
+// ============================================
+// Resource is gated by either `customers.view-all` (admins/accountants) or
+// `customers.view-own` (account managers); per-record visibility is then
+// enforced by CustomerPolicy + the AccountManagerScope global query scope.
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('permission:customers.view-all|customers.view-own')->group(function () {
+        Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class);
     });
 });

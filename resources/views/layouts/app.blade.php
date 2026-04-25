@@ -854,7 +854,7 @@
 
                 <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" data-tooltip="لوحة التحكم"><span class="nav-icon">📊</span><span class="nav-label">لوحة التحكم</span></a></li>
                 @if(feature_enabled('customers'))
-                <li><a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('customers', 'العملاء') }}"><span class="nav-icon">{{ feature_icon('customers', '👥') }}</span><span class="nav-label">{{ feature_name('customers', 'العملاء') }}</span></a></li>
+                <li><a href="{{ route('admin.customers.index') }}" class="{{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('customers', 'العملاء') }}"><span class="nav-icon">{{ feature_icon('customers', '👥') }}</span><span class="nav-label">{{ feature_name('customers', 'العملاء') }}</span></a></li>
                 @endif
                 @if(!$isEmployeeOnly)
                     <li><a href="{{ route('branches.index') }}" class="{{ request()->routeIs('branches.*') ? 'active' : '' }}" data-tooltip="الفروع"><span class="nav-icon">🏢</span><span class="nav-label">الفروع</span></a></li>

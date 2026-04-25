@@ -8,6 +8,8 @@ use App\Domain\Catalog\Models\Unit;
 use App\Domain\Catalog\Policies\ServicePolicy;
 use App\Domain\Catalog\Policies\ServiceTypePolicy;
 use App\Domain\Catalog\Policies\UnitPolicy;
+use App\Domain\Customer\Models\Customer;
+use App\Domain\Customer\Policies\CustomerPolicy;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -34,5 +36,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ServiceType::class, ServiceTypePolicy::class);
         Gate::policy(Service::class, ServicePolicy::class);
         Gate::policy(Unit::class, UnitPolicy::class);
+
+        // Phase 4: Customer policy
+        Gate::policy(Customer::class, CustomerPolicy::class);
     }
 }
