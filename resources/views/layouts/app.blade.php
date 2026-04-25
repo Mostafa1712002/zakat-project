@@ -33,7 +33,7 @@
     <link rel="apple-touch-icon" href="{{ !empty($__sidebarLogo) ? asset('storage/' . $__sidebarLogo) : asset('logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Reem+Kufi:wght@500;600;700&family=Tajawal:wght@500;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -843,6 +843,341 @@
             .filter-row { grid-template-columns: 1fr; }
         }
     </style>
+
+    {{-- ============================================================ --}}
+    {{-- EDITORIAL LUXURY THEME — AMMRK signature aesthetic            --}}
+    {{-- ============================================================ --}}
+    <style>
+        :root {
+            /* Refined palette: deep teal + antique gold on cream */
+            --ink: #0f1721;
+            --ink-soft: #2a3641;
+            --ink-muted: #6b7785;
+            --teal-deep: #0a4d5c;
+            --teal-mid: #0e7490;
+            --teal-light: #ecf6f8;
+            --gold: #b89968;
+            --gold-light: #d4b87f;
+            --gold-pale: #f5ecd9;
+            --cream: #faf7f0;
+            --paper: #ffffff;
+            --line: #e8e2d4;
+            --shadow-soft: 0 2px 12px rgba(15, 23, 33, 0.04), 0 1px 2px rgba(15, 23, 33, 0.03);
+            --shadow-lift: 0 12px 32px -12px rgba(15, 23, 33, 0.18), 0 4px 12px rgba(15, 23, 33, 0.06);
+        }
+
+        body {
+            background: var(--cream);
+            background-image:
+                radial-gradient(ellipse 1200px 600px at 80% -10%, rgba(184,153,104,0.06), transparent 60%),
+                radial-gradient(ellipse 800px 400px at 0% 100%, rgba(10,77,92,0.05), transparent 60%);
+            color: var(--ink);
+            font-feature-settings: "kern", "liga", "ss01";
+        }
+
+        /* Subtle paper grain */
+        body::before {
+            content: "";
+            position: fixed; inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(184,153,104,0.025) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(10,77,92,0.02) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Display font for headings */
+        h1, .page-header h1 {
+            font-family: 'Reem Kufi', 'Cairo', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+        }
+        h2, h3 {
+            font-family: 'Reem Kufi', 'Cairo', sans-serif;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        /* Sidebar — refined editorial */
+        .sidebar {
+            background: linear-gradient(170deg, #0a4d5c 0%, #07343f 100%) !important;
+            box-shadow: -1px 0 0 rgba(184,153,104,0.15), inset 1px 0 0 rgba(255,255,255,0.04);
+        }
+        .sidebar::before {
+            content: "";
+            position: absolute;
+            top: 0; right: 0; width: 3px; height: 80px;
+            background: linear-gradient(180deg, var(--gold) 0%, transparent 100%);
+            opacity: 0.4;
+        }
+        .sidebar .logo {
+            border-bottom: 1px solid rgba(184,153,104,0.18) !important;
+            padding-bottom: 18px !important;
+        }
+        .sidebar .logo-text {
+            font-family: 'Reem Kufi', 'Cairo', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .sidebar .nav-menu a {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            border-radius: 8px !important;
+        }
+        .sidebar .nav-menu a:hover {
+            background: rgba(184,153,104,0.12) !important;
+            color: var(--gold-light) !important;
+            transform: translateX(-2px);
+        }
+        .sidebar .nav-menu a.active,
+        .sidebar .nav-menu li.active a {
+            background: linear-gradient(90deg, rgba(184,153,104,0.18), rgba(184,153,104,0.05)) !important;
+            border-right: 2px solid var(--gold);
+            color: white !important;
+        }
+
+        /* Main content paper */
+        .main {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Page headers with editorial flair */
+        .page-header {
+            position: relative;
+            padding-bottom: 20px !important;
+            margin-bottom: 24px !important;
+            border-bottom: 1px solid var(--line) !important;
+        }
+        .page-header::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            right: 0;
+            width: 60px;
+            height: 2px;
+            background: var(--gold);
+        }
+        .page-header h1 {
+            font-size: 1.75rem !important;
+            margin-bottom: 4px !important;
+        }
+        .page-header p {
+            color: var(--ink-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Cards — paper feel with subtle depth */
+        .card,
+        .stat-card,
+        .form-card {
+            background: var(--paper) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: 14px !important;
+            box-shadow: var(--shadow-soft) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card:hover,
+        .stat-card:hover {
+            box-shadow: var(--shadow-lift) !important;
+        }
+
+        /* Stat card — editorial number layout */
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0; right: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--gold) 0%, transparent 50%);
+            opacity: 0.6;
+        }
+        .stat-card .stat-value {
+            font-family: 'Reem Kufi', 'Cairo', sans-serif;
+            font-weight: 700;
+            color: var(--teal-deep);
+            letter-spacing: -0.02em;
+        }
+        .stat-card .stat-label {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.72rem !important;
+            color: var(--ink-muted) !important;
+            font-weight: 600;
+        }
+
+        /* Buttons — refined */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal-deep) 0%, var(--teal-mid) 100%) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.01em;
+            box-shadow: 0 2px 8px rgba(10,77,92,0.18) !important;
+            transition: all 0.25s ease !important;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #093d4a 0%, #0c6280 100%) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(10,77,92,0.28) !important;
+        }
+        .btn-primary::after {
+            content: "";
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 30px; height: 30px;
+            background: radial-gradient(circle, rgba(184,153,104,0.3), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .btn-primary:hover::after { opacity: 1; }
+        .btn-secondary {
+            background: var(--paper) !important;
+            border: 1px solid var(--line) !important;
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+        }
+        .btn-secondary:hover {
+            background: var(--cream) !important;
+            border-color: var(--gold-light) !important;
+            color: var(--teal-deep) !important;
+        }
+
+        /* Tables — editorial typography */
+        .table thead th,
+        .data-table thead th {
+            background: var(--cream) !important;
+            color: var(--ink-soft) !important;
+            font-family: 'Reem Kufi', 'Cairo', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 0.78rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 14px 12px !important;
+            border-bottom: 1px solid var(--line) !important;
+        }
+        .table tbody tr,
+        .data-table tbody tr {
+            transition: background 0.15s ease;
+        }
+        .table tbody tr:hover,
+        .data-table tbody tr:hover {
+            background: var(--gold-pale) !important;
+        }
+        .table tbody td,
+        .data-table tbody td {
+            border-bottom: 1px solid var(--line) !important;
+            padding: 14px 12px !important;
+            color: var(--ink-soft);
+        }
+
+        /* Forms — refined inputs */
+        input.form-control,
+        select.form-control,
+        textarea.form-control,
+        .form-row input[type="text"],
+        .form-row input[type="email"],
+        .form-row input[type="number"],
+        .form-row input[type="date"],
+        .form-row select,
+        .form-row textarea {
+            border: 1px solid var(--line) !important;
+            background: var(--paper) !important;
+            border-radius: 10px !important;
+            font-family: 'Cairo', sans-serif !important;
+            transition: all 0.2s ease !important;
+        }
+        input.form-control:focus,
+        select.form-control:focus,
+        textarea.form-control:focus {
+            border-color: var(--gold) !important;
+            background: var(--paper) !important;
+            box-shadow: 0 0 0 3px rgba(184,153,104,0.12) !important;
+            outline: none;
+        }
+        label, .form-row label {
+            color: var(--ink-soft) !important;
+            font-weight: 600 !important;
+            font-size: 0.82rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Badges — pill style */
+        .badge {
+            font-family: 'Cairo', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 0.72rem !important;
+            padding: 4px 10px !important;
+            border-radius: 999px !important;
+            letter-spacing: 0.02em;
+        }
+        .badge-success { background: #ecfdf5 !important; color: #047857 !important; border: 1px solid #a7f3d0; }
+        .badge-warning { background: #fffbeb !important; color: #b45309 !important; border: 1px solid #fde68a; }
+        .badge-danger { background: #fef2f2 !important; color: #b91c1c !important; border: 1px solid #fecaca; }
+        .badge-primary { background: var(--teal-light) !important; color: var(--teal-deep) !important; border: 1px solid #b3e5ed; }
+        .badge-info { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe; }
+        .badge-secondary { background: #f8fafc !important; color: #64748b !important; border: 1px solid var(--line); }
+
+        /* Alerts — subtle elevated */
+        .alert {
+            border-radius: 12px !important;
+            border-width: 1px !important;
+            border-style: solid !important;
+            padding: 12px 16px !important;
+            font-weight: 500;
+        }
+        .alert-success {
+            background: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+            color: #065f46 !important;
+        }
+        .alert-danger {
+            background: #fef2f2 !important;
+            border-color: #fecaca !important;
+            color: #991b1b !important;
+        }
+
+        /* Scrollbar refined */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: var(--line);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
+
+        /* Selection */
+        ::selection {
+            background: var(--gold-pale);
+            color: var(--ink);
+        }
+
+        /* Mobile menu toggle — refined */
+        .menu-toggle {
+            background: linear-gradient(135deg, var(--teal-deep), var(--teal-mid)) !important;
+            box-shadow: 0 4px 12px rgba(10,77,92,0.3) !important;
+            border-radius: 12px !important;
+        }
+
+        /* Page-load fade */
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .main > * { animation: fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+        .main > *:nth-child(1) { animation-delay: 0ms; }
+        .main > *:nth-child(2) { animation-delay: 60ms; }
+        .main > *:nth-child(3) { animation-delay: 120ms; }
+        .main > *:nth-child(4) { animation-delay: 180ms; }
+        .main > *:nth-child(5) { animation-delay: 240ms; }
+    </style>
+
     @stack('styles')
 </head>
 <body>

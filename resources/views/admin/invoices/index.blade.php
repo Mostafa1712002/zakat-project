@@ -112,8 +112,8 @@
                 </div>
             @endif
             <div class="ic-foot">
-                <small>📅 {{ $invoice->created_at?->format('Y-m-d') }}</small>
-                <small style="color:var(--primary)">عرض التفاصيل ←</small>
+                <small>{{ $invoice->created_at?->format('Y-m-d') }}</small>
+                <small class="ic-cta">عرض التفاصيل ←</small>
             </div>
         </a>
     @empty
@@ -132,119 +132,261 @@
 
 @push('styles')
 <style>
+    /* Editorial KPI strip */
     .kpi-strip {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-bottom: 16px;
+        gap: 16px;
+        margin-bottom: 28px;
     }
     .kpi {
-        background: linear-gradient(135deg, #ffffff, #f8fafc);
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 14px 16px;
+        position: relative;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px 22px;
         display: flex;
-        align-items: center;
-        gap: 12px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: var(--shadow-soft);
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .kpi:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lift);
+        border-color: var(--gold-light);
+    }
+    .kpi::before {
+        content: "";
+        position: absolute;
+        top: 0; right: 0;
+        width: 80px; height: 80px;
+        background: radial-gradient(circle at top right, rgba(184,153,104,0.12), transparent 70%);
+        pointer-events: none;
     }
     .kpi-icon {
-        font-size: 1.8rem;
-        background: rgba(14,116,144,0.1);
-        width: 44px; height: 44px;
-        display: flex; align-items: center; justify-content: center;
-        border-radius: 10px;
+        font-size: 1.4rem;
+        color: var(--gold);
+        opacity: 0.9;
+        line-height: 1;
+        margin-bottom: 4px;
     }
-    .kpi strong { display: block; font-size: 1.15rem; color: #0f172a; }
-    .kpi small { color: #64748b; font-size: 0.8rem; }
+    .kpi strong {
+        display: block;
+        font-family: 'Reem Kufi', 'Cairo', sans-serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--teal-deep);
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+    }
+    .kpi small {
+        color: var(--ink-muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+    }
 
+    /* Filters — editorial bar */
     .filters-card {
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
-        gap: 8px;
-        background: white;
-        padding: 14px;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        margin-bottom: 16px;
+        gap: 10px;
+        background: var(--paper);
+        padding: 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-soft);
+        align-items: end;
     }
-    .filter-btn { white-space: nowrap; }
+    .filters-card .form-control {
+        height: 42px;
+        font-size: 0.88rem;
+    }
+    .filter-btn { white-space: nowrap; height: 42px; padding: 0 18px; }
 
+    /* Invoice cards — paper documents */
     .invoice-cards {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-        gap: 14px;
-        margin-bottom: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 18px;
+        margin-bottom: 24px;
     }
     .invoice-card {
-        background: white;
-        border: 1px solid #e2e8f0;
+        position: relative;
+        background: var(--paper);
+        border: 1px solid var(--line);
         border-radius: 14px;
-        padding: 16px;
+        padding: 22px;
         text-decoration: none;
         color: inherit;
-        transition: all 0.2s;
-        display: flex; flex-direction: column; gap: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow: hidden;
+    }
+    .invoice-card::before {
+        content: "";
+        position: absolute;
+        top: 0; right: 0; bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, var(--gold) 0%, var(--gold-light) 60%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
     .invoice-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(14,116,144,0.12);
-        border-color: #0e7490;
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lift);
+        border-color: var(--gold-light);
     }
-    .ic-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
-    .ic-num { font-weight: 700; color: #0f172a; font-size: 1rem; }
-    .ic-badges { display: flex; flex-wrap: wrap; gap: 4px; }
-    .ic-customer { color: #475569; font-size: 0.9rem; }
-    .ic-event { color: #64748b; font-size: 0.85rem;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .invoice-card:hover::before { opacity: 1; }
+
+    .ic-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding-bottom: 12px;
+        border-bottom: 1px dashed var(--line);
     }
+    .ic-num {
+        font-family: 'Reem Kufi', 'Cairo', sans-serif;
+        font-weight: 700;
+        color: var(--ink);
+        font-size: 1.05rem;
+        letter-spacing: -0.01em;
+    }
+    .ic-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .ic-customer {
+        color: var(--ink-soft);
+        font-size: 0.92rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ic-event {
+        color: var(--ink-muted);
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-style: italic;
+    }
+
     .ic-amounts {
-        background: #f8fafc;
-        border-radius: 8px;
-        padding: 10px 12px;
+        background: linear-gradient(135deg, var(--cream), #fefbf5);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px 14px;
         margin-top: 4px;
     }
     .ic-amount-row {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding: 3px 0;
+        align-items: baseline;
+        padding: 4px 0;
         font-size: 0.88rem;
     }
-    .ic-amount-row span { color: #64748b; }
-    .ic-amount-row strong { color: #0f172a; }
-    .ic-progress { background: #e2e8f0; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 2px; }
-    .ic-progress-bar { background: linear-gradient(90deg, #16a34a, #22c55e); height: 100%; transition: width 0.4s; }
+    .ic-amount-row + .ic-amount-row {
+        border-top: 1px solid rgba(184,153,104,0.18);
+    }
+    .ic-amount-row span {
+        color: var(--ink-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+    .ic-amount-row strong {
+        color: var(--ink);
+        font-family: 'Reem Kufi', 'Cairo', sans-serif;
+        font-weight: 600;
+        font-size: 0.96rem;
+    }
+
+    .ic-progress {
+        background: var(--line);
+        height: 3px;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 4px;
+    }
+    .ic-progress-bar {
+        background: linear-gradient(90deg, var(--gold-light), var(--gold));
+        height: 100%;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     .ic-foot {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         padding-top: 8px;
-        border-top: 1px solid #f1f5f9;
+        border-top: 1px solid var(--line);
         margin-top: 4px;
     }
-    .ic-foot small { color: #94a3b8; font-size: 0.78rem; }
+    .ic-foot small {
+        color: var(--ink-muted);
+        font-size: 0.74rem;
+        letter-spacing: 0.04em;
+    }
+    .ic-cta {
+        color: var(--teal-deep) !important;
+        font-weight: 600;
+        font-size: 0.78rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
 
+    /* Empty state — editorial */
     .empty-state {
         grid-column: 1 / -1;
         text-align: center;
-        padding: 48px 16px;
-        background: #f8fafc;
-        border-radius: 12px;
-        border: 2px dashed #cbd5e1;
+        padding: 64px 24px;
+        background: var(--paper);
+        border-radius: 14px;
+        border: 1px dashed var(--gold-light);
+        position: relative;
     }
-    .empty-state h3 { color: #475569; margin: 12px 0 4px; }
-    .empty-state p { color: #94a3b8; margin-bottom: 16px; }
+    .empty-state::before {
+        content: "✦";
+        position: absolute;
+        top: 20px; right: 20px;
+        color: var(--gold);
+        font-size: 1.2rem;
+        opacity: 0.4;
+    }
+    .empty-state::after {
+        content: "✦";
+        position: absolute;
+        bottom: 20px; left: 20px;
+        color: var(--gold);
+        font-size: 1.2rem;
+        opacity: 0.4;
+    }
+    .empty-state h3 {
+        color: var(--ink);
+        margin: 16px 0 8px;
+        font-family: 'Reem Kufi', 'Cairo', sans-serif;
+    }
+    .empty-state p { color: var(--ink-muted); margin-bottom: 20px; }
 
     @media (max-width: 768px) {
-        .kpi-strip { grid-template-columns: 1fr 1fr; gap: 8px; }
-        .kpi { padding: 10px 12px; gap: 8px; }
-        .kpi-icon { width: 36px; height: 36px; font-size: 1.4rem; }
-        .kpi strong { font-size: 0.95rem; }
-        .kpi small { font-size: 0.7rem; }
-        .filters-card { grid-template-columns: 1fr 1fr; }
+        .kpi-strip { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+        .kpi { padding: 14px; }
+        .kpi strong { font-size: 1.2rem; }
+        .filters-card { grid-template-columns: 1fr 1fr; padding: 12px; }
         .filter-search { grid-column: 1 / -1; }
         .filter-btn { grid-column: 1 / -1; }
-        .invoice-cards { grid-template-columns: 1fr; gap: 10px; }
+        .invoice-cards { grid-template-columns: 1fr; gap: 12px; }
+        .invoice-card { padding: 16px; }
     }
     @media (max-width: 380px) {
         .kpi-strip { grid-template-columns: 1fr; }
