@@ -128,8 +128,9 @@ class IssueInvoice
             ])->save();
 
             // Only queue submission when we actually have a signed payload.
+            // Use afterCommit() so a failed ZATCA submission doesn't roll back the issuance transaction.
             if ($zatcaStatus === Invoice::ZATCA_PENDING && $signedXml !== null) {
-                SubmitInvoiceToZatca::dispatch($invoice->id);
+                SubmitInvoiceToZatca::dispatch($invoice->id)->afterCommit();
             }
 
             $fresh = $invoice->refresh();
