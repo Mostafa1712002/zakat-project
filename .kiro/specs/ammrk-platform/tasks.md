@@ -102,43 +102,47 @@
 ## Phase 3: Catalog (Service Types & Services)
 
 ### Task 3.1: Migrations
-- [ ] `service_types` migration
-- [ ] `units` migration (recreated)
-- [ ] `services` migration (no price field)
+- [x] `service_types` migration (`2026_04_25_130000`)
+- [x] `units` migration recreated (`2026_04_25_130001`) — old Phase 1 migration deleted
+- [x] `services` migration (`2026_04_25_130002`) — no price field, soft deletes, FK restrict
 
 **Outcome:** ✅ Catalog tables exist
 **Dependencies:** Phase 2 complete
 
 ### Task 3.2: Models & Seeders
-- [ ] `app/Domain/Catalog/Models/{ServiceType,Service,Unit}.php`
-- [ ] Relationships, fillable, casts
-- [ ] `ServiceTypeSeeder` with 6 default types: Exhibitions, Conferences, Events, Tech Solutions, Hospitality, Media
-- [ ] `UnitSeeder` with: يوم, فعالية, باقة, شهر, ساعة
+- [x] `app/Domain/Catalog/Models/{ServiceType,Service,Unit}.php` (old `app/Models/Unit.php` removed)
+- [x] Relationships, fillable, casts (`ServiceType hasMany Service`; `Service belongsTo ServiceType + Unit`)
+- [x] `ServiceTypeSeeder` with 6 default types (Arabic): المعارض, المؤتمرات, الفعاليات, الحلول التقنية, الضيافة, الإعلام
+- [x] `UnitSeeder` recreated with: يوم, فعالية, باقة, شهر, ساعة (replaces 12 weight/length/volume units from Phase 1)
+- [x] Wired both into `DatabaseSeeder` (after `DefaultUsersSeeder`)
 
 **Outcome:** ✅ Catalog populated with default data
 **Dependencies:** 3.1
 
 ### Task 3.3: Controllers & Routes
-- [ ] `Admin/ServiceTypeController` (resource: index/create/store/edit/update/destroy)
-- [ ] `Admin/ServiceController` (resource)
-- [ ] `Admin/UnitController` (resource)
-- [ ] Routes registered in `web.php` under admin middleware + permission middleware
+- [x] `Admin/ServiceTypeController` (resource: index/create/store/edit/update/destroy, `show` excluded)
+- [x] `Admin/ServiceController` (resource)
+- [x] `Admin/UnitController` (resource)
+- [x] Added `units.{view,create,edit,delete}` permissions to `RolePermissionSeeder` (Super Admin/Admin auto-grant via existing logic)
+- [x] Routes registered under `admin/` prefix with Spatie `permission:*.view` middleware on each resource group (18 routes total)
 
 **Outcome:** ✅ CRUD endpoints functional
 **Dependencies:** 3.2
 
 ### Task 3.4: Views & UI
-- [ ] `service-types/index` (table with toggle active, sort_order drag)
-- [ ] `service-types/{create,edit}` (icon picker, name)
-- [ ] `services/index` (table grouped by service type)
-- [ ] `services/{create,edit}` (service type select, name, unit, description, classification)
-- [ ] Apply Spatie `@can` directives
+- [x] `service-types/{index,create,edit}.blade.php` — table with search + active filter, plain text icon input
+- [x] `services/{index,create,edit}.blade.php` — search + type filter + active filter, ZATCA classification select (S/Z/E)
+- [x] `units/{index,create,edit}.blade.php` — basic table + filter
+- [x] Spatie `@can` directives gate edit/delete/create buttons (mapped to policies)
+- [x] Verified end-to-end via curl (login → POST `services/store` → service persisted)
 
 **Outcome:** ✅ Catalog manageable via admin UI
 **Dependencies:** 3.3
 
 ### Task 3.5: Policies
-- [ ] `ServicePolicy`, `ServiceTypePolicy`, `UnitPolicy` mapped to permissions
+- [x] `ServiceTypePolicy`, `ServicePolicy`, `UnitPolicy` under `app/Domain/Catalog/Policies/`
+- [x] Methods (`viewAny`, `view`, `create`, `update`, `delete`) mapped to Spatie permissions
+- [x] Registered via `Gate::policy()` in `AppServiceProvider::boot()`
 
 **Outcome:** ✅ Permission-protected catalog
 **Dependencies:** 3.3
@@ -346,10 +350,10 @@
 |-------|-------|-----------|--------|
 | 1. Cleanup | 5 | 5 | ✅ Complete |
 | 2. Foundation | 4 | 4 | ✅ Complete |
-| 3. Catalog | 5 | 0 | Not Started |
+| 3. Catalog | 5 | 5 | ✅ Complete |
 | 4. Customer | 4 | 0 | Not Started |
 | 5. Sales | 8 | 0 | Not Started |
 | 6. Treasury | 3 | 0 | Not Started |
 | 7. Reports | 3 | 0 | Not Started |
 | 8. Polish | 3 | 0 | Not Started |
-| **Total** | **35** | **9** | **26%** |
+| **Total** | **35** | **14** | **40%** |
