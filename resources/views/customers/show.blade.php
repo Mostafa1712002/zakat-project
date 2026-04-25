@@ -26,7 +26,7 @@
             <p><strong>الهاتف:</strong> {{ $customer->phone ?? '-' }}</p>
             <p><strong>الموبايل:</strong> {{ $customer->mobile ?? '-' }}</p>
             <p><strong>الفرع:</strong> {{ $customer->branch->name ?? '-' }}</p>
-            <p><strong>المندوب:</strong> {{ $customer->salesRep->name ?? '-' }}</p>
+            <p><strong>المندوب:</strong> -</p>
         </div>
     </div>
     <div class="card">
@@ -89,26 +89,16 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($customer->sales as $index => $sale)
-                <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td><code>{{ $sale->invoice_number }}</code></td>
-                    <td>{{ $sale->invoice_date?->format('Y-m-d') ?? '-' }}</td>
-                    <td>{{ number_format($sale->total_amount, 2) }} ج.م</td>
-                    <td>{{ $sale->status }}</td>
-                    <td>{{ $sale->payment_status }}</td>
-                </tr>
-                @empty
+                {{-- NOTE: Phase 1 cleanup — sales relation removed. Invoices list comes back in Phase 5. --}}
                 <tr>
                     <td colspan="6">
                         <div class="empty-state">
                             <div class="empty-state-icon">🧾</div>
                             <h3>لا توجد فواتير</h3>
-                            <p>لم يتم تسجيل أي فواتير لهذا العميل بعد</p>
+                            <p>سيتم تفعيل سجل الفواتير في المرحلة الخامسة</p>
                         </div>
                     </td>
                 </tr>
-                @endforelse
             </tbody>
         </table>
     </div>

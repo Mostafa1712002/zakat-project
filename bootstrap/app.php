@@ -19,13 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Prevent browser back button after logout
         $middleware->web(append: [
             \App\Http\Middleware\PreventBackHistory::class,
-            \App\Http\Middleware\SalesRepAccessMiddleware::class,
         ]);
 
         $middleware->alias([
             'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'feature' => \App\Http\Middleware\CheckFeatureMiddleware::class,
-            'sales_rep_access' => \App\Http\Middleware\SalesRepAccessMiddleware::class,
             'admin_only' => \App\Http\Middleware\AdminOnly::class,
         ]);
     })

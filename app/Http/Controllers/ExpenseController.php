@@ -9,7 +9,6 @@ use App\Models\ExpenseCategory;
 use App\Models\ExpensePaymentMethod;
 use App\Models\Partner;
 use App\Models\PartnerTransaction;
-use App\Models\SalesRep;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -60,7 +59,7 @@ class ExpenseController extends Controller
             ->orderBy('name')
             ->get();
 
-        $salesReps = SalesRep::where('is_active', true)->orderBy('name')->get();
+        $salesReps = collect();
 
         return view('expenses.create', compact('paymentMethods', 'categories', 'salesReps'));
     }
@@ -79,8 +78,6 @@ class ExpenseController extends Controller
             'notes' => 'nullable|string',
             'employee_id' => 'nullable|exists:employees,id',
             'partner_id' => 'nullable|exists:partners,id',
-            'sales_rep_id' => 'nullable|exists:sales_reps,id',
-            'deduct_from_treasury' => 'nullable|boolean',
             'transaction_type' => 'nullable|string', // salary, advance, bonus, deduction, withdrawal, profit_share
         ]);
 
@@ -131,23 +128,9 @@ class ExpenseController extends Controller
             }
 
             // إزالة الحقول غير الموجودة في جدول expenses
-            $deductFromTreasury = $validated['deduct_from_treasury'] ?? false;
             unset($validated['transaction_type']);
-            unset($validated['deduct_from_treasury']);
 
             $expense = Expense::create($validated);
-
-            // خصم من خزينة المندوب إذا تم اختيار ذلك
-            if (!empty($validated['sales_rep_id']) && $deductFromTreasury) {
-                $salesRep = SalesRep::find($validated['sales_rep_id']);
-                if ($salesRep) {
-                    $salesRep->recordExpense(
-                        $validated['amount'],
-                        $validated['title'],
-                        $expense->id
-                    );
-                }
-            }
 
             DB::commit();
 
@@ -175,7 +158,7 @@ class ExpenseController extends Controller
         $categories = ExpenseCategory::active()->orderBy('name')->get();
         $employees = Employee::where('is_active', true)->orderBy('name')->get();
         $partners = Partner::where('is_active', true)->orderBy('name')->get();
-        $salesReps = SalesRep::where('is_active', true)->orderBy('name')->get();
+        $salesReps = collect();
 
         return view('expenses.edit', compact('expense', 'paymentMethods', 'categories', 'employees', 'partners', 'salesReps'));
     }

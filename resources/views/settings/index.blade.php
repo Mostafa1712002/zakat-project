@@ -59,29 +59,7 @@
         </div>
     </div>
 
-    <!-- Categories -->
-    <div class="card settings-card">
-        <div class="settings-card-icon">🏷️</div>
-        <div class="settings-card-content">
-            <h3>الأقسام</h3>
-            <p>إدارة أقسام المنتجات</p>
-        </div>
-        <div class="settings-card-action">
-            <a href="{{ route('categories.index') }}" class="btn btn-primary">إدارة</a>
-        </div>
-    </div>
-
-    <!-- Warehouses -->
-    <div class="card settings-card">
-        <div class="settings-card-icon">📦</div>
-        <div class="settings-card-content">
-            <h3>المخازن</h3>
-            <p>إدارة المخازن والمخازن</p>
-        </div>
-        <div class="settings-card-action">
-            <a href="{{ route('warehouses.index') }}" class="btn btn-primary">إدارة</a>
-        </div>
-    </div>
+    {{-- NOTE: Phase 1 cleanup — Categories and Warehouses cards removed (deleted domains). --}}
 
     <!-- Data Reset -->
     <div class="card settings-card settings-card-danger">

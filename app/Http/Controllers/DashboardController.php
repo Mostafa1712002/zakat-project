@@ -2,96 +2,50 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Product;
 use App\Models\Customer;
-use App\Models\Sale;
-use App\Models\Purchase;
 use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\Partner;
 use App\Models\PartnerTransaction;
-use App\Models\SalesRep;
-use App\Models\InventoryLevel;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    /**
+     * NOTE: Phase 1 cleanup stub.
+     * Original dashboard depended on deleted Sale/Purchase/Product/Inventory/SalesRep models.
+     * Will be rebuilt in Phase 7 (Reports & Dashboard) against new Quote/Invoice models.
+     */
     public function index()
     {
-        $today = Carbon::today();
-
-        // Daily stats
-        $todaySales = Sale::whereDate('invoice_date', $today)->sum('total_amount');
-        $todayPurchases = Purchase::whereDate('invoice_date', $today)->sum('total_amount');
-
-        // Treasury balance (same logic as TreasuryController)
-        // رأس المال من الشركاء
+        // Treasury balance — partner investment minus expenses; collections placeholder for Phase 5+.
         $openingBalance = Partner::sum('initial_investment')
             + PartnerTransaction::where('type', PartnerTransaction::TYPE_INVESTMENT)->sum('amount')
             - PartnerTransaction::where('type', PartnerTransaction::TYPE_RETURN)->sum('amount');
 
         $totalCollections = Payment::where('type', Payment::TYPE_RECEIVED)
             ->where('status', Payment::STATUS_COMPLETED)
-            ->where(function ($q) {
-                $q->where('payable_type', '!=', SalesRep::class)
-                  ->orWhereNull('payable_type');
-            })
-            ->sum('amount');
-
-        $totalCashSales = Sale::where('payment_type', 'cash')
-            ->where('status', Sale::STATUS_CONFIRMED)
-            ->sum('total_amount');
-
-        $totalRepWithdrawals = Payment::where('type', Payment::TYPE_RECEIVED)
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->where('payable_type', SalesRep::class)
             ->sum('amount');
 
         $totalExpenses = Expense::where('status', 'paid')->sum('amount');
 
-        $treasuryBalance = $openingBalance + ($totalCollections + $totalCashSales + $totalRepWithdrawals) - $totalExpenses;
-
-        // Collection stats
-        $unpaidInvoices = Sale::where('payment_status', 'unpaid')->count();
-        $overdueInvoices = Sale::where('payment_status', '!=', 'paid')
-            ->where('due_date', '<', now())
-            ->count();
-        $expectedPayments = Sale::where('payment_status', '!=', 'paid')
-            ->where('due_date', '>=', now())
-            ->where('due_date', '<=', now()->addDays(7))
-            ->sum('remaining_amount');
-
-        // Low stock count - count products with inventory below min_stock
-        $lowStockCount = InventoryLevel::where('quantity', '<', 10)->distinct('product_id')->count('product_id');
+        $treasuryBalance = $openingBalance + $totalCollections - $totalExpenses;
 
         $stats = [
-            'total_sales' => $todaySales,
-            'total_purchases' => $todayPurchases,
-            'low_stock_count' => $lowStockCount,
+            'total_sales' => 0,
+            'total_purchases' => 0,
+            'low_stock_count' => 0,
             'treasury_balance' => $treasuryBalance,
             'customers_count' => Customer::count(),
-            'products_count' => Product::count(),
-            'categories_count' => Category::count(),
-            'unpaid_invoices' => $unpaidInvoices,
-            'overdue_invoices' => $overdueInvoices,
-            'expected_payments' => $expectedPayments,
+            'products_count' => 0,
+            'categories_count' => 0,
+            'unpaid_invoices' => 0,
+            'overdue_invoices' => 0,
+            'expected_payments' => 0,
         ];
 
-        $recent_sales = Sale::with('customer')->latest('invoice_date')->take(5)->get();
-        $top_customers = Customer::withSum('sales', 'total_amount')
-            ->withCount('sales')
-            ->orderByDesc('sales_sum_total_amount')
-            ->take(3)
-            ->get();
-
-        // Low stock products - get products with low inventory
-        $low_stock_products = Product::select('products.*')
-            ->selectRaw('(SELECT COALESCE(SUM(quantity), 0) FROM inventory_levels WHERE inventory_levels.product_id = products.id) as total_stock')
-            ->havingRaw('total_stock < 20')
-            ->orderBy('total_stock', 'asc')
-            ->take(5)
-            ->get();
+        $recent_sales = collect();
+        $top_customers = collect();
+        $low_stock_products = collect();
 
         return view('dashboard', compact('stats', 'recent_sales', 'top_customers', 'low_stock_products'));
     }

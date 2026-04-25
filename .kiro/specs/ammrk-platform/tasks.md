@@ -3,49 +3,53 @@
 ## Phase 1: Cleanup (Delete Old Modules)
 
 ### Task 1.1: Remove Inventory Domain
-- [ ] Delete models: `Product`, `ProductPrice`, `InventoryLevel`, `StockMovement`, `Warehouse`, `Grade`, `Unit` (will recreate)
-- [ ] Delete controllers: `ProductController`, `WarehouseController`, `InventoryController`, `StockMovementController`, `GradeController`
-- [ ] Delete migrations referencing inventory tables
-- [ ] Delete views under `resources/views/admin/products/`, `warehouses/`, `inventory/`
-- [ ] Remove routes under `web.php` for inventory paths
+- [x] Delete models: `Product`, `ProductPrice`, `InventoryLevel`, `StockMovement`, `Warehouse`, `Grade`, `Category` (Unit kept — will be replaced in Phase 3)
+- [x] Delete controllers: `ProductController`, `WarehouseController`, `CategoryController`
+- [x] Delete migrations referencing inventory tables
+- [x] Delete views under `resources/views/products/`, `warehouses/`, `categories/`
+- [x] Remove routes under `web.php` for inventory paths
 
-**Outcome:** ✅ Inventory domain entirely removed
+**Outcome:** ✅ Inventory domain entirely removed (Unit retained per spec divergence — see cleanup-log.md)
 **Dependencies:** None
 
 ### Task 1.2: Remove Suppliers Domain
-- [ ] Delete `Supplier` model + migration + factory
-- [ ] Delete `SupplierController` + views
-- [ ] Delete supplier routes
-- [ ] Search & remove all `supplier_id` foreign key references
+- [x] Delete `Supplier` model + migration
+- [x] Delete `SupplierController` + views
+- [x] Delete supplier routes
+- [x] Search & remove all `supplier_id` foreign key references (handled via migration deletion)
 
 **Outcome:** ✅ Supplier domain entirely removed
 **Dependencies:** None
 
 ### Task 1.3: Remove Sales Reps Domain
-- [ ] Delete models: `SalesRep`, `SalesRepInventory`, `SalesRepStockMovement`, `SalesRepTransaction`, `CommissionWithdrawal`
-- [ ] Delete `SalesRepController` + related controllers
-- [ ] Delete sales rep views and routes
-- [ ] Delete `SalesRepAccessMiddleware` and remove from kernel
-- [ ] Delete sales rep migrations
+- [x] Delete models: `SalesRep`, `SalesRepInventory`, `SalesRepStockMovement`, `SalesRepTransaction`, `CommissionWithdrawal`
+- [x] Delete `SalesRepController`, `SalesRepAccountController`, `SalesRepDashboardController`
+- [x] Delete sales rep views and routes
+- [x] Delete `SalesRepAccessMiddleware` and remove from `bootstrap/app.php` (Laravel 11 — no Kernel.php)
+- [x] Delete sales rep migrations
+- [x] Delete `App\Traits\SalesRepScope` (used by Customer, Payment)
 
 **Outcome:** ✅ Sales Rep domain entirely removed
 **Dependencies:** None
 
 ### Task 1.4: Remove Returns Domain
-- [ ] Delete `SaleReturn`, `SaleReturnItem`, `PurchaseReturn`, `PurchaseReturnItem`
-- [ ] Delete return controllers and views
-- [ ] Delete return migrations
+- [x] Delete `SaleReturn`, `SaleReturnItem`, `PurchaseReturn`, `PurchaseReturnItem`
+- [x] Delete return controllers and views
+- [x] Delete return migrations
 
 **Outcome:** ✅ Returns domain removed
 **Dependencies:** 1.1, 1.3
 
 ### Task 1.5: Remove Old Sales/Purchases Domain
-- [ ] Delete `Sale`, `SaleItem`, `Purchase`, `PurchaseItem` (will be replaced by Quote/Invoice)
-- [ ] Delete old sales/purchase controllers
-- [ ] Delete old sales/purchase views and routes
-- [ ] Delete old migrations
+- [x] Delete `Sale`, `SaleItem`, `Purchase`, `PurchaseItem` (will be replaced by Quote/Invoice in Phase 5)
+- [x] Delete old sales/purchase controllers (`SaleController`, `PurchaseController`, `QuotationController`, `PurchaseQuotationController`)
+- [x] Delete old sales/purchase views and routes
+- [x] Delete old migrations
+- [x] Stub surviving controllers (Dashboard, Report, Treasury, Zatca, Payment, Customer) — depended on Sale/Purchase
+- [x] Strip surviving model relations (User.sales/salesRep, Customer.sales/salesRep, Payment.sale/purchase/salesRep, Branch.warehouses, Employee.salesRep, Expense.salesRep)
+- [x] Clean sidebar navigation in `resources/views/layouts/app.blade.php`
 
-**Outcome:** ✅ Old sales/purchase tables removed (replaced by new Quote/Invoice)
+**Outcome:** ✅ Old sales/purchase tables removed (replaced by new Quote/Invoice in Phase 5)
 **Dependencies:** 1.4
 
 ---
@@ -336,7 +340,7 @@
 
 | Phase | Tasks | Completed | Status |
 |-------|-------|-----------|--------|
-| 1. Cleanup | 5 | 0 | Not Started |
+| 1. Cleanup | 5 | 5 | ✅ Complete |
 | 2. Foundation | 4 | 0 | Not Started |
 | 3. Catalog | 5 | 0 | Not Started |
 | 4. Customer | 4 | 0 | Not Started |
@@ -344,4 +348,4 @@
 | 6. Treasury | 3 | 0 | Not Started |
 | 7. Reports | 3 | 0 | Not Started |
 | 8. Polish | 3 | 0 | Not Started |
-| **Total** | **35** | **0** | **0%** |
+| **Total** | **35** | **5** | **14%** |

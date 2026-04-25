@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Branch;
-use App\Models\SalesRep;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
@@ -14,17 +13,16 @@ use Illuminate\Support\Facades\DB;
 class CustomerController extends Controller
 {
     /**
+     * NOTE: Phase 1 cleanup — removed SalesRep scoping and Sale relationships.
+     * Customer scope (Account Manager) is rebuilt in Phase 4 via AccountManagerScope.
+     */
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = Customer::with(['branch', 'salesRep'])
-            ->withSum(['sales as total_remaining' => function ($q) {
-                $q->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
-                  ->where('status', '!=', 'cancelled')
-                  ->where('remaining_amount', '>', 0);
-            }], 'remaining_amount')
-            ->forSalesRep();
+        $query = Customer::with(['branch']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -37,12 +35,6 @@ class CustomerController extends Controller
             $query->where('item_type', $request->item_type);
         }
 
-        if ($request->balance === 'has_balance') {
-            $query->having('total_remaining', '>', 0);
-        } elseif ($request->balance === 'no_balance') {
-            $query->havingRaw('COALESCE(total_remaining, 0) <= 0');
-        }
-
         $customers = $query->latest()->paginate(15);
 
         return view('customers.index', compact('customers'));
@@ -53,15 +45,9 @@ class CustomerController extends Controller
      */
     public function create()
     {
-        $user = auth()->user();
         $branches = Branch::where('is_active', true)->get();
-
-        // المندوب لا يرى قائمة المندوبين - يتم تعيينه تلقائياً
-        $salesReps = $user->isSalesRep()
-            ? collect()
-            : SalesRep::where('is_active', true)->get();
-
-        $currentSalesRep = $user->salesRep;
+        $salesReps = collect();
+        $currentSalesRep = null;
 
         return view('customers.create', compact('branches', 'salesReps', 'currentSalesRep'));
     }
@@ -85,7 +71,6 @@ class CustomerController extends Controller
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms_days' => 'nullable|integer|min:0',
             'branch_id' => 'nullable|exists:branches,id',
-            'sales_rep_id' => 'nullable|exists:sales_reps,id',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
         ] + (feature_enabled('customer_target') ? [
@@ -110,12 +95,6 @@ class CustomerController extends Controller
             } while (Customer::where('code', $validated['code'])->exists());
         }
 
-        // إذا كان المستخدم مندوب، يتم تعيينه تلقائياً للعميل
-        $user = auth()->user();
-        if ($user->isSalesRep() && $user->salesRep) {
-            $validated['sales_rep_id'] = $user->salesRep->id;
-        }
-
         Customer::create($validated);
 
         return redirect()->route('customers.index')
@@ -127,21 +106,9 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
-        // التحقق من صلاحية الوصول
-        if (!$customer->canCurrentUserAccess()) {
-            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
-        }
+        $customer->load(['branch']);
 
-        $customer->load(['branch', 'salesRep', 'sales' => function ($query) {
-            $query->latest()->take(10);
-        }]);
-
-        // الرصيد المستحق الفعلي من الفواتير
-        $totalRemaining = $customer->sales()
-            ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
-            ->where('status', '!=', 'cancelled')
-            ->where('remaining_amount', '>', 0)
-            ->sum('remaining_amount');
+        $totalRemaining = 0;
 
         return view('customers.show', compact('customer', 'totalRemaining'));
     }
@@ -151,18 +118,8 @@ class CustomerController extends Controller
      */
     public function edit(Customer $customer)
     {
-        // التحقق من صلاحية الوصول
-        if (!$customer->canCurrentUserAccess()) {
-            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
-        }
-
-        $user = auth()->user();
         $branches = Branch::where('is_active', true)->get();
-
-        // المندوب لا يرى قائمة المندوبين
-        $salesReps = $user->isSalesRep()
-            ? collect()
-            : SalesRep::where('is_active', true)->get();
+        $salesReps = collect();
 
         return view('customers.edit', compact('customer', 'branches', 'salesReps'));
     }
@@ -172,11 +129,6 @@ class CustomerController extends Controller
      */
     public function update(Request $request, Customer $customer)
     {
-        // التحقق من صلاحية الوصول
-        if (!$customer->canCurrentUserAccess()) {
-            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
-        }
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => ['nullable', 'string', 'max:50', Rule::unique('customers', 'code')->ignore($customer->id)->whereNull('deleted_at')],
@@ -191,7 +143,6 @@ class CustomerController extends Controller
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms_days' => 'nullable|integer|min:0',
             'branch_id' => 'nullable|exists:branches,id',
-            'sales_rep_id' => 'nullable|exists:sales_reps,id',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
         ] + (feature_enabled('customer_target') ? [
@@ -216,17 +167,6 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
-        // التحقق من صلاحية الوصول
-        if (!$customer->canCurrentUserAccess()) {
-            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
-        }
-
-        // Check if customer has sales
-        if ($customer->sales()->exists()) {
-            return back()->with('error', 'لا يمكن حذف العميل لأنه لديه فواتير مسجلة');
-        }
-
-        // Check if customer has outstanding balance
         if ($customer->current_balance > 0) {
             return back()->with('error', 'لا يمكن حذف العميل لأنه لديه رصيد مستحق');
         }
@@ -242,10 +182,6 @@ class CustomerController extends Controller
      */
     public function showWithdrawTarget(Customer $customer)
     {
-        if (!$customer->canCurrentUserAccess()) {
-            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
-        }
-
         if (!$customer->hasAchievedTarget()) {
             return back()->with('error', 'العميل لم يحقق التارجت بعد');
         }
@@ -262,10 +198,6 @@ class CustomerController extends Controller
      */
     public function withdrawTarget(Request $request, Customer $customer)
     {
-        if (!$customer->canCurrentUserAccess()) {
-            abort(403, 'ليس لديك صلاحية للوصول لهذا العميل');
-        }
-
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01|max:' . $customer->withdrawable_target_amount,
             'notes' => 'nullable|string|max:500',
@@ -276,14 +208,12 @@ class CustomerController extends Controller
         }
 
         DB::transaction(function () use ($customer, $validated) {
-            // البحث عن أو إنشاء فئة مصروفات تارجت العملاء
             $category = ExpenseCategory::firstOrCreate(
                 ['code' => 'customer-target'],
                 ['name' => 'تارجت عميل', 'is_active' => true]
             );
 
-            // إنشاء المصروف
-            $expense = Expense::create([
+            Expense::create([
                 'expense_number' => Expense::generateExpenseNumber(),
                 'expense_category_id' => $category->id,
                 'title' => 'تارجت عميل: ' . $customer->name,
@@ -298,7 +228,6 @@ class CustomerController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            // تحديث رصيد التارجت المصروف للعميل
             $customer->recordTargetWithdrawal($validated['amount']);
         });
 

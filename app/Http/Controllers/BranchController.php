@@ -9,7 +9,7 @@ class BranchController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Branch::withCount(['users', 'warehouses']);
+        $query = Branch::withCount(['users']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -91,10 +91,6 @@ class BranchController extends Controller
     {
         if ($branch->users()->count() > 0) {
             return back()->with('error', 'لا يمكن حذف الفرع لأنه مرتبط بمستخدمين');
-        }
-
-        if ($branch->warehouses()->count() > 0) {
-            return back()->with('error', 'لا يمكن حذف الفرع لأنه مرتبط بمخازن');
         }
 
         $branch->delete();

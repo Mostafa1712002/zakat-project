@@ -10,9 +10,6 @@
     </div>
     <div class="header-actions">
         <a href="{{ route('customers.index') }}" class="btn">تحصيل من عميل</a>
-        @can('pay_suppliers')
-        <a href="{{ route('suppliers.index') }}" class="btn">دفع لمورد</a>
-        @endcan
     </div>
 </div>
 
@@ -68,17 +65,7 @@
                     </td>
                     <td>{{ $payment->payable?->name ?? '-' }}</td>
                     <td>
-                        @if($payment->sale)
-                            <a href="{{ route('sales.show', $payment->sale) }}" class="text-primary">
-                                <code>{{ $payment->sale->invoice_number }}</code>
-                            </a>
-                        @elseif($payment->purchase)
-                            <a href="{{ route('purchases.show', $payment->purchase) }}" class="text-primary">
-                                <code>{{ $payment->purchase->invoice_number }}</code>
-                            </a>
-                        @else
-                            <span class="text-muted">على الحساب</span>
-                        @endif
+                        <span class="text-muted">على الحساب</span>
                     </td>
                     <td>{{ $payment->payment_date->format('Y-m-d') }}</td>
                     <td>
@@ -108,7 +95,7 @@
                             @endswitch
                         </span>
                     </td>
-                    <td>{{ $payment->salesRep?->name ?? '-' }}</td>
+                    <td>-</td>
                     <td>
                         <a href="{{ route('payments.show', $payment) }}" class="btn btn-sm">عرض</a>
                     </td>

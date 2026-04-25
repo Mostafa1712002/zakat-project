@@ -225,7 +225,6 @@
         <div style="display: flex; flex-wrap: wrap; gap: 12px;">
             <a href="{{ route('expenses.create') }}" class="btn btn-danger">💸 تسجيل مصروف</a>
             <a href="{{ route('payments.index') }}" class="btn btn-success">💵 التحصيلات</a>
-            <a href="{{ route('sales.create') }}" class="btn btn-primary">💰 فاتورة بيع</a>
             <a href="{{ route('employee-transactions.create') }}" class="btn">👨‍💻 صرف مرتب/سلفة</a>
         </div>
     </div>

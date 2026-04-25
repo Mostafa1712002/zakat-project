@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Traits\Auditable;
-use App\Traits\SalesRepScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Model
 {
-    use HasFactory, SoftDeletes, Auditable, SalesRepScope;
+    use HasFactory, SoftDeletes, Auditable;
 
     protected $fillable = [
         'name',
@@ -52,16 +51,6 @@ class Customer extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
-    }
-
-    public function salesRep(): BelongsTo
-    {
-        return $this->belongsTo(SalesRep::class);
-    }
-
-    public function sales(): HasMany
-    {
-        return $this->hasMany(Sale::class);
     }
 
     public function payments(): HasMany
@@ -125,24 +114,21 @@ class Customer extends Model
 
     /**
      * إعادة حساب الرصيد المستحق من الفواتير الفعلية
+     * NOTE: stub during Phase 1 cleanup; will be wired to invoices in Phase 5.
      */
     public function recalculateBalance(): void
     {
-        $this->current_balance = $this->sales()
-            ->where('status', '!=', 'cancelled')
-            ->whereIn('payment_status', ['unpaid', 'partial', 'overdue'])
-            ->sum('remaining_amount');
+        $this->current_balance = 0;
         $this->save();
     }
 
     /**
-     * إجمالي مشتريات العميل (الفواتير المؤكدة فقط)
+     * إجمالي مشتريات العميل
+     * NOTE: stub during Phase 1 cleanup; will be wired to invoices in Phase 5.
      */
     public function getTotalPurchasesAttribute(): float
     {
-        return $this->sales()
-            ->where('status', 'confirmed')
-            ->sum('total_amount');
+        return 0.0;
     }
 
     /**

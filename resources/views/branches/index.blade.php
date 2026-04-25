@@ -47,7 +47,6 @@
                     <th>المدير</th>
                     <th>الهاتف</th>
                     <th>المستخدمين</th>
-                    <th>المخازن</th>
                     <th>الحالة</th>
                     <th>الإجراءات</th>
                 </tr>
@@ -66,7 +65,6 @@
                     <td>{{ $branch->manager_name ?? '-' }}</td>
                     <td>{{ $branch->phone ?? '-' }}</td>
                     <td><span class="badge badge-primary">{{ $branch->users_count }}</span></td>
-                    <td><span class="badge badge-primary">{{ $branch->warehouses_count }}</span></td>
                     <td>
                         @if($branch->is_active)
                             <span class="badge badge-success">نشط</span>

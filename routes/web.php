@@ -2,16 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\SalesRepController;
-use App\Http\Controllers\WarehouseController;
-use App\Http\Controllers\SaleController;
-use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\QuotationController;
-use App\Http\Controllers\PurchaseQuotationController;
-use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExpensePaymentMethodController;
@@ -22,17 +13,14 @@ use App\Http\Controllers\UxAnalysisController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\SalesRepDashboardController;
 use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\EmployeeTransactionController;
 use App\Http\Controllers\PartnerController;
-use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\PartnerTransactionController;
 use App\Http\Controllers\ProfitDistributionController;
 use App\Http\Controllers\TreasuryController;
-use App\Http\Controllers\SalesRepAccountController;
 use App\Http\Controllers\BranchController;
 
 // Dynamic favicon from company logo
@@ -64,12 +52,6 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Categories (الأقسام)
-    Route::resource('categories', CategoryController::class);
-
-    // Products (الأصناف)
-    Route::resource('products', ProductController::class);
-
     // Customers (العملاء)
     Route::resource('customers', CustomerController::class);
     Route::middleware(['feature:customer_target'])->group(function () {
@@ -81,68 +63,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('customers/{customer}/collect', [PaymentController::class, 'collectFromCustomer'])->name('customers.collect');
     });
 
-    // Sales Representatives (المندوبين) - Admin Only
-    Route::middleware(['admin_only'])->group(function () {
-        Route::resource('sales-reps', SalesRepController::class);
-
-        // خزينة المندوب
-        Route::get('sales-reps/{salesRep}/treasury', [SalesRepController::class, 'treasuryStatement'])->name('sales-reps.treasury');
-        Route::get('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'showDepositForm'])->name('sales-reps.deposit.form');
-        Route::post('sales-reps/{salesRep}/deposit', [SalesRepController::class, 'deposit'])->name('sales-reps.deposit');
-        Route::get('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'showWithdrawForm'])->name('sales-reps.withdraw.form');
-        Route::post('sales-reps/{salesRep}/withdraw', [SalesRepController::class, 'withdraw'])->name('sales-reps.withdraw');
-
-        // سحب عمولة المندوب
-        Route::get('sales-reps/{salesRep}/withdraw-commission', [SalesRepController::class, 'showWithdrawCommission'])->name('sales-reps.withdraw-commission.form');
-        Route::post('sales-reps/{salesRep}/withdraw-commission', [SalesRepController::class, 'withdrawCommission'])->name('sales-reps.withdraw-commission.store');
-    });
-
     // Branches (الفروع)
     Route::resource('branches', BranchController::class)->except(['show']);
-
-    // Warehouses (المخازن)
-    Route::get('warehouses/transfer', [WarehouseController::class, 'showTransferForm'])->name('warehouses.transfer');
-    Route::post('warehouses/transfer', [WarehouseController::class, 'transfer'])->name('warehouses.process-transfer');
-    Route::get('warehouses/{warehouse}/products-with-stock', [WarehouseController::class, 'productsWithStock'])->name('warehouses.products-with-stock');
-    Route::resource('warehouses', WarehouseController::class);
-
-    // Sales (المبيعات)
-    Route::get('sales/get-stock', [SaleController::class, 'getStock'])->name('sales.get-stock');
-    Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])->name('sales.pdf');
-    Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
-    Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
-    Route::get('sales/{sale}/zatca-xml', [SaleController::class, 'downloadXml'])->name('sales.zatca.xml');
-    Route::get('sales/{sale}/credit-note', [SaleController::class, 'createCreditNote'])->name('sales.credit-note.create');
-    Route::post('sales/{sale}/credit-note', [SaleController::class, 'storeCreditNote'])->name('sales.credit-note.store');
-    Route::post('sales/{sale}/zatca-submit', [SaleController::class, 'zatcaSubmit'])->name('sales.zatca.submit');
-    Route::post('sales/{sale}/zatca-retry', [SaleController::class, 'zatcaRetry'])->name('sales.zatca.retry');
-    Route::resource('sales', SaleController::class);
-
-    // Sales Quotations (تسعيرات المبيعات)
-    Route::get('quotations/{sale}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
-    Route::post('quotations/{sale}/confirm', [QuotationController::class, 'confirm'])->name('quotations.confirm');
-    Route::resource('quotations', QuotationController::class);
-
-    // Purchases (المشتريات)
-    Route::get('purchases/{purchase}/pdf', [PurchaseController::class, 'pdf'])->name('purchases.pdf');
-    Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
-    Route::resource('purchases', PurchaseController::class);
-
-    // Purchase Quotations (تسعيرات المشتريات)
-    Route::get('purchase-quotations/{purchase}/pdf', [PurchaseQuotationController::class, 'pdf'])->name('purchase-quotations.pdf');
-    Route::post('purchase-quotations/{purchase}/confirm', [PurchaseQuotationController::class, 'confirm'])->name('purchase-quotations.confirm');
-    Route::resource('purchase-quotations', PurchaseQuotationController::class);
-
-    // Purchase Returns (مرتجعات المشتريات)
-    Route::resource('purchase-returns', PurchaseReturnController::class)->except(['edit', 'update']);
-
-    // Suppliers (الموردين)
-    Route::get('suppliers/{supplier}/products', [SupplierController::class, 'products'])->name('suppliers.products');
-    Route::resource('suppliers', SupplierController::class);
-    Route::middleware(['feature:payments'])->group(function () {
-        Route::get('suppliers/{supplier}/pay', [PaymentController::class, 'showPayToSupplier'])->name('suppliers.pay.form');
-        Route::post('suppliers/{supplier}/pay', [PaymentController::class, 'payToSupplier'])->name('suppliers.pay');
-    });
 
     // =====================================================
     // Admin Only Routes - Restricted from Employee Access
@@ -190,19 +112,11 @@ Route::middleware(['auth'])->group(function () {
     // Reports (التقارير)
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
-        Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
-        Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
         Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
-        Route::get('/stock-movements', [ReportController::class, 'stockMovements'])->name('stock-movements');
 
         // Profits Report - Admin Only
         Route::middleware(['admin_only'])->group(function () {
             Route::get('/profits', [ReportController::class, 'profits'])->name('profits');
-        });
-
-        Route::middleware(['feature:report_sales_reps'])->group(function () {
-            Route::get('/sales-reps', [ReportController::class, 'salesRepsPerformance'])->name('sales-reps');
-            Route::get('/sales-reps/{salesRep}', [ReportController::class, 'salesRepDetail'])->name('sales-rep-detail');
         });
     });
 
@@ -238,35 +152,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('index');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password');
-    });
-
-    // Sales Rep Dashboard (لوحة تحكم المندوب)
-    Route::middleware(['feature:sales_rep_dashboard'])->prefix('my-dashboard')->name('sales-rep.')->group(function () {
-        Route::get('/', [SalesRepDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/customers', [SalesRepDashboardController::class, 'customers'])->name('customers');
-        Route::get('/sales', [SalesRepDashboardController::class, 'sales'])->name('sales');
-        Route::get('/collections', [SalesRepDashboardController::class, 'collections'])->name('collections');
-        Route::get('/reports', [SalesRepDashboardController::class, 'reports'])->name('reports');
-
-        // حساب المندوب - خزينتي، مصروفاتي، مخزني
-        Route::get('/treasury', [SalesRepAccountController::class, 'myTreasury'])->name('treasury');
-        Route::get('/expenses', [SalesRepAccountController::class, 'myExpenses'])->name('expenses');
-        Route::post('/expenses', [SalesRepAccountController::class, 'storeExpense'])->name('expenses.store');
-        Route::get('/inventory', [SalesRepAccountController::class, 'myInventory'])->name('inventory');
-    });
-
-    // Admin - إدارة خزينات ومخازن المندوبين
-    Route::middleware(['admin_only'])->prefix('admin')->name('admin.')->group(function () {
-        // خزينات المندوبين
-        Route::get('sales-rep-treasury', [SalesRepAccountController::class, 'treasuryIndex'])->name('sales-rep-treasury.index');
-        Route::get('sales-rep-treasury/{salesRep}', [SalesRepAccountController::class, 'treasuryShow'])->name('sales-rep-treasury.show');
-        Route::post('sales-rep-treasury/{salesRep}/withdraw', [SalesRepAccountController::class, 'withdrawToMain'])->name('sales-rep-treasury.withdraw');
-
-        // مخازن المندوبين
-        Route::get('sales-rep-inventory', [SalesRepAccountController::class, 'inventoryIndex'])->name('sales-rep-inventory.index');
-        Route::get('sales-rep-inventory/{salesRep}', [SalesRepAccountController::class, 'inventoryShow'])->name('sales-rep-inventory.show');
-        Route::post('sales-rep-inventory/{salesRep}/allocate', [SalesRepAccountController::class, 'allocateStock'])->name('sales-rep-inventory.allocate');
-        Route::post('sales-rep-inventory/{salesRep}/return', [SalesRepAccountController::class, 'returnStock'])->name('sales-rep-inventory.return');
     });
 
     // Employee Dashboard (لوحة تحكم الموظف)

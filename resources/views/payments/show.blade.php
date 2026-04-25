@@ -43,17 +43,7 @@
             <div>
                 <span class="text-muted">الفاتورة:</span>
                 <strong>
-                    @if($payment->sale)
-                        <a href="{{ route('sales.show', $payment->sale) }}" class="text-primary">
-                            {{ $payment->sale->invoice_number }}
-                        </a>
-                    @elseif($payment->purchase)
-                        <a href="{{ route('purchases.show', $payment->purchase) }}" class="text-primary">
-                            {{ $payment->purchase->invoice_number }}
-                        </a>
-                    @else
-                        <span class="text-muted">على الحساب</span>
-                    @endif
+                    <span class="text-muted">على الحساب</span>
                 </strong>
             </div>
             <div>
@@ -118,13 +108,6 @@
                 <span class="text-muted">المستخدم:</span>
                 <strong>{{ $payment->user?->name ?? '-' }}</strong>
             </div>
-
-            @if($payment->salesRep)
-            <div>
-                <span class="text-muted">المندوب:</span>
-                <strong>{{ $payment->salesRep->name }}</strong>
-            </div>
-            @endif
 
             <div>
                 <span class="text-muted">تاريخ الإنشاء:</span>

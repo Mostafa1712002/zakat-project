@@ -69,16 +69,13 @@
                 <tbody>
                     @foreach($failedInvoices as $invoice)
                     <tr>
-                        <td><a href="{{ route('sales.show', $invoice) }}">{{ $invoice->invoice_number }}</a></td>
+                        <td>{{ $invoice->invoice_number ?? '-' }}</td>
                         <td>{{ $invoice->customer?->name ?? '-' }}</td>
                         <td>{{ $invoice->zatca_invoice_type_label }}</td>
                         <td class="text-danger" style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">{{ $invoice->zatca_last_error }}</td>
                         <td>{{ $invoice->zatca_retry_count }}</td>
                         <td>
-                            <form action="{{ route('sales.zatca.retry', $invoice) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-sm btn-warning">إعادة</button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-warning" disabled>إعادة</button>
                         </td>
                     </tr>
                     @endforeach
@@ -108,16 +105,13 @@
                 <tbody>
                     @foreach($pendingInvoices as $invoice)
                     <tr>
-                        <td><a href="{{ route('sales.show', $invoice) }}">{{ $invoice->invoice_number }}</a></td>
+                        <td>{{ $invoice->invoice_number ?? '-' }}</td>
                         <td>{{ $invoice->customer?->name ?? '-' }}</td>
                         <td>{{ $invoice->zatca_invoice_type_label }}</td>
                         <td>{{ $invoice->zatca_status_label }}</td>
                         <td>{{ $invoice->zatca_issued_at?->format('Y-m-d H:i') }}</td>
                         <td>
-                            <form action="{{ route('sales.zatca.submit', $invoice) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-sm btn-success">إرسال</button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-success" disabled>إرسال</button>
                         </td>
                     </tr>
                     @endforeach
@@ -145,7 +139,7 @@
                 <tbody>
                     @foreach($recentInvoices as $invoice)
                     <tr>
-                        <td><a href="{{ route('sales.show', $invoice) }}">{{ $invoice->invoice_number }}</a></td>
+                        <td>{{ $invoice->invoice_number ?? '-' }}</td>
                         <td>{{ $invoice->customer?->name ?? '-' }}</td>
                         <td>{{ $invoice->zatca_invoice_type_label }}</td>
                         <td><span class="badge bg-success">{{ $invoice->zatca_status_label }}</span></td>

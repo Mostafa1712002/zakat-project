@@ -302,10 +302,7 @@ class SettingController extends Controller
             return back()->with('error', 'لا يمكنك حذف حسابك الخاص');
         }
 
-        // Check if user has sales
-        if ($user->sales()->exists()) {
-            return back()->with('error', 'لا يمكن حذف المستخدم لأنه لديه فواتير مسجلة');
-        }
+        // NOTE: Phase 1 cleanup — sales() relation removed. Re-add invoice check in Phase 5.
 
         $user->delete();
 

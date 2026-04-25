@@ -26,8 +26,8 @@ class AdminOnly
             return $next($request);
         }
 
-        // Block employees and sales reps without admin roles
-        if ($user && ($user->isEmployee() || $user->isSalesRep())) {
+        // Block employees without admin roles
+        if ($user && $user->isEmployee()) {
             abort(403, 'ليس لديك صلاحية للوصول لهذه الصفحة');
         }
 

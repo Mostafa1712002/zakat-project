@@ -22,7 +22,6 @@ class Expense extends Model
         'expense_category_id',
         'branch_id',
         'user_id',
-        'sales_rep_id',
         'employee_id',
         'partner_id',
         'employee_transaction_id',
@@ -85,11 +84,6 @@ class Expense extends Model
     public function partner(): BelongsTo
     {
         return $this->belongsTo(Partner::class);
-    }
-
-    public function salesRep(): BelongsTo
-    {
-        return $this->belongsTo(SalesRep::class);
     }
 
     public function employeeTransaction(): BelongsTo

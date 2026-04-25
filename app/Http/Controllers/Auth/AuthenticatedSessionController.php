@@ -28,11 +28,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect sales reps to their dashboard
-        if (Auth::user()->isSalesRep() && !Auth::user()->isSuperAdmin()) {
-            return redirect()->route('sales-rep.dashboard');
-        }
-
         // Redirect employees to their dashboard
         if (Auth::user()->isEmployee() && !Auth::user()->isSuperAdmin()) {
             return redirect()->route('employee.dashboard');

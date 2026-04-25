@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -37,19 +36,6 @@ class User extends Authenticatable
         return $this->belongsTo(Branch::class);
     }
 
-    public function sales(): HasMany
-    {
-        return $this->hasMany(Sale::class);
-    }
-
-    /**
-     * المندوب المرتبط بالمستخدم
-     */
-    public function salesRep(): HasOne
-    {
-        return $this->hasOne(SalesRep::class);
-    }
-
     /**
      * الموظف المرتبط بالمستخدم
      */
@@ -59,27 +45,11 @@ class User extends Authenticatable
     }
 
     /**
-     * التحقق من كون المستخدم مندوب مبيعات
-     */
-    public function isSalesRep(): bool
-    {
-        return $this->salesRep()->exists() || $this->hasRole('sales_rep');
-    }
-
-    /**
      * التحقق من كون المستخدم موظف
      */
     public function isEmployee(): bool
     {
         return $this->employee()->exists() || $this->hasRole('employee');
-    }
-
-    /**
-     * الحصول على معرف المندوب
-     */
-    public function getSalesRepIdAttribute(): ?int
-    {
-        return $this->salesRep?->id;
     }
 
     /**
