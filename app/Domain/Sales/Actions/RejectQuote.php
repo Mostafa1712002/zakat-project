@@ -2,6 +2,7 @@
 
 namespace App\Domain\Sales\Actions;
 
+use App\Domain\Sales\Events\QuoteRejected;
 use App\Domain\Sales\Models\Quote;
 use App\Models\User;
 use DomainException;
@@ -33,6 +34,8 @@ class RejectQuote
             'approved_by' => $rejecter->getAuthIdentifier(),
             'approved_at' => null,
         ]);
+
+        QuoteRejected::dispatch($quote, $rejecter, $reason);
 
         return $quote;
     }

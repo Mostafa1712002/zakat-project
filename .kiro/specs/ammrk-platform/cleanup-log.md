@@ -179,3 +179,10 @@ Surviving migrations: 25 (users, cache, jobs, permissions, branches, audit_logs,
 - **`reports/customers.blade.php` left as-is** — it references stats variables not provided by the controller stub. Will be rewritten in Phase 7. Route still resolves but rendering will fail if hit.
 - **Livewire ZatcaFields component skipped** — Alpine.js x-show in `_form.blade.php` handles dynamic field toggling for type/is_tax_exempt without adding a Livewire dependency.
 - **Pest test for scope skipped** — verified manually via tinker (Admin sees 2, Account Manager sees 1, policy denies cross-AM access). Per the explicit instruction to skip complex Pest tests, this remains as a TODO for Phase 8 QA.
+
+## Phase 8 Notes (2026-04-25)
+
+- **Audit log events** wired for `invoice.issued`, `quote.approved`, `quote.rejected` only. `payment.recorded` and `payment.refunded` already write `AuditLog` rows inline inside `RecordPayment`/`RefundPayment` (Phase 6). Routing payments through the new listener would create duplicate rows, and the constraint says "do not modify Phase 1-7 work" — so events for payments are intentionally NOT dispatched. The audit-log index page renders inline + listener-written rows uniformly.
+- **No EventServiceProvider** added. Laravel 11 doesn't ship one by default; using `Event::listen(...)` calls in `AppServiceProvider::boot()` instead, which is simpler and avoids touching `bootstrap/providers.php`.
+- **ZATCA local skip**: `IssueInvoice` requires a ZATCA private key + base64 cert which are not present locally (they live on the prod server). The action's existing internal `try/catch` (lines ~113-119) swallows the `RuntimeException('ZATCA signing credentials are not configured')` and flips the invoice to `zatca_status='failed'` while still moving `status='issued'`. Smoke test asserts `status='issued'` and accepts any `zatca_status`. Production server has real cert and produces a signed XML.
+- **Smoke test 13/13 pass** locally (SQLite). Output: `php8.2 tests/Smoke/full_flow_test.php` — all steps pass, audit_logs row counts verified (1× invoice.issued, 2× payment.recorded, 1× quote.approved).

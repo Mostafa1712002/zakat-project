@@ -2,6 +2,7 @@
 
 namespace App\Domain\Sales\Actions;
 
+use App\Domain\Sales\Events\QuoteApproved;
 use App\Domain\Sales\Models\Quote;
 use App\Models\User;
 use DomainException;
@@ -28,6 +29,8 @@ class ApproveQuote
             'approved_at' => Carbon::now(),
             'rejection_reason' => null,
         ]);
+
+        QuoteApproved::dispatch($quote, $approver);
 
         return $quote;
     }

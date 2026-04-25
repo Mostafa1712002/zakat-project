@@ -21,6 +21,7 @@ use App\Http\Controllers\PartnerTransactionController;
 use App\Http\Controllers\ProfitDistributionController;
 use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -187,6 +188,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{role}/edit', [AdminRoleController::class, 'edit'])->name('edit');
             Route::put('/{role}', [AdminRoleController::class, 'update'])->name('update');
         });
+
+        // Phase 8.1 — Audit Logs (read-only)
+        Route::middleware(['permission:settings.system'])
+            ->get('audit-logs', [AdminAuditLogController::class, 'index'])
+            ->name('audit-logs.index');
     });
 
     // Features Management (إدارة المميزات) - Super Admin Only

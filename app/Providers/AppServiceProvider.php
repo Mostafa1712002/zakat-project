@@ -10,11 +10,16 @@ use App\Domain\Catalog\Policies\ServiceTypePolicy;
 use App\Domain\Catalog\Policies\UnitPolicy;
 use App\Domain\Customer\Models\Customer;
 use App\Domain\Customer\Policies\CustomerPolicy;
+use App\Domain\Sales\Events\InvoiceIssued;
+use App\Domain\Sales\Events\QuoteApproved;
+use App\Domain\Sales\Events\QuoteRejected;
 use App\Domain\Sales\Models\Invoice;
 use App\Domain\Sales\Models\Quote;
 use App\Domain\Sales\Policies\InvoicePolicy;
 use App\Domain\Sales\Policies\QuotePolicy;
+use App\Listeners\AuditLogListener;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -49,5 +54,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Phase 5b: Sales / Invoice policy
         Gate::policy(Invoice::class, InvoicePolicy::class);
+
+        // Phase 8.1: Audit log event listeners
+        Event::listen(InvoiceIssued::class, AuditLogListener::class);
+        Event::listen(QuoteApproved::class, AuditLogListener::class);
+        Event::listen(QuoteRejected::class, AuditLogListener::class);
     }
 }

@@ -32,6 +32,7 @@ declare -A SITES=(
     ["al-hadari"]="/var/www/al-hadari.7erfa-system.com"
     ["zaca"]="/var/www/zaca.newaves-systems.com"
     ["ammrk"]="/var/www/ammrk.newaves-systems.com"
+    ["ammrk-v2"]="/var/www/ammrk.newaves-systems.com"
 )
 
 # Branch → Site mapping (for auto-detect)
@@ -42,6 +43,7 @@ declare -A BRANCH_TO_SITE=(
     ["al-hadari"]="al-hadari"
     ["zaca"]="zaca"
     ["ammrk"]="ammrk"
+    ["ammrk-v2"]="ammrk-v2"
 )
 
 deploy_site() {

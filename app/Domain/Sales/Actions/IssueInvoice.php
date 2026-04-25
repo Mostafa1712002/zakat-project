@@ -3,6 +3,7 @@
 namespace App\Domain\Sales\Actions;
 
 use App\Domain\Customer\Validators\ZatcaCustomerValidator;
+use App\Domain\Sales\Events\InvoiceIssued;
 use App\Domain\Sales\Models\Invoice;
 use App\Jobs\SubmitInvoiceToZatca;
 use App\Models\Setting;
@@ -131,7 +132,10 @@ class IssueInvoice
                 SubmitInvoiceToZatca::dispatch($invoice->id);
             }
 
-            return $invoice->refresh();
+            $fresh = $invoice->refresh();
+            InvoiceIssued::dispatch($fresh);
+
+            return $fresh;
         });
     }
 
