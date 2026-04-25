@@ -265,26 +265,26 @@
 ## Phase 6: Treasury (Payments)
 
 ### Task 6.1: Migrations & Models
-- [ ] `treasuries`, `payments` migrations
-- [ ] `Treasury`, `Payment` models
+- [x] `treasuries`, `payments` migrations
+- [x] `Treasury`, `Payment` models
 
 **Outcome:** ✅ Treasury tables exist
 **Dependencies:** Phase 5 complete
 
 ### Task 6.2: RecordPayment Action
-- [ ] Validates: amount <= remaining balance
-- [ ] Updates invoice `paid_amount` and `status` (paid_partial/paid)
-- [ ] Updates treasury balance
-- [ ] Audit log entry
+- [x] Validates: amount <= remaining balance
+- [x] Updates invoice `paid_amount` and `status` (paid_partial/paid)
+- [x] Updates treasury balance
+- [x] Audit log entry
 
 **Outcome:** ✅ Payment recording with side effects
 **Dependencies:** 6.1
 
 ### Task 6.3: UI
-- [ ] `Admin/PaymentController` + form
-- [ ] `payments/index` (filter by date range, customer, invoice)
-- [ ] `payments/create` (invoice select, amount, method, treasury, date)
-- [ ] Receipt PDF download
+- [x] `Admin/PaymentController` + form
+- [x] `payments/index` (filter by date range, customer, invoice)
+- [x] `payments/create` (invoice select, amount, method, treasury, date)
+- [x] Receipt PDF download
 
 **Outcome:** ✅ Payment management UI
 **Dependencies:** 6.2
@@ -358,7 +358,7 @@
 | 3. Catalog | 5 | 5 | ✅ Complete |
 | 4. Customer | 4 | 4 | ✅ Complete |
 | 5. Sales | 8 | 4 | 🔄 Phase 5a Complete (Quote workflow) |
-| 6. Treasury | 3 | 0 | Not Started |
+| 6. Treasury | 3 | 3 | ✅ Complete |
 | 7. Reports | 3 | 0 | Not Started |
 | 8. Polish | 3 | 0 | Not Started |
 | **Total** | **35** | **22** | **63%** |

@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             DefaultUsersSeeder::class,
             ServiceTypeSeeder::class,
             UnitSeeder::class,
+            TreasurySeeder::class,
         ]);
 
         $this->createExpenseCategories();

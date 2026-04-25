@@ -275,3 +275,28 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
             ->name('invoices.pdf');
     });
 });
+
+// ============================================
+// Phase 6: Treasury (Payments + Treasuries)
+// ============================================
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class)
+        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->middleware([
+            'index'   => 'permission:payments.view',
+            'create'  => 'permission:payments.create',
+            'store'   => 'permission:payments.create',
+            'show'    => 'permission:payments.view',
+            'destroy' => 'permission:payments.refund',
+        ]);
+
+    Route::resource('treasuries', \App\Http\Controllers\Admin\TreasuryController::class)
+        ->middleware([
+            'index'   => 'permission:payments.view',
+            'create'  => 'permission:settings.system',
+            'store'   => 'permission:settings.system',
+            'edit'    => 'permission:settings.system',
+            'update'  => 'permission:settings.system',
+            'destroy' => 'permission:settings.system',
+        ]);
+});
