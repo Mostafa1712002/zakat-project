@@ -10,9 +10,14 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('key')->unique();
+            $table->string('key', 100)->unique();
             $table->text('value')->nullable();
+            $table->enum('type', ['string', 'int', 'decimal', 'bool', 'json'])->default('string');
+            $table->string('group', 50)->default('general');
+            $table->boolean('is_public')->default(false);
             $table->timestamps();
+
+            $table->index('group');
         });
     }
 

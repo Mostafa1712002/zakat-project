@@ -57,38 +57,42 @@
 ## Phase 2: Foundation (Auth, Roles, Settings)
 
 ### Task 2.1: Database & Spatie Setup
-- [ ] Create new DB `ammrk_v2`
-- [ ] Update `.env` to point to `ammrk_v2`
-- [ ] Run Spatie permission migrations (`php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"`)
-- [ ] Create `users` migration (drop `branch_id` if conflicts, ensure clean schema)
+- [x] Switched to SQLite for local dev (`DB_DATABASE=/home/mostafa/www/zakat-project/database/database.sqlite`)
+- [x] Spatie Permission v6.24 already installed; published migration retained
+- [x] Confirmed `users` schema matches design (id, name, email, password, branch_id, phone, is_active) via two existing migrations
+- [x] Deleted stale `2026_01_29_122411_add_employee_role_and_permissions` migration (Phase 1 follow-up)
+- [x] `php artisan migrate:fresh` runs cleanly
 
-**Outcome:** ✅ Empty new DB with auth + permission tables
+**Outcome:** ✅ SQLite DB, permissions tables, fresh schema ready
 **Dependencies:** Phase 1 complete
 
 ### Task 2.2: Settings Module
-- [ ] Create `settings` migration: id, key (unique), value, type, group, is_public
-- [ ] Create `Setting` model with helpers: `Setting::get('key', $default)`, `Setting::put('key', $value, $type)`
-- [ ] Create `SettingsSeeder` with all required settings (default_tax_rate=15, etc.)
-- [ ] Create admin UI: `/admin/settings/general`, `/admin/settings/zatca`
+- [x] Updated `settings` migration: id, key (unique), value (text), type (enum), group, is_public
+- [x] `Setting` model with cached `Setting::get()` / `Setting::put()` (1-hour TTL per key)
+- [x] `SettingsSeeder` with 7 defaults: default_tax_rate=15, prefixes (INV-/Q-/PAY-), invoice_due_days=30, quote_validity_days=14, zatca_environment=production
+- [x] Admin UI: `/admin/settings/general` and `/admin/settings/zatca` (Blade + can:settings.system gate)
 
 **Outcome:** ✅ Settings system functional with VAT 15% default
 **Dependencies:** 2.1
 
 ### Task 2.3: Roles & Permissions Seeder
-- [ ] Create `RolePermissionSeeder`:
-  - Roles: Super Admin, Admin, Account Manager, Accountant
-  - Permissions (granular): customers.* | services.* | service-types.* | quotes.* | invoices.* | payments.* | reports.* | settings.* | users.*
-  - Assign default permissions per role
-- [ ] Run seeder and verify
-- [ ] Create dynamic permission UI at `/admin/roles` (toggle permissions per role)
-- [ ] Lock 'Super Admin' role from edit
+- [x] `RolePermissionSeeder`: 4 roles, 46 granular permissions
+  - Super Admin (locked, all 46), Admin (44 — minus settings.system + roles.manage-permissions)
+  - Account Manager (10 sales-side scoped permissions)
+  - Accountant (13 invoicing/treasury/reports permissions)
+- [x] Added `is_locked` column on roles table (separate migration)
+- [x] Spatie middleware aliases registered (`role`, `permission`, `role_or_permission`) in `bootstrap/app.php`
+- [x] Admin UI at `/admin/roles` (index) and `/admin/roles/{role}/edit` (checkbox grid grouped by domain)
+- [x] Server-side guard: 403 if attempting to edit Super Admin or any locked role; cache forgotten on save
 
 **Outcome:** ✅ Dynamic role/permission management
 **Dependencies:** 2.1
 
 ### Task 2.4: Default Users Seeder
-- [ ] Create `DefaultUsersSeeder` with: super-admin@ammrk.com, admin@ammrk.com (password = Ammrk@2026)
-- [ ] Run seeder
+- [x] `DefaultUsersSeeder` creates super-admin@ammrk.com and admin@ammrk.com (password = Ammrk@2026)
+- [x] `DatabaseSeeder` calls SettingsSeeder → RolePermissionSeeder → DefaultUsersSeeder (in order)
+- [x] Branch + expense category/method seeds preserved for surviving Phase 1 domains
+- [x] `php artisan db:seed` runs cleanly
 
 **Outcome:** ✅ Login works for super admin and admin
 **Dependencies:** 2.3
@@ -341,11 +345,11 @@
 | Phase | Tasks | Completed | Status |
 |-------|-------|-----------|--------|
 | 1. Cleanup | 5 | 5 | ✅ Complete |
-| 2. Foundation | 4 | 0 | Not Started |
+| 2. Foundation | 4 | 4 | ✅ Complete |
 | 3. Catalog | 5 | 0 | Not Started |
 | 4. Customer | 4 | 0 | Not Started |
 | 5. Sales | 8 | 0 | Not Started |
 | 6. Treasury | 3 | 0 | Not Started |
 | 7. Reports | 3 | 0 | Not Started |
 | 8. Polish | 3 | 0 | Not Started |
-| **Total** | **35** | **5** | **14%** |
+| **Total** | **35** | **9** | **26%** |

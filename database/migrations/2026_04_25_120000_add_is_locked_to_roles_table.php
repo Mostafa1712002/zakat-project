@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $rolesTable = config('permission.table_names.roles', 'roles');
+
+        Schema::table($rolesTable, function (Blueprint $table) {
+            $table->boolean('is_locked')->default(false)->after('guard_name');
+        });
+    }
+
+    public function down(): void
+    {
+        $rolesTable = config('permission.table_names.roles', 'roles');
+
+        Schema::table($rolesTable, function (Blueprint $table) {
+            $table->dropColumn('is_locked');
+        });
+    }
+};

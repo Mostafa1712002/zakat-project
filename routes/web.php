@@ -22,6 +22,8 @@ use App\Http\Controllers\PartnerTransactionController;
 use App\Http\Controllers\ProfitDistributionController;
 use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 
 // Dynamic favicon from company logo
 Route::get('/favicon.ico', function () {
@@ -171,6 +173,26 @@ Route::middleware(['auth'])->group(function () {
 
     // ZATCA Dashboard (لوحة متابعة الفوترة الإلكترونية)
     Route::get('zatca/dashboard', [App\Http\Controllers\ZatcaController::class, 'dashboard'])->name('zatca.dashboard');
+
+    // ====================================================
+    // AMMRK Admin Module (Phase 2 — Foundation)
+    // ====================================================
+    Route::prefix('admin')->name('admin.')->group(function () {
+        // Settings — system + zatca settings (system permission gates the system tab)
+        Route::middleware(['can:settings.system'])->prefix('settings')->name('settings.')->group(function () {
+            Route::get('/general', [AdminSettingsController::class, 'general'])->name('general');
+            Route::put('/general', [AdminSettingsController::class, 'updateGeneral'])->name('general.update');
+            Route::get('/zatca', [AdminSettingsController::class, 'zatca'])->name('zatca');
+            Route::put('/zatca', [AdminSettingsController::class, 'updateZatca'])->name('zatca.update');
+        });
+
+        // Roles & Permissions
+        Route::middleware(['can:roles.manage-permissions'])->prefix('roles')->name('roles.')->group(function () {
+            Route::get('/', [AdminRoleController::class, 'index'])->name('index');
+            Route::get('/{role}/edit', [AdminRoleController::class, 'edit'])->name('edit');
+            Route::put('/{role}', [AdminRoleController::class, 'update'])->name('update');
+        });
+    });
 
     // Features Management (إدارة المميزات) - Super Admin Only
     Route::middleware(['super_admin'])->prefix('features')->name('features.')->group(function () {

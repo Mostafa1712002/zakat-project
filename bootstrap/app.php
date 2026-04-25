@@ -25,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'feature' => \App\Http\Middleware\CheckFeatureMiddleware::class,
             'admin_only' => \App\Http\Middleware\AdminOnly::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

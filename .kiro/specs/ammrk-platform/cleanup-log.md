@@ -147,10 +147,14 @@ All migrations creating or altering tables for deleted domains. Listed in detail
 2. **Phase 1 directory mismatch**: User's prompt said `/home/mostafa/www/zakat-project/` but the `claude.md` `Working directory` was `/home/mostafa/www/crm`. The crm path doesn't exist; zakat-project is correct. Confirmed via `git status` showing `ammrk-v2` branch.
 3. **Laravel 11/12 — no `app/Http/Kernel.php`**: Middleware registration is in `bootstrap/app.php`. Cleaned both `web(append:)` and `alias[]`.
 4. **Sidebar layout**: Had 132 lines of role-specific menus referencing 9+ deleted route groups. Replaced with a slimmed nav focused on customer/treasury/zatca/settings (the surviving domains).
-5. **`add_employee_role_and_permissions` migration**: Inserts permission strings like `view_products`, `view_warehouses`, `view_suppliers`. Left as-is — Phase 2 RolePermissionSeeder fully replaces this. Permission names are just strings; insert won't fail.
+5. **`add_employee_role_and_permissions` migration**: Inserts permission strings like `view_products`, `view_warehouses`, `view_suppliers`. Originally left as-is for Phase 2. **DELETED at start of Phase 2** because the migration would seed legacy "employee" role + stale permission strings before `RolePermissionSeeder` runs, polluting `roles` + `permissions` tables on `migrate:fresh`. The new RolePermissionSeeder fully replaces it. (File: `database/migrations/2026_01_29_122411_add_employee_role_and_permissions.php`)
 6. **`SettingController::resetData`**: Hardcodes table names like `sale_items`, `sales`, `purchases` to truncate. Each is wrapped in try/catch — non-existent tables are silently skipped. Safe for fresh DB.
 7. **Customer migration `sales_rep_id` column**: Still in customers table schema as plain `unsignedBigInteger` (no FK constraint). Phase 4 redoes customers — leaving column to avoid altering until DB rebuild.
 8. **Feature seeder data**: `database/seeders/FeatureSeeder.php` and `SiteFeatureSeeder.php` likely seed feature flags for deleted domains (`sales`, `products`, `sales_reps`, etc.). Not deleted — flagged as Phase 2 follow-up since Feature model is repurposed and DB is being rebuilt.
+
+## Phase 2 Environment Note
+
+**Local default `php` (8.5) is missing `pdo_sqlite`.** Use `php8.2 artisan ...` for every command (migrate, db:seed, route:list, tinker, serve). Installing `php8.5-sqlite3` requires sudo not available in this session. Phase 2 + later phases run via `php8.2`.
 
 ## Migrations Deleted (35 files)
 
