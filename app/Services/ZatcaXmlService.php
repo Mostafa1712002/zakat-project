@@ -28,6 +28,13 @@ class ZatcaXmlService
         $this->addProfileIds($doc, $invoice);
         $this->addInvoiceMetadata($doc, $invoice, $sale);
         $this->addInvoiceTypeCode($doc, $invoice, $sale);
+
+        // UBL 2.1 schema order: cbc:Note MUST come immediately after cbc:InvoiceTypeCode
+        // (before cbc:DocumentCurrencyCode). Required by BR-KSA-17 for credit/debit notes.
+        if ($sale->zatca_note_type && $sale->zatca_note_reason) {
+            $this->addElement($doc, $invoice, 'cbc', 'Note', $sale->zatca_note_reason);
+        }
+
         $this->addElement($doc, $invoice, 'cbc', 'DocumentCurrencyCode', 'SAR');
         $this->addElement($doc, $invoice, 'cbc', 'TaxCurrencyCode', 'SAR');
 
@@ -119,6 +126,8 @@ class ZatcaXmlService
         $element->setAttribute('name', $subType);
     }
 
+    // BillingReference holds the original invoice ID. Note element handled separately
+    // earlier in the schema order (before DocumentCurrencyCode).
     private function addBillingReference(DOMDocument $doc, DOMElement $parent, Sale $sale): void
     {
         $billingRef = $doc->createElement('cac:BillingReference');
@@ -126,10 +135,6 @@ class ZatcaXmlService
         $this->addElement($doc, $invoiceDocRef, 'cbc', 'ID', $sale->originalSale->invoice_number);
         $billingRef->appendChild($invoiceDocRef);
         $parent->appendChild($billingRef);
-
-        if ($sale->zatca_note_reason) {
-            $this->addElement($doc, $parent, 'cbc', 'Note', $sale->zatca_note_reason);
-        }
     }
 
     private function addAdditionalDocumentReferences(DOMDocument $doc, DOMElement $parent, Sale $sale): void
