@@ -74,6 +74,25 @@ class SubmitInvoiceToZatca implements ShouldQueue
                 $secret,
             );
 
+            // ZatcaApiService returns ['error' => true, ...] on non-2xx
+            if (isset($response['error']) && $response['error'] === true) {
+                $invoice->update([
+                    'zatca_status' => Invoice::ZATCA_FAILED,
+                    'zatca_warnings' => [[
+                        'code' => 'API_' . ($response['status_code'] ?? 'ERROR'),
+                        'message' => $response['message'] ?? ($response['body'] ?? 'ZATCA rejected the invoice'),
+                    ]],
+                    'zatca_submitted_at' => now(),
+                ]);
+
+                Log::error("ZATCA rejected invoice {$invoice->invoice_number}", [
+                    'status' => $response['status_code'] ?? null,
+                    'body' => $response['body'] ?? null,
+                ]);
+
+                throw new \RuntimeException("ZATCA returned non-success status {$response['status_code']}: {$response['body']}");
+            }
+
             $invoice->update([
                 'zatca_status' => Invoice::ZATCA_CLEARED,
                 'zatca_uuid' => $response['uuid'] ?? $invoice->uuid,
