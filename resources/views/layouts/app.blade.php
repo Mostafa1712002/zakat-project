@@ -33,7 +33,7 @@
     <link rel="apple-touch-icon" href="{{ !empty($__sidebarLogo) ? asset('storage/' . $__sidebarLogo) : asset('logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Reem+Kufi:wght@500;600;700&family=Tajawal:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@400;500;600;700;800&family=Reem+Kufi:wght@500;600;700&family=Tajawal:wght@500;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -873,6 +873,9 @@
                 radial-gradient(ellipse 800px 400px at 0% 100%, rgba(10,77,92,0.05), transparent 60%);
             color: var(--ink);
             font-feature-settings: "kern", "liga", "ss01";
+            font-family: 'Amiri', 'Cairo', serif;
+            font-size: 16px;
+            line-height: 1.7;
         }
 
         /* Subtle paper grain */
@@ -886,17 +889,27 @@
             z-index: 0;
         }
 
-        /* Display font for headings */
+        /* Amiri for body, Reem Kufi for display headings (better for big titles) */
         h1, .page-header h1 {
-            font-family: 'Reem Kufi', 'Cairo', sans-serif;
-            font-weight: 600;
-            letter-spacing: -0.01em;
+            font-family: 'Amiri', 'Cairo', serif;
+            font-weight: 700;
+            letter-spacing: 0;
             color: var(--ink);
         }
         h2, h3 {
-            font-family: 'Reem Kufi', 'Cairo', sans-serif;
-            font-weight: 600;
+            font-family: 'Amiri', 'Cairo', serif;
+            font-weight: 700;
             color: var(--ink);
+            letter-spacing: 0;
+        }
+        /* Numerical / metric values stay in geometric font for legibility */
+        .stat-value, .ic-num, .ic-amount-row strong, .kpi strong,
+        code, [data-numeric], .badge {
+            font-family: 'Reem Kufi', 'Cairo', sans-serif;
+        }
+        /* Tabular numbers everywhere */
+        .table td, .data-table td, .info-table td {
+            font-variant-numeric: tabular-nums;
         }
 
         /* Sidebar — refined editorial */
@@ -967,10 +980,16 @@
             font-size: 0.9rem;
         }
 
-        /* Cards — paper feel with subtle depth */
+        /* Cards — generous padding + paper feel + depth */
         .card,
         .stat-card,
-        .form-card {
+        .form-card,
+        .invoice-card,
+        .kpi,
+        .filter-card,
+        .filters-card,
+        .item-card {
+            padding: 28px 32px !important;
             background: var(--paper) !important;
             border: 1px solid var(--line) !important;
             border-radius: 14px !important;
@@ -980,6 +999,33 @@
         .card:hover,
         .stat-card:hover {
             box-shadow: var(--shadow-lift) !important;
+        }
+        /* Card heading spacing */
+        .card > h3:first-child,
+        .form-card > h3:first-child {
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+            position: relative;
+        }
+        .card > h3:first-child::after,
+        .form-card > h3:first-child::after {
+            content: "";
+            position: absolute;
+            bottom: -1px; right: 0;
+            width: 40px; height: 2px;
+            background: var(--gold);
+        }
+        /* Vertical breathing room between stacked cards */
+        .card + .card,
+        .form-card + .card,
+        .card + .form-card { margin-top: 20px; }
+        /* Mobile padding adjusted */
+        @media (max-width: 768px) {
+            .card, .stat-card, .form-card, .invoice-card, .kpi, .item-card,
+            .filter-card, .filters-card {
+                padding: 18px 20px !important;
+            }
         }
 
         /* Stat card — editorial number layout */
