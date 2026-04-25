@@ -239,6 +239,12 @@ class ZatcaXmlService
             default => '10',
         };
         $this->addElement($doc, $paymentMeans, 'cbc', 'PaymentMeansCode', $code);
+
+        // BR-KSA-17: Credit/Debit notes must include InstructionNote with reason
+        if ($sale->zatca_note_type && $sale->zatca_note_reason) {
+            $this->addElement($doc, $paymentMeans, 'cbc', 'InstructionNote', $sale->zatca_note_reason);
+        }
+
         $parent->appendChild($paymentMeans);
     }
 
