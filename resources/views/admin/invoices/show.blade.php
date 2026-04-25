@@ -105,7 +105,27 @@
 
 <div class="card">
     <h3>البنود</h3>
-    <div class="table-container">
+    {{-- Mobile: card-style list. Desktop: table. --}}
+    <div class="items-mobile">
+        @foreach ($invoice->items as $item)
+            <div class="item-card">
+                <div class="item-card-title">{{ $item->service?->name }}</div>
+                @if ($item->description)
+                    <div class="item-card-desc">{{ $item->description }}</div>
+                @endif
+                <div class="item-card-rows">
+                    <span>الكمية:</span><strong>{{ rtrim(rtrim((string) $item->quantity, '0'), '.') }}</strong>
+                    <span>سعر الوحدة:</span><strong>{{ number_format((float) $item->unit_price, 2) }}</strong>
+                    @if ((float) $item->discount_amount > 0)
+                        <span>الخصم:</span><strong>{{ number_format((float) $item->discount_amount, 2) }}</strong>
+                    @endif
+                    <span>الضريبة {{ rtrim(rtrim((string) $item->tax_rate, '0'), '.') }}%:</span><strong>{{ number_format((float) $item->tax_amount, 2) }}</strong>
+                    <span>الإجمالي:</span><strong style="color:#0e7490">{{ number_format((float) $item->total, 2) }}</strong>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    <div class="table-container items-desktop">
     <table class="table items-table">
         <thead>
             <tr>
@@ -183,4 +203,19 @@
     </table>
     </div>
 </div>
+@push('styles')
+<style>
+    .items-mobile { display: none; }
+    .item-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+    .item-card-title { font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .item-card-desc { color: #64748b; font-size: 0.85rem; margin-bottom: 8px; }
+    .item-card-rows { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 0.85rem; }
+    .item-card-rows span { color: #64748b; }
+    .item-card-rows strong { text-align: end; }
+    @media (max-width: 768px) {
+        .items-mobile { display: block; }
+        .items-desktop { display: none; }
+    }
+</style>
+@endpush
 @endsection
