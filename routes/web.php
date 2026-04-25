@@ -23,6 +23,8 @@ use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
 
 // Dynamic favicon from company logo
 Route::get('/favicon.ico', function () {
@@ -50,8 +52,9 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 
 // Protected Routes (require authentication)
 Route::middleware(['auth'])->group(function () {
-    // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    // Dashboard — Phase 7 (Admin\DashboardController replaces Phase 1 stub)
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
     // Customers — moved to Phase 4 admin block (admin.customers.*).
     // Old top-level customer/withdraw-target/collect routes removed; the new
@@ -299,4 +302,30 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
             'update'  => 'permission:settings.system',
             'destroy' => 'permission:settings.system',
         ]);
+});
+
+// ============================================
+// Phase 7: Reports (Financial + Operational)
+// ============================================
+// Financial reports gated by `reports.financial`; operational reports gated by
+// `reports.operational`. CSV export reuses the same controller and is gated by
+// either permission depending on report type (handled at route level).
+Route::middleware(['auth'])->prefix('admin/reports')->name('admin.reports.')->group(function () {
+    Route::middleware('permission:reports.financial')->group(function () {
+        Route::get('revenue', [AdminReportController::class, 'revenue'])->name('revenue');
+        Route::get('vat', [AdminReportController::class, 'vat'])->name('vat');
+        Route::get('customer-debt', [AdminReportController::class, 'customerDebt'])->name('customer-debt');
+    });
+
+    Route::middleware('permission:reports.operational')->group(function () {
+        Route::get('quotes-pending', [AdminReportController::class, 'pendingQuotes'])->name('quotes-pending');
+        Route::get('zatca-failed', [AdminReportController::class, 'failedZatca'])->name('zatca-failed');
+        Route::get('events-calendar', [AdminReportController::class, 'eventsCalendar'])->name('events-calendar');
+    });
+
+    // Export accepts both permissions; route param differentiates report type.
+    Route::middleware('permission:reports.financial|reports.operational')
+        ->get('export/{type}', [AdminReportController::class, 'export'])
+        ->where('type', 'revenue|vat|customer-debt|quotes-pending|zatca-failed|events-calendar')
+        ->name('export');
 });

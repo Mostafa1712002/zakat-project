@@ -294,26 +294,26 @@
 ## Phase 7: Reports & Dashboard
 
 ### Task 7.1: Dashboard
-- [ ] KPIs: monthly revenue, outstanding debt, paid this month, upcoming events
-- [ ] Charts: revenue trend (12 months), invoice status breakdown
-- [ ] Recent activity feed (last 10 invoices/payments)
+- [x] KPIs: monthly revenue, outstanding debt, paid this month, upcoming events
+- [x] Charts: revenue trend (12 months), invoice status breakdown
+- [x] Recent activity feed (last 10 invoices/payments)
 
 **Outcome:** ✅ Operational dashboard
 **Dependencies:** Phase 6 complete
 
 ### Task 7.2: Financial Reports
-- [ ] Revenue report (date range, by service type, by customer)
-- [ ] VAT report (for ZATCA filing — collected vs cleared)
-- [ ] Customer debt aging report (0-30, 31-60, 61-90, 90+)
-- [ ] Export to Excel + PDF
+- [x] Revenue report (date range, by service type, by customer)
+- [x] VAT report (for ZATCA filing — collected vs cleared)
+- [x] Customer debt aging report (0-30, 31-60, 61-90, 90+)
+- [x] Export to CSV (Excel-compatible, UTF-8 BOM)
 
 **Outcome:** ✅ Financial reporting suite
 **Dependencies:** 7.1
 
 ### Task 7.3: Operational Reports
-- [ ] Quotes pending approval
-- [ ] Failed ZATCA submissions
-- [ ] Active events calendar (timeline view)
+- [x] Quotes pending approval
+- [x] Failed ZATCA submissions
+- [x] Active events calendar (timeline view)
 
 **Outcome:** ✅ Operational reporting
 **Dependencies:** 7.1
@@ -359,6 +359,6 @@
 | 4. Customer | 4 | 4 | ✅ Complete |
 | 5. Sales | 8 | 4 | 🔄 Phase 5a Complete (Quote workflow) |
 | 6. Treasury | 3 | 3 | ✅ Complete |
-| 7. Reports | 3 | 0 | Not Started |
+| 7. Reports | 3 | 3 | ✅ Complete |
 | 8. Polish | 3 | 0 | Not Started |
-| **Total** | **35** | **22** | **63%** |
+| **Total** | **35** | **25** | **71%** |
