@@ -52,7 +52,7 @@ class ReportController extends Controller
         // Aggregate per month: total VAT collected and total cleared by ZATCA
         $rows = Invoice::issued()
             ->whereBetween('issued_at', [$from, $to])
-            ->selectRaw("strftime('%Y-%m', issued_at) as ym,
+            ->selectRaw("DATE_FORMAT(issued_at, '%Y-%m') as ym,
                          sum(tax_total) as total_vat,
                          sum(case when zatca_status = 'cleared' then tax_total else 0 end) as cleared_vat,
                          sum(case when zatca_status != 'cleared' then tax_total else 0 end) as pending_vat")
@@ -195,7 +195,7 @@ class ReportController extends Controller
                     [$from, $to] = $this->dateRange($request, 12);
                     $rows = Invoice::issued()
                         ->whereBetween('issued_at', [$from, $to])
-                        ->selectRaw("strftime('%Y-%m', issued_at) as ym,
+                        ->selectRaw("DATE_FORMAT(issued_at, '%Y-%m') as ym,
                                      sum(tax_total) as total_vat,
                                      sum(case when zatca_status = 'cleared' then tax_total else 0 end) as cleared_vat,
                                      sum(case when zatca_status != 'cleared' then tax_total else 0 end) as pending_vat")

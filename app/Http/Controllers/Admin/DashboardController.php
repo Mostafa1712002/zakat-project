@@ -63,7 +63,7 @@ class DashboardController extends Controller
         $monthlyRows = Invoice::issued()
             ->whereNotNull('issued_at')
             ->where('issued_at', '>=', $trendStart)
-            ->selectRaw("strftime('%Y-%m', issued_at) as ym, sum(grand_total) as total")
+            ->selectRaw("DATE_FORMAT(issued_at, '%Y-%m') as ym, sum(grand_total) as total")
             ->groupBy('ym')
             ->pluck('total', 'ym');
 
