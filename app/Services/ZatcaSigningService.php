@@ -251,26 +251,30 @@ class ZatcaSigningService
             . '                                </xades:SignedProperties>';
     }
 
+    // Embedded SignedProperties must match the SIGNING version byte-for-byte
+    // (same indentation) so ZATCA's c14n produces the same bytes we hashed.
+    // Without xmlns declarations on inner elements — c14n adds them from the
+    // outer Signature/UBLExtensions context.
     private function buildSignedPropertiesForEmbedding(
         string $signingTime, string $certHash, string $issuer, string $serialNumber
     ): string {
-        return '<xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="xadesSignedProperties">'
-            . '<xades:SignedSignatureProperties>'
-            . '<xades:SigningTime>' . $signingTime . '</xades:SigningTime>'
-            . '<xades:SigningCertificate>'
-            . '<xades:Cert>'
-            . '<xades:CertDigest>'
-            . '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
-            . '<ds:DigestValue>' . $certHash . '</ds:DigestValue>'
-            . '</xades:CertDigest>'
-            . '<xades:IssuerSerial>'
-            . '<ds:X509IssuerName>' . $issuer . '</ds:X509IssuerName>'
-            . '<ds:X509SerialNumber>' . $serialNumber . '</ds:X509SerialNumber>'
-            . '</xades:IssuerSerial>'
-            . '</xades:Cert>'
-            . '</xades:SigningCertificate>'
-            . '</xades:SignedSignatureProperties>'
-            . '</xades:SignedProperties>';
+        return '<xades:SignedProperties Id="xadesSignedProperties">' . "\n"
+            . '                                    <xades:SignedSignatureProperties>' . "\n"
+            . '                                        <xades:SigningTime>' . $signingTime . '</xades:SigningTime>' . "\n"
+            . '                                        <xades:SigningCertificate>' . "\n"
+            . '                                            <xades:Cert>' . "\n"
+            . '                                                <xades:CertDigest>' . "\n"
+            . '                                                    <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>' . "\n"
+            . '                                                    <ds:DigestValue>' . $certHash . '</ds:DigestValue>' . "\n"
+            . '                                                </xades:CertDigest>' . "\n"
+            . '                                                <xades:IssuerSerial>' . "\n"
+            . '                                                    <ds:X509IssuerName>' . $issuer . '</ds:X509IssuerName>' . "\n"
+            . '                                                    <ds:X509SerialNumber>' . $serialNumber . '</ds:X509SerialNumber>' . "\n"
+            . '                                                </xades:IssuerSerial>' . "\n"
+            . '                                            </xades:Cert>' . "\n"
+            . '                                        </xades:SigningCertificate>' . "\n"
+            . '                                    </xades:SignedSignatureProperties>' . "\n"
+            . '                                </xades:SignedProperties>';
     }
 
     private function buildSignatureXml(
