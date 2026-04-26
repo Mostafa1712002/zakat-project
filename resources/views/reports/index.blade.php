@@ -40,17 +40,6 @@
     </div>
 
     <div class="card report-card">
-        <div class="report-card-icon">📦</div>
-        <div class="report-card-content">
-            <h3>تقرير المخزون</h3>
-            <p>مستويات المخزون وحركة الأصناف</p>
-        </div>
-        <div class="report-card-action">
-            <a href="{{ route('reports.inventory') }}" class="btn btn-primary">عرض التقرير</a>
-        </div>
-    </div>
-
-    <div class="card report-card">
         <div class="report-card-icon">👥</div>
         <div class="report-card-content">
             <h3>تقرير العملاء</h3>
@@ -58,17 +47,6 @@
         </div>
         <div class="report-card-action">
             <a href="{{ route('reports.customers') }}" class="btn btn-primary">عرض التقرير</a>
-        </div>
-    </div>
-
-    <div class="card report-card">
-        <div class="report-card-icon">🔄</div>
-        <div class="report-card-content">
-            <h3>حركة المخزون</h3>
-            <p>سجل تحركات المخزون حسب المخزن والصنف</p>
-        </div>
-        <div class="report-card-action">
-            <a href="{{ route('reports.stock-movements') }}" class="btn btn-primary">عرض التقرير</a>
         </div>
     </div>
 </div>

@@ -94,10 +94,9 @@
                     <th style="width:25%">الخدمة</th>
                     <th>الوصف</th>
                     <th style="width:8%">الكمية</th>
-                    <th style="width:10%">سعر الوحدة</th>
+                    <th style="width:14%">سعر الخدمة أو البند</th>
                     <th style="width:10%">الخصم</th>
-                    <th style="width:8%">الضريبة %</th>
-                    <th style="width:10%">الإجمالي</th>
+                    <th style="width:12%">الإجمالي</th>
                     <th></th>
                 </tr>
             </thead>
@@ -127,10 +126,7 @@
                             <input type="number" step="0.01" min="0" :name="`items[${idx}][discount_amount]`"
                                    x-model.number="it.discount_amount" class="form-control">
                         </td>
-                        <td>
-                            <input type="number" step="0.01" min="0" max="100" :name="`items[${idx}][tax_rate]`"
-                                   x-model.number="it.tax_rate" class="form-control">
-                        </td>
+                        <input type="hidden" :name="`items[${idx}][tax_rate]`" :value="it.tax_rate">
                         <td><strong x-text="lineTotal(it).toFixed(2)"></strong></td>
                         <td>
                             <button type="button" class="btn btn-sm btn-danger" @click="removeItem(idx)">حذف</button>
@@ -140,20 +136,20 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="8">
+                    <td colspan="7">
                         <button type="button" class="btn btn-secondary" @click="addItem()">➕ إضافة بند</button>
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="6" class="text-end"><strong>الإجمالي قبل الضريبة:</strong></td>
+                    <td colspan="5" class="text-end"><strong>الإجمالي قبل الضريبة:</strong></td>
                     <td colspan="2"><strong x-text="subtotal().toFixed(2)"></strong></td>
                 </tr>
                 <tr>
-                    <td colspan="6" class="text-end"><strong>إجمالي الضريبة:</strong></td>
+                    <td colspan="5" class="text-end"><strong>إجمالي الضريبة (15%):</strong></td>
                     <td colspan="2"><strong x-text="taxTotal().toFixed(2)"></strong></td>
                 </tr>
                 <tr>
-                    <td colspan="6" class="text-end"><strong>الإجمالي النهائي:</strong></td>
+                    <td colspan="5" class="text-end"><strong>الإجمالي النهائي:</strong></td>
                     <td colspan="2"><strong x-text="grandTotal().toFixed(2)"></strong></td>
                 </tr>
             </tfoot>

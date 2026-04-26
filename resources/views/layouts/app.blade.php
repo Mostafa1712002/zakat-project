@@ -10,6 +10,7 @@
     $__sidebarLogo = $__siteSettings['company_logo'] ?? '';
     $__sidebarName = $__siteSettings['company_name'] ?? config('app.name', 'CRM');
     $__palettes = [
+        'ammrk'   => ['primary' => '#0060a8', 'dark' => '#004680', 'light' => '#5fa8c0'],
         'cyan'    => ['primary' => '#0891b2', 'dark' => '#0e7490', 'light' => '#06b6d4'],
         'blue'    => ['primary' => '#2563eb', 'dark' => '#1d4ed8', 'light' => '#3b82f6'],
         'indigo'  => ['primary' => '#6366f1', 'dark' => '#4f46e5', 'light' => '#818cf8'],
@@ -19,8 +20,8 @@
         'amber'   => ['primary' => '#d97706', 'dark' => '#b45309', 'light' => '#f59e0b'],
         'slate'   => ['primary' => '#475569', 'dark' => '#334155', 'light' => '#64748b'],
     ];
-    $__activePalette = $__siteSettings['color_palette'] ?? 'cyan';
-    $__colors = $__palettes[$__activePalette] ?? $__palettes['cyan'];
+    $__activePalette = $__siteSettings['color_palette'] ?? 'ammrk';
+    $__colors = $__palettes[$__activePalette] ?? $__palettes['ammrk'];
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -1253,6 +1254,9 @@
                 $homeRoute = route('dashboard');
             @endphp
             <a href="{{ $homeRoute }}" class="logo">
+                <img src="{{ !empty($__sidebarLogo) ? asset('storage/' . $__sidebarLogo) : asset('logo.png') }}"
+                     alt="{{ $__sidebarName }}" class="logo-icon"
+                     style="width:96px;height:96px;object-fit:contain;background:#fff;padding:8px;border-radius:14px;display:block;margin:0 auto 10px;">
                 <div class="logo-text">{{ $__sidebarName }}</div>
             </a>
 
@@ -1275,6 +1279,10 @@
                 @if(feature_enabled('customers'))
                 <li><a href="{{ route('admin.customers.index') }}" class="{{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" data-tooltip="{{ feature_name('customers', 'العملاء') }}"><span class="nav-icon">{{ feature_icon('customers', '👥') }}</span><span class="nav-label">{{ feature_name('customers', 'العملاء') }}</span></a></li>
                 @endif
+                <li><a href="{{ route('admin.services.index') }}" class="{{ request()->routeIs('admin.services.*') || request()->routeIs('admin.service-types.*') ? 'active' : '' }}" data-tooltip="الخدمات"><span class="nav-icon">🛎️</span><span class="nav-label">الخدمات</span></a></li>
+                <li><a href="{{ route('admin.quotes.index') }}" class="{{ request()->routeIs('admin.quotes.*') ? 'active' : '' }}" data-tooltip="عروض الأسعار"><span class="nav-icon">📑</span><span class="nav-label">عروض الأسعار</span></a></li>
+                <li><a href="{{ route('admin.invoices.index') }}" class="{{ request()->routeIs('admin.invoices.*') ? 'active' : '' }}" data-tooltip="الفواتير"><span class="nav-icon">🧾</span><span class="nav-label">الفواتير</span></a></li>
+                <li><a href="{{ route('admin.payments.index') }}" class="{{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" data-tooltip="المدفوعات"><span class="nav-icon">💳</span><span class="nav-label">المدفوعات</span></a></li>
                 @if(!$isEmployeeOnly)
                     <li><a href="{{ route('branches.index') }}" class="{{ request()->routeIs('branches.*') ? 'active' : '' }}" data-tooltip="الفروع"><span class="nav-icon">🏢</span><span class="nav-label">الفروع</span></a></li>
                     @if(feature_enabled('employees'))
