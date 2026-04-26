@@ -867,21 +867,21 @@
     {{-- ============================================================ --}}
     <style>
         :root {
-            /* Refined palette: deep teal + antique gold on cream */
-            --ink: #0f1721;
-            --ink-soft: #2a3641;
-            --ink-muted: #6b7785;
-            --teal-deep: #0a4d5c;
-            --teal-mid: #0e7490;
-            --teal-light: #ecf6f8;
-            --gold: #b89968;
-            --gold-light: #d4b87f;
-            --gold-pale: #f5ecd9;
-            --cream: #faf7f0;
+            /* AMMRK palette: brand blue + light teal accent on cool paper */
+            --ink: #0c1f33;
+            --ink-soft: #2a3a4a;
+            --ink-muted: #5d6d7e;
+            --teal-deep: #004680;
+            --teal-mid: #0060a8;
+            --teal-light: #e8f3f7;
+            --gold: #5fa8c0;
+            --gold-light: #78c0d0;
+            --gold-pale: #d8eef2;
+            --cream: #f6fafc;
             --paper: #ffffff;
-            --line: #e8e2d4;
-            --shadow-soft: 0 2px 12px rgba(15, 23, 33, 0.04), 0 1px 2px rgba(15, 23, 33, 0.03);
-            --shadow-lift: 0 12px 32px -12px rgba(15, 23, 33, 0.18), 0 4px 12px rgba(15, 23, 33, 0.06);
+            --line: #d8e6ee;
+            --shadow-soft: 0 2px 12px rgba(0, 96, 168, 0.05), 0 1px 2px rgba(0, 96, 168, 0.04);
+            --shadow-lift: 0 12px 32px -12px rgba(0, 96, 168, 0.20), 0 4px 12px rgba(0, 96, 168, 0.08);
         }
 
         body {
@@ -930,10 +930,10 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Sidebar — refined editorial */
+        /* Sidebar — AMMRK brand */
         .sidebar {
-            background: linear-gradient(170deg, #0a4d5c 0%, #07343f 100%) !important;
-            box-shadow: -1px 0 0 rgba(184,153,104,0.15), inset 1px 0 0 rgba(255,255,255,0.04);
+            background: linear-gradient(170deg, #0060a8 0%, #003a6e 100%) !important;
+            box-shadow: -1px 0 0 rgba(95,168,192,0.18), inset 1px 0 0 rgba(255,255,255,0.06);
         }
         .sidebar::before {
             content: "";
