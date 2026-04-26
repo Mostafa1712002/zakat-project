@@ -29,12 +29,12 @@
 </div>
 
 <!-- الرصيد الفعلي الحالي -->
-<div class="card mb-4" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color: white;">
+<div class="card mb-4" style="background: linear-gradient(135deg, #0060a8 0%, #003a6e 100%); color: white;">
     <div class="card-body" style="text-align: center; padding: 30px;">
         <div style="font-size: 18px; opacity: 0.9; margin-bottom: 8px;">💰 الرصيد الفعلي الحالي</div>
-        <div style="font-size: 42px; font-weight: 700;">{{ number_format($overallBalance, 2) }} ج.م</div>
+        <div style="font-size: 42px; font-weight: 700;">{{ number_format($overallBalance, 2) }} ر.س</div>
         @if($openingBalance > 0)
-        <div style="font-size: 14px; opacity: 0.8; margin-top: 8px;">رأس المال: {{ number_format($openingBalance, 2) }} ج.م</div>
+        <div style="font-size: 14px; opacity: 0.8; margin-top: 8px;">رأس المال: {{ number_format($openingBalance, 2) }} ر.س</div>
         @endif
     </div>
 </div>
@@ -43,18 +43,18 @@
 <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
     <div class="stat-card" style="border-right: 4px solid var(--success);">
         <div class="stat-icon" style="color: var(--success);">📥</div>
-        <div class="stat-value" style="color: var(--success);">{{ number_format($totalIncome, 2) }} ج.م</div>
+        <div class="stat-value" style="color: var(--success);">{{ number_format($totalIncome, 2) }} ر.س</div>
         <div class="stat-label">إجمالي الوارد</div>
         <div style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
-            <div>تحصيلات: {{ number_format($collections, 2) }} ج.م</div>
-            <div>مبيعات نقدية: {{ number_format($cashSales, 2) }} ج.م</div>
-            <div>سحب خزينات المندوبين: {{ number_format($repWithdrawals, 2) }} ج.م</div>
+            <div>تحصيلات: {{ number_format($collections, 2) }} ر.س</div>
+            <div>مبيعات نقدية: {{ number_format($cashSales, 2) }} ر.س</div>
+            <div>سحب خزينات المندوبين: {{ number_format($repWithdrawals, 2) }} ر.س</div>
         </div>
     </div>
 
     <div class="stat-card" style="border-right: 4px solid var(--danger);">
         <div class="stat-icon" style="color: var(--danger);">📤</div>
-        <div class="stat-value" style="color: var(--danger);">{{ number_format($totalExpenses, 2) }} ج.م</div>
+        <div class="stat-value" style="color: var(--danger);">{{ number_format($totalExpenses, 2) }} ر.س</div>
         <div class="stat-label">إجمالي الصادر</div>
         <div style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
             شامل مشتريات ومصروفات ومدفوعات موردين
@@ -63,7 +63,7 @@
 
     <div class="stat-card" style="border-right: 4px solid var(--primary);">
         <div class="stat-icon" style="color: var(--primary);">📈</div>
-        <div class="stat-value" style="color: {{ $profit >= 0 ? 'var(--success)' : 'var(--danger)' }};">{{ number_format($profit, 2) }} ج.م</div>
+        <div class="stat-value" style="color: {{ $profit >= 0 ? 'var(--success)' : 'var(--danger)' }};">{{ number_format($profit, 2) }} ر.س</div>
         <div class="stat-label">الربح</div>
         <div style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
             أرباح المبيعات في الفترة
@@ -81,7 +81,7 @@
             @forelse($expensesByCategory as $category => $amount)
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: 8px; margin-bottom: 8px;">
                     <span>{{ $category }}</span>
-                    <strong style="color: var(--danger);">{{ number_format($amount, 2) }} ج.م</strong>
+                    <strong style="color: var(--danger);">{{ number_format($amount, 2) }} ر.س</strong>
                 </div>
             @empty
                 <div class="empty-state" style="padding: 30px;">
@@ -123,7 +123,7 @@
                         </small>
                     </div>
                     <strong style="color: {{ $transaction['type'] === 'income' ? 'var(--success)' : 'var(--danger)' }};">
-                        {{ $transaction['type'] === 'income' ? '+' : '-' }}{{ number_format($transaction['amount'], 2) }} ج.م
+                        {{ $transaction['type'] === 'income' ? '+' : '-' }}{{ number_format($transaction['amount'], 2) }} ر.س
                     </strong>
                 </div>
             @empty
@@ -140,7 +140,7 @@
 @if(isset($overdueInvoices) && $overdueInvoices->count() > 0)
 <div class="card mt-4">
     <div class="card-header" style="background: #fef2f2; border-bottom: 2px solid #ef4444;">
-        <h3 class="card-title" style="color: #dc2626;">⚠️ فواتير متأخرة السداد ({{ number_format($totalOverdueAmount, 2) }} ج.م)</h3>
+        <h3 class="card-title" style="color: #dc2626;">⚠️ فواتير متأخرة السداد ({{ number_format($totalOverdueAmount, 2) }} ر.س)</h3>
     </div>
     <div class="table-container overflow-auto">
         <table class="table text-nowrap">
@@ -160,7 +160,7 @@
                     <td><code>{{ $invoice->invoice_number }}</code></td>
                     <td>{{ $invoice->customer->name ?? '-' }}</td>
                     <td>{{ $invoice->due_date?->format('Y-m-d') ?? '-' }}</td>
-                    <td><strong class="text-danger">{{ number_format($invoice->remaining_amount, 2) }} ج.م</strong></td>
+                    <td><strong class="text-danger">{{ number_format($invoice->remaining_amount, 2) }} ر.س</strong></td>
                     <td>
                         @if($invoice->due_date)
                             <span class="badge badge-danger">{{ $invoice->due_date->diffInDays(now()) }} يوم</span>
@@ -202,7 +202,7 @@
                     <td><code>{{ $invoice->invoice_number }}</code></td>
                     <td>{{ $invoice->customer->name ?? '-' }}</td>
                     <td>{{ $invoice->due_date?->format('Y-m-d') }}</td>
-                    <td><strong>{{ number_format($invoice->remaining_amount, 2) }} ج.م</strong></td>
+                    <td><strong>{{ number_format($invoice->remaining_amount, 2) }} ر.س</strong></td>
                     <td>
                         @if($invoice->customer)
                             <a href="{{ route('customers.collect.form', $invoice->customer) }}" class="btn btn-sm btn-success">تحصيل</a>

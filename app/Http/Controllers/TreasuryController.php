@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Partner;
 use App\Models\PartnerTransaction;
-use App\Models\Payment;
+use App\Domain\Treasury\Models\Payment;
 use App\Models\Expense;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -21,9 +21,7 @@ class TreasuryController extends Controller
         $startDate = $request->get('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->get('end_date', Carbon::now()->format('Y-m-d'));
 
-        $collections = Payment::where('type', Payment::TYPE_RECEIVED)
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->whereBetween('payment_date', [$startDate, $endDate])
+        $collections = Payment::whereBetween('payment_date', [$startDate, $endDate])
             ->sum('amount');
 
         $cashSales = 0.0;
@@ -46,9 +44,7 @@ class TreasuryController extends Controller
 
         $recentTransactions = collect();
 
-        $totalCollectionsAll = Payment::where('type', Payment::TYPE_RECEIVED)
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->sum('amount');
+        $totalCollectionsAll = Payment::sum('amount');
         $totalExpensesAll = Expense::where('status', 'paid')->sum('amount');
 
         $openingBalance = Partner::sum('initial_investment')

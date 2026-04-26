@@ -91,12 +91,11 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th style="width:25%">الخدمة</th>
+                    <th style="width:28%">الخدمة</th>
                     <th>الوصف</th>
-                    <th style="width:8%">الكمية</th>
-                    <th style="width:14%">سعر الخدمة أو البند</th>
-                    <th style="width:10%">الخصم</th>
-                    <th style="width:12%">الإجمالي</th>
+                    <th style="width:16%">سعر الخدمة أو البند</th>
+                    <th style="width:12%">الخصم</th>
+                    <th style="width:14%">الإجمالي</th>
                     <th></th>
                 </tr>
             </thead>
@@ -114,10 +113,7 @@
                         <td>
                             <input type="text" :name="`items[${idx}][description]`" x-model="it.description" class="form-control">
                         </td>
-                        <td>
-                            <input type="number" step="0.01" min="0.01" :name="`items[${idx}][quantity]`"
-                                   x-model.number="it.quantity" class="form-control" required>
-                        </td>
+                        <input type="hidden" :name="`items[${idx}][quantity]`" :value="it.quantity">
                         <td>
                             <input type="number" step="0.01" min="0" :name="`items[${idx}][unit_price]`"
                                    x-model.number="it.unit_price" class="form-control" required>
@@ -136,20 +132,20 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="7">
+                    <td colspan="6">
                         <button type="button" class="btn btn-secondary" @click="addItem()">➕ إضافة بند</button>
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="5" class="text-end"><strong>الإجمالي قبل الضريبة:</strong></td>
+                    <td colspan="4" class="text-end"><strong>الإجمالي قبل الضريبة:</strong></td>
                     <td colspan="2"><strong x-text="subtotal().toFixed(2)"></strong></td>
                 </tr>
                 <tr>
-                    <td colspan="5" class="text-end"><strong>إجمالي الضريبة (15%):</strong></td>
+                    <td colspan="4" class="text-end"><strong>إجمالي الضريبة (15%):</strong></td>
                     <td colspan="2"><strong x-text="taxTotal().toFixed(2)"></strong></td>
                 </tr>
                 <tr>
-                    <td colspan="5" class="text-end"><strong>الإجمالي النهائي:</strong></td>
+                    <td colspan="4" class="text-end"><strong>الإجمالي النهائي:</strong></td>
                     <td colspan="2"><strong x-text="grandTotal().toFixed(2)"></strong></td>
                 </tr>
             </tfoot>
